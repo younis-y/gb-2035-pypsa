@@ -1,0 +1,22 @@
+# Model-wide defaults. Scenario-specific knobs live in scenarios.yaml; sourced numbers in assumptions.yaml.
+weather_year: 2019
+target_year: 2035
+resolution_hours: 1
+discount_rate: 0.07
+eur_to_gbp: 0.85
+losses_uplift: 1.07
+interconnector_total_gw: 19.4
+interconnector_price_gbp_mwh: 65.0
+gas_price_gbp_mwh_th: 24.0
+gas_co2_t_per_mwh_th: 0.184
+gas_ccs_capture_rate: 0.90
+ccs_transport_storage_gbp_t: 9.0
+existing_ccgt_efficiency: 0.50
+nuclear_marginal_cost_gbp_mwh: 8.0
+battery_hours: 2.0
+battery_round_trip_efficiency: 0.90
+battery_wear_cost_gbp_mwh: 0.09
+solver_name: highs
+solver_options:
+  output_flag: false
+  threads: 8

@@ -1,0 +1,111 @@
+from pathlib import Path
+
+import pytest
+import yaml
+from pydantic import ValidationError
+
+from gb2035.config import (
+    Scenario,
+    Settings,
+    deep_merge,
+    list_scenarios,
+    load_assumptions,
+    load_scenario,
+    load_settings,
+)
+from gb2035.paths import ProjectPaths
+
+
+def test_project_paths(tmp_path: Path):
+    p = ProjectPaths(tmp_path)
+    assert p.config == tmp_path / "config"
+    assert p.data_raw == tmp_path / "data" / "raw"
+    assert p.data_derived == tmp_path / "data" / "derived"
+    assert p.results == tmp_path / "results"
+    assert p.manifest == tmp_path / "data" / "manifest.json"
+
+
+def test_settings_defaults():
+    s = Settings()
+    assert s.weather_year == 2019
+    assert s.discount_rate == 0.07
+    assert s.solver_name == "highs"
+
+
+def test_deep_merge_nested():
+    base = {"a": 1, "h": {"x": 1, "y": 2}}
+    assert deep_merge(base, {"h": {"y": 5}, "b": 2}) == {"a": 1, "b": 2, "h": {"x": 1, "y": 5}}
+    assert base == {"a": 1, "h": {"x": 1, "y": 2}}, "deep_merge must not mutate its input"
+
+
+def test_scenario_rejects_cap_and_price_together():
+    with pytest.raises(ValidationError):
+        Scenario(
+            name="bad",
+            co2_cap_mt=5.0,
+            carbon_price_gbp_t=55.0,
+            demand_pathway="Holistic Transition",
+        )
+
+
+def test_scenario_allows_neither_cap_nor_price():
+    s = Scenario(name="free", demand_pathway="Holistic Transition")
+    assert s.co2_cap_mt is None and s.carbon_price_gbp_t is None
+
+
+def test_load_scenario_merges_defaults(tmp_path: Path):
+    doc = {
+        "defaults": {
+            "demand_pathway": "Holistic Transition",
+            "hydrogen": {"industrial_demand_twh": 5.0},
+        },
+        "scenarios": {
+            "cap5": {"description": "cap", "co2_cap_mt": 5.0},
+            "cap5_no_h2": {"co2_cap_mt": 5.0, "hydrogen": {"industrial_demand_twh": 0.0}},
+        },
+    }
+    path = tmp_path / "scenarios.yaml"
+    path.write_text(yaml.safe_dump(doc))
+    s = load_scenario("cap5_no_h2", path)
+    assert s.name == "cap5_no_h2"
+    assert s.co2_cap_mt == 5.0
+    assert s.hydrogen.industrial_demand_twh == 0.0
+    assert s.hydrogen.bus_zone == "Z7"
+    assert list_scenarios(path) == ["cap5", "cap5_no_h2"]
+
+
+def test_load_scenario_unknown_name(tmp_path: Path):
+    path = tmp_path / "scenarios.yaml"
+    path.write_text(
+        yaml.safe_dump({"defaults": {"demand_pathway": "Holistic Transition"}, "scenarios": {}})
+    )
+    with pytest.raises(KeyError, match="nope"):
+        load_scenario("nope", path)
+
+
+def test_repo_config_files_load(repo_root: Path):
+    settings = load_settings(repo_root / "config" / "settings.yaml")
+    assert settings.target_year == 2035
+    assumptions = load_assumptions(repo_root / "config" / "assumptions.yaml")
+    assert all(a.source for a in assumptions.values())
+    names = list_scenarios(repo_root / "config" / "scenarios.yaml")
+    for required in [
+        "test",
+        "uncapped",
+        "cap30",
+        "cap20",
+        "cap10",
+        "cap5",
+        "cap2",
+        "cap0p5",
+        "cap5_no_h2",
+        "cap5_ee_demand",
+        "cap5_tx_expansion",
+    ]:
+        assert required in names
+    test = load_scenario("test", repo_root / "config" / "scenarios.yaml")
+    assert (
+        test.snapshots is not None
+        and test.snapshots.start == "2019-01-14"
+        and test.snapshots.end == "2019-01-20"
+    )

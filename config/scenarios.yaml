@@ -1,0 +1,39 @@
+defaults:
+  demand_pathway: Holistic Transition
+  hydrogen:
+    bus_zone: Z7
+    industrial_demand_twh: 5.0
+    blue_h2_enabled: true
+  transmission_expandable: false
+
+scenarios:
+  test:
+    description: One January week, every technology, used by CI with an expected objective
+    co2_cap_mt: 5.0
+    snapshots: {start: "2019-01-14", end: "2019-01-20"}
+  uncapped:
+    description: Reference with the UK ETS carbon price and no cap
+    carbon_price_gbp_t: 55.0
+  cap30: {description: "30 MtCO2 cap", co2_cap_mt: 30.0}
+  cap20: {description: "20 MtCO2 cap", co2_cap_mt: 20.0}
+  cap10: {description: "10 MtCO2 cap", co2_cap_mt: 10.0}
+  cap5: {description: "5 MtCO2 cap", co2_cap_mt: 5.0}
+  cap2: {description: "2 MtCO2 cap", co2_cap_mt: 2.0}
+  cap0p5: {description: "0.5 MtCO2 cap", co2_cap_mt: 0.5}
+  cap5_no_h2:
+    description: cap5 without the Teesside hydrogen demand
+    co2_cap_mt: 5.0
+    hydrogen: {industrial_demand_twh: 0.0, blue_h2_enabled: false}
+  cap5_ee_demand:
+    description: cap5 with Electric Engagement demand
+    co2_cap_mt: 5.0
+    demand_pathway: Electric Engagement
+    hydrogen: {industrial_demand_twh: 1.3}
+  cap5_tx_expansion:
+    description: cap5 with extendable inter-zone links
+    co2_cap_mt: 5.0
+    transmission_expandable: true
+  cap5_steel:
+    description: cap5 plus EAF loads at Port Talbot and Scunthorpe (stretch)
+    co2_cap_mt: 5.0
+    steel: {port_talbot_eaf_twh: 1.5, scunthorpe_eaf_twh: 1.5, h2_dri_enabled: false}
