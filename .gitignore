@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+data/raw/
+results/**/network.nc
+results/**/dispatch_hourly.parquet
+*.egg-info/
+dist/
+.DS_Store
+.snakemake/
+.worktrees/
+.superpowers/
