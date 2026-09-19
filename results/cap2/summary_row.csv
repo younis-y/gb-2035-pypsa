@@ -1,0 +1,2 @@
+scenario,total_cost_gbp_bn_per_yr,lp_objective_gbp_bn_per_yr,fixed_asset_cost_gbp_bn_per_yr,shadow_carbon_price_gbp_per_t,emissions_mt,net_imports_twh,onwind_gw,offwind_gw,solar_gw,gas_gw,gas_ccs_gw,nuclear_gw,battery_gw,onwind_new_gw,offwind_new_gw,solar_new_gw,battery_new_gw,electrolysis_gw,h2_store_gwh,h2_turbine_gw_el,teesside_green_h2_twh,teesside_blue_h2_twh,curtailed_share_wind_solar
+cap2,16.1826,11.5595,4.62313,910.466,2,-2.73893,44.0443,27.856,103.388,23.4076,3.6162,4.458,20.2015,27.7394,0,89.2517,5.5481,0,91.315,1.08044,0,6.50091,0.0267149

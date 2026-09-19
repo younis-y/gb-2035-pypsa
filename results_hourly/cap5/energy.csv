@@ -1,0 +1,14 @@
+carrier,bus_carrier,twh
+blue_h2,H2,5
+export,AC,-44.6349
+gas,AC,13.296
+gas_ccs,AC,9.45849e-09
+import,AC,58.0995
+nuclear,AC,35.3916
+offwind,AC,138.723
+onwind,AC,115.607
+solar,AC,101.15
+battery,AC,8.52432
+pumped_hydro,AC,3.60356
+h2_turbine,AC,0
+electrolysis,AC,-0

@@ -1,0 +1,9 @@
+node,metric,value
+Teesside,electrolysis_mw,0
+Teesside,electrolysis_utilisation,0
+Teesside,green_h2_twh,0
+Teesside,h2_store_mwh,91315
+Teesside,h2_turbine_mw_h2_input,2160.88
+Teesside,h2_to_power_twh_el,0.75041
+Teesside,blue_h2_twh,6.50091
+Teesside,industrial_demand_twh,5

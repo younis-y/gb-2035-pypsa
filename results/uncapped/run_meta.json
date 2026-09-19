@@ -1,0 +1,12 @@
+{
+  "scenario": "uncapped",
+  "git_sha": "f47bd8b",
+  "pypsa_version": "1.3.0",
+  "solve_seconds": 760.1,
+  "snapshots": 2920,
+  "resolution_hours": 3,
+  "solver": "pdlp",
+  "total_cost_gbp_per_yr": 15108900976.997807,
+  "lp_objective_gbp_per_yr": 10485773625.534447,
+  "fixed_asset_cost_gbp_per_yr": 4623127351.46336
+}

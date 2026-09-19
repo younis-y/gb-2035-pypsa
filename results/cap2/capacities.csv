@@ -1,0 +1,261 @@
+component,name,carrier,zone,p_nom_opt,p_nom_min,unit,existing
+Generator,ic BritNed import,import,Z15,1204.97,0,MW,True
+Generator,ic EastWest import,import,Z9,722.981,0,MW,True
+Generator,ic Moyle import,import,Z5,722.981,0,MW,True
+Generator,ic Nemo import,import,Z15,1204.97,0,MW,True
+Generator,ic IFA import,import,Z15,2409.94,0,MW,True
+Generator,ic IFA2 import,import,Z16,1204.97,0,MW,True
+Generator,ic NSL import,import,Z7,1686.96,0,MW,True
+Generator,ic ElecLink import,import,Z15,1204.97,0,MW,True
+Generator,ic Viking Link import,import,Z12,1686.96,0,MW,True
+Generator,ic Greenlink import,import,Z13,602.484,0,MW,True
+Generator,ic GridLink import,import,Z15,1686.96,0,MW,True
+Generator,ic NeuConnect import,import,Z15,1686.96,0,MW,True
+Generator,ic NorthConnect import,import,Z2,1686.96,0,MW,True
+Generator,ic FAB Link import,import,Z17,1686.96,0,MW,True
+Generator,ic BritNed export,export,Z15,1204.97,0,MW,True
+Generator,ic EastWest export,export,Z9,722.981,0,MW,True
+Generator,ic Moyle export,export,Z5,722.981,0,MW,True
+Generator,ic Nemo export,export,Z15,1204.97,0,MW,True
+Generator,ic IFA export,export,Z15,2409.94,0,MW,True
+Generator,ic IFA2 export,export,Z16,1204.97,0,MW,True
+Generator,ic NSL export,export,Z7,1686.96,0,MW,True
+Generator,ic ElecLink export,export,Z15,1204.97,0,MW,True
+Generator,ic Viking Link export,export,Z12,1686.96,0,MW,True
+Generator,ic Greenlink export,export,Z13,602.484,0,MW,True
+Generator,ic GridLink export,export,Z15,1686.96,0,MW,True
+Generator,ic NeuConnect export,export,Z15,1686.96,0,MW,True
+Generator,ic NorthConnect export,export,Z2,1686.96,0,MW,True
+Generator,ic FAB Link export,export,Z17,1686.96,0,MW,True
+Generator,onwind Z1_1,onwind,Z1_1,355.891,0,MW,False
+Generator,onwind Z1_2,onwind,Z1_2,757.029,0,MW,False
+Generator,onwind Z1_3,onwind,Z1_3,3642.51,0,MW,False
+Generator,onwind Z1_4,onwind,Z1_4,1197.14,0,MW,False
+Generator,onwind Z2,onwind,Z2,0,0,MW,False
+Generator,onwind Z3,onwind,Z3,0,0,MW,False
+Generator,onwind Z4,onwind,Z4,791.303,0,MW,False
+Generator,onwind Z5,onwind,Z5,0,0,MW,False
+Generator,onwind Z6,onwind,Z6,3094.28,0,MW,False
+Generator,onwind Z7,onwind,Z7,0,0,MW,False
+Generator,onwind Z8,onwind,Z8,0,0,MW,False
+Generator,onwind Z9,onwind,Z9,0,0,MW,False
+Generator,onwind Z10,onwind,Z10,1622.84,0,MW,False
+Generator,onwind Z11,onwind,Z11,0,0,MW,False
+Generator,onwind Z12,onwind,Z12,4965.91,0,MW,False
+Generator,onwind Z13,onwind,Z13,3343.34,0,MW,False
+Generator,onwind Z14,onwind,Z14,0,0,MW,False
+Generator,onwind Z15,onwind,Z15,864.967,0,MW,False
+Generator,onwind Z16,onwind,Z16,2849.69,0,MW,False
+Generator,onwind Z17,onwind,Z17,4254.51,0,MW,False
+Generator,onwind_existing Z1_1,onwind,Z1_1,454.2,0,MW,True
+Generator,onwind_existing Z1_2,onwind,Z1_2,37.8,0,MW,True
+Generator,onwind_existing Z1_3,onwind,Z1_3,1633.6,0,MW,True
+Generator,onwind_existing Z1_4,onwind,Z1_4,1125,0,MW,True
+Generator,onwind_existing Z2,onwind,Z2,904.3,0,MW,True
+Generator,onwind_existing Z3,onwind,Z3,635.75,0,MW,True
+Generator,onwind_existing Z4,onwind,Z4,322.9,0,MW,True
+Generator,onwind_existing Z5,onwind,Z5,4355.85,0,MW,True
+Generator,onwind_existing Z6,onwind,Z6,2722.7,0,MW,True
+Generator,onwind_existing Z7,onwind,Z7,607.85,0,MW,True
+Generator,onwind_existing Z8,onwind,Z8,662.9,0,MW,True
+Generator,onwind_existing Z9,onwind,Z9,667.7,0,MW,True
+Generator,onwind_existing Z10,onwind,Z10,138.6,0,MW,True
+Generator,onwind_existing Z11,onwind,Z11,257.9,0,MW,True
+Generator,onwind_existing Z12,onwind,Z12,403.4,0,MW,True
+Generator,onwind_existing Z13,onwind,Z13,967.3,0,MW,True
+Generator,onwind_existing Z14,onwind,Z14,13.6,0,MW,True
+Generator,onwind_existing Z15,onwind,Z15,71.8,0,MW,True
+Generator,onwind_existing Z16,onwind,Z16,69.3,0,MW,True
+Generator,onwind_existing Z17,onwind,Z17,252.5,0,MW,True
+Generator,solar Z1_1,solar,Z1_1,666.212,0,MW,False
+Generator,solar Z1_2,solar,Z1_2,0,0,MW,False
+Generator,solar Z1_3,solar,Z1_3,0,0,MW,False
+Generator,solar Z1_4,solar,Z1_4,0,0,MW,False
+Generator,solar Z2,solar,Z2,8008.19,0,MW,False
+Generator,solar Z3,solar,Z3,0,0,MW,False
+Generator,solar Z4,solar,Z4,1978.26,0,MW,False
+Generator,solar Z5,solar,Z5,0,0,MW,False
+Generator,solar Z6,solar,Z6,0,0,MW,False
+Generator,solar Z7,solar,Z7,8123.4,0,MW,False
+Generator,solar Z8,solar,Z8,10122.7,0,MW,False
+Generator,solar Z9,solar,Z9,0,0,MW,False
+Generator,solar Z10,solar,Z10,4057.1,0,MW,False
+Generator,solar Z11,solar,Z11,5476.56,0,MW,False
+Generator,solar Z12,solar,Z12,12414.8,0,MW,False
+Generator,solar Z13,solar,Z13,15805.5,0,MW,False
+Generator,solar Z14,solar,Z14,2676.05,0,MW,False
+Generator,solar Z15,solar,Z15,2162.42,0,MW,False
+Generator,solar Z16,solar,Z16,7124.23,0,MW,False
+Generator,solar Z17,solar,Z17,10636.3,0,MW,False
+Generator,solar_existing Z1_3,solar,Z1_3,0.7,0,MW,True
+Generator,solar_existing Z1_4,solar,Z1_4,0.3,0,MW,True
+Generator,solar_existing Z2,solar,Z2,90.93,0,MW,True
+Generator,solar_existing Z3,solar,Z3,51.53,0,MW,True
+Generator,solar_existing Z4,solar,Z4,2.1,0,MW,True
+Generator,solar_existing Z5,solar,Z5,158.56,0,MW,True
+Generator,solar_existing Z7,solar,Z7,302.89,0,MW,True
+Generator,solar_existing Z8,solar,Z8,693.92,0,MW,True
+Generator,solar_existing Z9,solar,Z9,509.99,0,MW,True
+Generator,solar_existing Z10,solar,Z10,955.85,0,MW,True
+Generator,solar_existing Z11,solar,Z11,1771.86,0,MW,True
+Generator,solar_existing Z12,solar,Z12,2328.95,0,MW,True
+Generator,solar_existing Z13,solar,Z13,2847.96,0,MW,True
+Generator,solar_existing Z14,solar,Z14,193.54,0,MW,True
+Generator,solar_existing Z15,solar,Z15,998.2,0,MW,True
+Generator,solar_existing Z16,solar,Z16,1140.21,0,MW,True
+Generator,solar_existing Z17,solar,Z17,2088.52,0,MW,True
+Generator,offwind DOGGER_BANK,offwind,Z8,0,0,MW,False
+Generator,offwind HORNSEA,offwind,Z8,0,0,MW,False
+Generator,offwind EAST_ANGLIA,offwind,Z12,0,0,MW,False
+Generator,offwind Z2,offwind,Z2,0,0,MW,False
+Generator,offwind Z7,offwind,Z7,0,0,MW,False
+Generator,offwind Z15,offwind,Z15,0,0,MW,False
+Generator,offwind Z16,offwind,Z16,0,0,MW,False
+Generator,offwind Z17,offwind,Z17,0,0,MW,False
+Generator,offwind Z13,offwind,Z13,0,0,MW,False
+Generator,offwind_existing Z1_3,offwind,Z1_3,1490,0,MW,True
+Generator,offwind_existing Z2,offwind,Z2,1126.3,0,MW,True
+Generator,offwind_existing Z3,offwind,Z3,2155,0,MW,True
+Generator,offwind_existing Z5,offwind,Z5,457,0,MW,True
+Generator,offwind_existing Z6,offwind,Z6,174,0,MW,True
+Generator,offwind_existing Z7,offwind,Z7,2503.5,0,MW,True
+Generator,offwind_existing Z8,offwind,Z8,3920,0,MW,True
+Generator,offwind_existing Z9,offwind,Z9,2729.2,0,MW,True
+Generator,offwind_existing Z10,offwind,Z10,1256.7,0,MW,True
+Generator,offwind_existing Z12,offwind,Z12,10574.8,0,MW,True
+Generator,offwind_existing Z15,offwind,Z15,1069.5,0,MW,True
+Generator,offwind_existing Z16,offwind,Z16,400,0,MW,True
+Generator,ocgt Z1_1,gas,Z1_1,0,0,MW,False
+Generator,gas_ccs Z1_1,gas_ccs,Z1_1,60.6588,0,MW,False
+Generator,ocgt Z1_2,gas,Z1_2,0,0,MW,False
+Generator,gas_ccs Z1_2,gas_ccs,Z1_2,48.9369,0,MW,False
+Generator,ocgt Z1_3,gas,Z1_3,0,0,MW,False
+Generator,gas_ccs Z1_3,gas_ccs,Z1_3,43.9616,0,MW,False
+Generator,ocgt Z1_4,gas,Z1_4,0,0,MW,False
+Generator,gas_ccs Z1_4,gas_ccs,Z1_4,41.3181,0,MW,False
+Generator,ccgt_existing Z2,gas,Z2,818.745,0,MW,True
+Generator,ocgt Z2,gas,Z2,0,0,MW,False
+Generator,gas_ccs Z2,gas_ccs,Z2,33.214,0,MW,False
+Generator,ocgt Z3,gas,Z3,0,0,MW,False
+Generator,gas_ccs Z3,gas_ccs,Z3,46.2977,0,MW,False
+Generator,ocgt Z4,gas,Z4,0,0,MW,False
+Generator,gas_ccs Z4,gas_ccs,Z4,56.5122,0,MW,False
+Generator,ocgt Z5,gas,Z5,0,0,MW,False
+Generator,gas_ccs Z5,gas_ccs,Z5,56.3273,0,MW,False
+Generator,ocgt Z6,gas,Z6,0,0,MW,False
+Generator,gas_ccs Z6,gas_ccs,Z6,42.5073,0,MW,False
+Generator,ocgt_existing Z7,gas,Z7,84,0,MW,True
+Generator,ocgt Z7,gas,Z7,0,0,MW,False
+Generator,gas_ccs Z7,gas_ccs,Z7,11.5567,0,MW,False
+Generator,ccgt_existing Z8,gas,Z8,3302.13,0,MW,True
+Generator,ocgt_existing Z8,gas,Z8,1280,0,MW,True
+Generator,ocgt Z8,gas,Z8,0,0,MW,False
+Generator,gas_ccs Z8,gas_ccs,Z8,339.477,0,MW,False
+Generator,ccgt_existing Z9,gas,Z9,2456.43,0,MW,True
+Generator,ocgt_existing Z9,gas,Z9,190,0,MW,True
+Generator,ocgt Z9,gas,Z9,0,0,MW,False
+Generator,gas_ccs Z9,gas_ccs,Z9,345.542,0,MW,False
+Generator,ccgt_existing Z10,gas,Z10,3855.58,0,MW,True
+Generator,ocgt Z10,gas,Z10,0,0,MW,False
+Generator,gas_ccs Z10,gas_ccs,Z10,433.174,0,MW,False
+Generator,ccgt_existing Z11,gas,Z11,341.597,0,MW,True
+Generator,ocgt Z11,gas,Z11,0,0,MW,False
+Generator,gas_ccs Z11,gas_ccs,Z11,770.652,0,MW,False
+Generator,nuclear Z12,nuclear,Z12,1198,0,MW,True
+Generator,ccgt_existing Z12,gas,Z12,1619.03,0,MW,True
+Generator,ocgt Z12,gas,Z12,0,0,MW,False
+Generator,gas_ccs Z12,gas_ccs,Z12,77.9507,0,MW,False
+Generator,ccgt_existing Z13,gas,Z13,3734.84,0,MW,True
+Generator,ocgt_existing Z13,gas,Z13,42,0,MW,True
+Generator,ocgt Z13,gas,Z13,0,0,MW,False
+Generator,gas_ccs Z13,gas_ccs,Z13,132.271,0,MW,False
+Generator,ccgt_existing Z14,gas,Z14,819.735,0,MW,True
+Generator,ocgt_existing Z14,gas,Z14,10,0,MW,True
+Generator,ocgt Z14,gas,Z14,0,0,MW,False
+Generator,gas_ccs Z14,gas_ccs,Z14,909.005,0,MW,False
+Generator,ccgt_existing Z15,gas,Z15,3314.18,0,MW,True
+Generator,ocgt Z15,gas,Z15,0,0,MW,False
+Generator,gas_ccs Z15,gas_ccs,Z15,41.3658,0,MW,False
+Generator,ccgt_existing Z16,gas,Z16,948.936,0,MW,True
+Generator,ocgt Z16,gas,Z16,0,0,MW,False
+Generator,gas_ccs Z16,gas_ccs,Z16,125.475,0,MW,False
+Generator,nuclear Z17,nuclear,Z17,3260,0,MW,True
+Generator,ccgt_existing Z17,gas,Z17,590.382,0,MW,True
+Generator,ocgt Z17,gas,Z17,0,0,MW,False
+Generator,gas_ccs Z17,gas_ccs,Z17,0,0,MW,False
+Generator,blue_h2 Teesside,blue_h2,Teesside,1200,0,MW,False
+StorageUnit,battery Z1_1,battery,Z1_1,0,0,MW,False
+StorageUnit,battery Z1_2,battery,Z1_2,0,0,MW,False
+StorageUnit,battery Z1_3,battery,Z1_3,0,0,MW,False
+StorageUnit,battery Z1_4,battery,Z1_4,0,0,MW,False
+StorageUnit,battery Z2,battery,Z2,0,0,MW,False
+StorageUnit,battery Z3,battery,Z3,0,0,MW,False
+StorageUnit,battery Z4,battery,Z4,0,0,MW,False
+StorageUnit,battery Z5,battery,Z5,0,0,MW,False
+StorageUnit,battery Z6,battery,Z6,0,0,MW,False
+StorageUnit,battery Z7,battery,Z7,0,0,MW,False
+StorageUnit,battery Z8,battery,Z8,0,0,MW,False
+StorageUnit,battery Z9,battery,Z9,0,0,MW,False
+StorageUnit,battery Z10,battery,Z10,228.65,0,MW,False
+StorageUnit,battery Z11,battery,Z11,243.355,0,MW,False
+StorageUnit,battery Z12,battery,Z12,237.99,0,MW,False
+StorageUnit,battery Z13,battery,Z13,240.05,0,MW,False
+StorageUnit,battery Z14,battery,Z14,244.733,0,MW,False
+StorageUnit,battery Z15,battery,Z15,160.317,0,MW,False
+StorageUnit,battery Z16,battery,Z16,223.924,0,MW,False
+StorageUnit,battery Z17,battery,Z17,3969.08,0,MW,False
+StorageUnit,battery_existing Z1_1,battery,Z1_1,71,0,MW,True
+StorageUnit,battery_existing Z1_3,battery,Z1_3,41,0,MW,True
+StorageUnit,battery_existing Z1_4,battery,Z1_4,50,0,MW,True
+StorageUnit,battery_existing Z2,battery,Z2,473.9,0,MW,True
+StorageUnit,battery_existing Z3,battery,Z3,343.5,0,MW,True
+StorageUnit,battery_existing Z5,battery,Z5,3117.68,0,MW,True
+StorageUnit,battery_existing Z6,battery,Z6,1139.9,0,MW,True
+StorageUnit,battery_existing Z7,battery,Z7,157.9,0,MW,True
+StorageUnit,battery_existing Z8,battery,Z8,1342.15,0,MW,True
+StorageUnit,battery_existing Z9,battery,Z9,1945.39,0,MW,True
+StorageUnit,battery_existing Z10,battery,Z10,589,0,MW,True
+StorageUnit,battery_existing Z11,battery,Z11,1054.6,0,MW,True
+StorageUnit,battery_existing Z12,battery,Z12,1217.16,0,MW,True
+StorageUnit,battery_existing Z13,battery,Z13,1155.92,0,MW,True
+StorageUnit,battery_existing Z14,battery,Z14,198.7,0,MW,True
+StorageUnit,battery_existing Z15,battery,Z15,1114.98,0,MW,True
+StorageUnit,battery_existing Z16,battery,Z16,396.49,0,MW,True
+StorageUnit,battery_existing Z17,battery,Z17,244.1,0,MW,True
+StorageUnit,pumped_hydro Z1_4,pumped_hydro,Z1_4,300,0,MW,True
+StorageUnit,pumped_hydro Z3,pumped_hydro,Z3,440,0,MW,True
+StorageUnit,pumped_hydro Z9,pumped_hydro,Z9,2088,0,MW,True
+Link,Z1_3-Z1_1,DC,Z1_3->Z1_1,3500,0,MW,True
+Link,Z1_3-Z1_2,DC,Z1_3->Z1_2,3500,0,MW,True
+Link,Z2-Z1_3,DC,Z2->Z1_3,6000,0,MW,True
+Link,Z7-Z2,DC,Z7->Z2,6000,0,MW,True
+Link,Z9-Z3,DC,Z9->Z3,8000,0,MW,True
+Link,Z1_4-Z1_2,AC,Z1_4->Z1_2,2000,0,MW,True
+Link,Z1_4-Z1_3,AC,Z1_4->Z1_3,3000,0,MW,True
+Link,Z2-Z1_4,AC,Z2->Z1_4,4000,0,MW,True
+Link,Z3-Z2,AC,Z3->Z2,6000,0,MW,True
+Link,Z4-Z3,AC,Z4->Z3,8000,0,MW,True
+Link,Z5-Z3,AC,Z5->Z3,8000,0,MW,True
+Link,Z6-Z5,AC,Z6->Z5,8000,0,MW,True
+Link,Z7-Z6,AC,Z7->Z6,8000,0,MW,True
+Link,Z8-Z7,AC,Z8->Z7,6000,0,MW,True
+Link,Z9-Z7,AC,Z9->Z7,6000,0,MW,True
+Link,Z9-Z8,AC,Z9->Z8,6000,0,MW,True
+Link,Z10-Z8,AC,Z10->Z8,8000,0,MW,True
+Link,Z11-Z9,AC,Z11->Z9,8000,0,MW,True
+Link,Z11-Z10,AC,Z11->Z10,8000,0,MW,True
+Link,Z12-Z10,AC,Z12->Z10,8000,0,MW,True
+Link,Z12-Z11,AC,Z12->Z11,8000,0,MW,True
+Link,Z13-Z11,AC,Z13->Z11,5000,0,MW,True
+Link,Z13-Z12,AC,Z13->Z12,5000,0,MW,True
+Link,Z14-Z12,AC,Z14->Z12,10000,0,MW,True
+Link,Z15-Z12,AC,Z15->Z12,6000,0,MW,True
+Link,Z15-Z14,AC,Z15->Z14,10000,0,MW,True
+Link,Z16-Z13,AC,Z16->Z13,6000,0,MW,True
+Link,Z16-Z14,AC,Z16->Z14,10000,0,MW,True
+Link,Z16-Z15,AC,Z16->Z15,6000,0,MW,True
+Link,Z17-Z13,AC,Z17->Z13,4000,0,MW,True
+Link,Z17-Z16,AC,Z17->Z16,4000,0,MW,True
+Link,electrolysis Teesside,electrolysis,Z7->Teesside H2,0,0,MW,False
+Link,h2_turbine Teesside,h2_turbine,Teesside H2->Z7,2160.88,0,MW,False
+Store,h2_store Teesside,h2_store,Teesside,91315,0,MWh,False
