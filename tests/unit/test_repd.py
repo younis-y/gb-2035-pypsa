@@ -25,6 +25,24 @@ def test_fixture_repd(fixtures_dir: Path, zones):
     assert set(out.columns) == {"zone", "technology", "status", "p_nom_mw"}
 
 
+def test_offshore_site_inside_named_polygon_lands_at_mapped_zone(tmp_path: Path, zones):
+    from pyproj import Transformer
+
+    from gb2035.data.zones import OFFSHORE_LANDING
+
+    point = zones.loc["HORNSEA", "geometry"].representative_point()
+    to_osgb = Transformer.from_crs("EPSG:4326", "EPSG:27700", always_xy=True)
+    x, y = to_osgb.transform(point.x, point.y)
+    csv = tmp_path / "repd.csv"
+    csv.write_text(
+        "Ref ID,Site Name,Technology Type,Installed Capacity (MWelec),Development Status (short),Country,X-coordinate,Y-coordinate\n"
+        f"1,Inside Hornsea,Wind Offshore,1000,Operational,England,{x:.0f},{y:.0f}\n",
+        encoding="latin-1",
+    )
+    out = build_repd_by_zone(csv, zones)
+    assert out.loc[0, "zone"] == OFFSHORE_LANDING["HORNSEA"] == "Z8"
+
+
 @pytest.mark.slow
 def test_real_repd_totals(repo_root: Path, zones):
     raw = repo_root / "data" / "raw" / "REPD_Publication_Q2_2026.csv"
