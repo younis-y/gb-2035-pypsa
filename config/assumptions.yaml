@@ -104,6 +104,11 @@ discount_rate:
   unit: ratio
   source: "Author assumption; DESNZ 2025 hurdle rates span 0.076 to 0.101"
   confidence: assumption
+solver_tolerance:
+  value: 1.0e-5
+  unit: ratio
+  source: "HiGHS PDLP primal/dual feasibility tolerance; simplex needs 20 min for four weeks and hours for a year on this LP"
+  confidence: assumption
 eur_to_gbp:
   value: 0.85
   unit: GBP per EUR

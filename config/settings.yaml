@@ -19,6 +19,11 @@ battery_wear_cost_gbp_mwh: 0.09
 pumped_hydro_hours: 8.0
 pumped_hydro_round_trip_efficiency: 0.75
 solver_name: highs
+# HiGHS PDLP (first-order) is used because simplex and interior point need hours on the
+# full-year LP; PDLP reaches HiGHS "Optimal" with relative infeasibility around 1e-4.
 solver_options:
   output_flag: false
-  threads: 8
+  solver: pdlp
+  threads: 4
+  primal_feasibility_tolerance: 1.0e-5
+  dual_feasibility_tolerance: 1.0e-5
