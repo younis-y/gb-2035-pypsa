@@ -81,3 +81,8 @@ markers = [
     "slow: takes more than ten seconds",
     "network: needs internet access",
 ]
+# PyPSA 1.3 coerces pandas 3.0 string columns back to object dtype on every `add` and warns
+# about it. Nothing in this project can act on it; ignore that one message only.
+filterwarnings = [
+    "ignore:pandas infers the `str` dtype for string data:FutureWarning",
+]

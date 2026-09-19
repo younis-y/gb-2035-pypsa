@@ -12,7 +12,6 @@ STEEL_SITES: dict[str, tuple[str, str]] = {
     "Port Talbot": ("Z13", "port_talbot_eaf_twh"),
     "Scunthorpe": ("Z8", "scunthorpe_eaf_twh"),
 }
-H2_LHV_MWH_PER_T = 33.33
 
 
 def add_co2_cap(n: pypsa.Network, cap_mt: float) -> None:
@@ -37,7 +36,9 @@ def add_steel_loads(
         if twh > 0:
             n.add("Load", f"eaf {site}", bus=zone, carrier="load", p_set=twh * 1e6 / 8760.0)
     if steel.h2_dri_enabled:
-        h2_twh = steel.h2_dri_mt_steel * 1e6 * steel.h2_kg_per_t / 1000.0 * H2_LHV_MWH_PER_T / 1e6
+        h2_twh = (
+            steel.h2_dri_mt_steel * 1e6 * steel.h2_kg_per_t / 1000.0 * steel.h2_lhv_mwh_per_t / 1e6
+        )
         n.add(
             "Load",
             "dri_electricity Port Talbot",

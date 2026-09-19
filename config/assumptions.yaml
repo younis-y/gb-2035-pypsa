@@ -144,3 +144,39 @@ h2_dri_kg_per_t:
   unit: kg H2 per t steel
   source: "Vogl, Ahman and Nilsson 2018, Journal of Cleaner Production 203"
   confidence: published
+pumped_hydro_hours:
+  value: 8.0
+  unit: hours
+  source: "Dinorwig 1,728 MW / 9.1 GWh about 5 h and Cruachan 440 MW about 10 h; fleet average, author assumption"
+  confidence: assumption
+pumped_hydro_round_trip_efficiency:
+  value: 0.75
+  unit: ratio
+  source: "Author assumption: 70 to 80 percent typical for GB pumped storage"
+  confidence: assumption
+h2_lhv_mwh_per_t:
+  value: 33.33
+  unit: MWh per t H2
+  source: "Hydrogen lower heating value 120 MJ/kg = 33.33 kWh/kg"
+  confidence: published
+offwind_share_dogger_bank:
+  value: 0.35
+  unit: ratio
+  source: "Author assumption informed by Crown Estate Round 4 and ScotWind leasing geography and FES 2025 F.55 (86.1 GW HT 2035)"
+  confidence: assumption
+offwind_share_hornsea:
+  value: 0.25
+  unit: ratio
+  source: "Author assumption informed by Crown Estate Round 4 and ScotWind leasing geography and FES 2025 F.55 (86.1 GW HT 2035)"
+  confidence: assumption
+offwind_share_east_anglia:
+  value: 0.25
+  unit: ratio
+  source: "Author assumption informed by Crown Estate Round 4 and ScotWind leasing geography and FES 2025 F.55 (86.1 GW HT 2035)"
+  confidence: assumption
+offwind_share_other_coastal:
+  value: 0.15
+  unit: ratio
+  source: "Author assumption informed by Crown Estate Round 4 and ScotWind leasing geography and FES 2025 F.55 (86.1 GW HT 2035)"
+  confidence: assumption
+  note: "Split across the six generic coastal units Z2, Z7, Z13, Z15, Z16 and Z17 in config/renewable_caps.yaml"

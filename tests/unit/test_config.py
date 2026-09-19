@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from gb2035.config import (
     Scenario,
     Settings,
+    SteelSettings,
     deep_merge,
     list_scenarios,
     load_assumptions,
@@ -88,6 +89,7 @@ def test_repo_config_files_load(repo_root: Path):
     assert settings.target_year == 2035
     assumptions = load_assumptions(repo_root / "config" / "assumptions.yaml")
     assert all(a.source for a in assumptions.values())
+    assert SteelSettings().h2_lhv_mwh_per_t == assumptions["h2_lhv_mwh_per_t"].value
     names = list_scenarios(repo_root / "config" / "scenarios.yaml")
     for required in [
         "test",
@@ -108,4 +110,13 @@ def test_repo_config_files_load(repo_root: Path):
         test.snapshots is not None
         and test.snapshots.start == "2019-01-14"
         and test.snapshots.end == "2019-01-20"
+    )
+
+
+def test_pumped_hydro_settings_match_assumptions(repo_root: Path):
+    settings = load_settings(repo_root / "config" / "settings.yaml")
+    a = load_assumptions(repo_root / "config" / "assumptions.yaml")
+    assert settings.pumped_hydro_hours == a["pumped_hydro_hours"].value
+    assert (
+        settings.pumped_hydro_round_trip_efficiency == a["pumped_hydro_round_trip_efficiency"].value
     )

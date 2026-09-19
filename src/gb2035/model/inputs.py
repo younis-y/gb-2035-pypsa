@@ -82,7 +82,9 @@ def load_inputs(paths: ProjectPaths) -> ModelInputs:
         links_all["bus0"].str.startswith("Z") & links_all["bus1"].str.startswith("Z")
     ]
     future = pd.read_csv(d / "links_future.csv").set_index("name")
-    interconnectors = future[future["bus1"].str.startswith("Z")][["bus1", "p_nom"]]
+    # An interconnector crosses the GB boundary: it lands on a zone but starts outside one.
+    is_import = future["bus1"].str.startswith("Z") & ~future["bus0"].str.startswith("Z")
+    interconnectors = future[is_import][["bus1", "p_nom"]]
     demand = pd.read_parquet(d / "demand_2019_hourly.parquet")["gross_demand_mw"]
     caps = RenewableCaps.model_validate(
         yaml.safe_load((paths.config / "renewable_caps.yaml").read_text())

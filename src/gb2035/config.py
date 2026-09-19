@@ -32,6 +32,8 @@ class Settings(BaseModel):
     battery_hours: float = 2.0
     battery_round_trip_efficiency: float = Field(default=0.90, gt=0, le=1)
     battery_wear_cost_gbp_mwh: float = 0.09
+    pumped_hydro_hours: float = 8.0
+    pumped_hydro_round_trip_efficiency: float = Field(default=0.75, gt=0, le=1)
     solver_name: str = "highs"
     solver_options: dict[str, Any] = Field(default_factory=lambda: {"output_flag": False})
 
@@ -57,6 +59,7 @@ class SteelSettings(BaseModel):
     h2_dri_enabled: bool = False
     h2_dri_mt_steel: float = 3.0
     h2_kg_per_t: float = 51.0
+    h2_lhv_mwh_per_t: float = 33.33
     dri_electricity_mwh_per_t: float = 0.7
 
 
