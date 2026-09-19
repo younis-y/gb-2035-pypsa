@@ -1,0 +1,66 @@
+metric,pathway,value,unit,sheet,block
+consumer_demand_twh,Electric Engagement,407.788997,TWh,F.53,0
+consumer_demand_twh,Hydrogen Evolution,370.468875,TWh,F.53,0
+consumer_demand_twh,Holistic Transition,388.302774,TWh,F.53,0
+consumer_demand_twh,Falling Behind,341.25298100000003,TWh,F.53,0
+consumer_demand_twh,Ten Year Forecast,353.482889,TWh,F.53,0
+peak_demand_gw,Electric Engagement,82.042,GW,F.54,0
+peak_demand_gw,Hydrogen Evolution,76.889,GW,F.54,0
+peak_demand_gw,Holistic Transition,74.341,GW,F.54,0
+peak_demand_gw,Falling Behind,71.732,GW,F.54,0
+peak_demand_gw,Ten Year Forecast,71.914,GW,F.54,0
+offshore_wind_gw,Electric Engagement,67.51944999999999,GW,F.55,0
+offshore_wind_gw,Hydrogen Evolution,77.16595,GW,F.55,0
+offshore_wind_gw,Holistic Transition,86.14444999999999,GW,F.55,0
+offshore_wind_gw,Falling Behind,54.982949999999995,GW,F.55,0
+offshore_wind_gw,Ten Year Forecast,61.49295,GW,F.55,0
+onshore_wind_gw,Electric Engagement,38.5757606,GW,F.56,0
+onshore_wind_gw,Hydrogen Evolution,35.81481230000001,GW,F.56,0
+onshore_wind_gw,Holistic Transition,38.356430800000005,GW,F.56,0
+onshore_wind_gw,Falling Behind,31.8876398,GW,F.56,0
+onshore_wind_gw,Ten Year Forecast,37.2464421,GW,F.56,0
+solar_gw,Electric Engagement,62.070780000000006,GW,F.57,0
+solar_gw,Hydrogen Evolution,55.73713,GW,F.57,0
+solar_gw,Holistic Transition,61.80042,GW,F.57,0
+solar_gw,Falling Behind,41.31183,GW,F.57,0
+solar_gw,Ten Year Forecast,46.62353,GW,F.57,0
+battery_gw,Electric Engagement,32.597252000000005,GW,F.59,0
+battery_gw,Hydrogen Evolution,24.7584528,GW,F.59,0
+battery_gw,Holistic Transition,29.840201,GW,F.59,0
+battery_gw,Falling Behind,22.655804900000003,GW,F.59,0
+battery_gw,Ten Year Forecast,29.930651,GW,F.59,0
+ldes_gw,Electric Engagement,8.578094000000002,GW,F.60,0
+ldes_gw,Hydrogen Evolution,7.458094,GW,F.60,0
+ldes_gw,Holistic Transition,10.498094000000002,GW,F.60,0
+ldes_gw,Falling Behind,3.202194,GW,F.60,0
+ldes_gw,Ten Year Forecast,7.158094,GW,F.60,0
+interconnector_gw,Electric Engagement,20.6,GW,F.61,0
+interconnector_gw,Hydrogen Evolution,17.900000000000002,GW,F.61,0
+interconnector_gw,Holistic Transition,19.400000000000002,GW,F.61,0
+interconnector_gw,Falling Behind,12.950000000000001,GW,F.61,0
+interconnector_gw,Ten Year Forecast,16.9,GW,F.61,0
+nuclear_gw,Electric Engagement,5.51,GW,F.62,0
+nuclear_gw,Hydrogen Evolution,5.04,GW,F.62,0
+nuclear_gw,Holistic Transition,5.04,GW,F.62,0
+nuclear_gw,Falling Behind,4.57,GW,F.62,0
+nuclear_gw,Ten Year Forecast,4.57,GW,F.62,0
+hydrogen_generation_gw,Electric Engagement,0.99582475,GW,F.63,0
+hydrogen_generation_gw,Hydrogen Evolution,7.071530200000001,GW,F.63,0
+hydrogen_generation_gw,Holistic Transition,2.5673820000000003,GW,F.63,0
+hydrogen_generation_gw,Falling Behind,0.0,GW,F.63,0
+hydrogen_generation_gw,Ten Year Forecast,0.382,GW,F.63,0
+gas_ccus_gw,Electric Engagement,7.183,GW,F.63,1
+gas_ccus_gw,Hydrogen Evolution,9.449,GW,F.63,1
+gas_ccus_gw,Holistic Transition,8.093,GW,F.63,1
+gas_ccus_gw,Falling Behind,3.216,GW,F.63,1
+gas_ccus_gw,Ten Year Forecast,5.906,GW,F.63,1
+unabated_gas_gw,Electric Engagement,19.969364000000002,GW,F.64,0
+unabated_gas_gw,Hydrogen Evolution,23.833810000000003,GW,F.64,0
+unabated_gas_gw,Holistic Transition,14.727670000000002,GW,F.64,0
+unabated_gas_gw,Falling Behind,47.956753,GW,F.64,0
+unabated_gas_gw,Ten Year Forecast,32.378054999999996,GW,F.64,0
+industrial_h2_twh,Electric Engagement,5.14,TWh,F.51,0
+industrial_h2_twh,Hydrogen Evolution,29.76,TWh,F.51,0
+industrial_h2_twh,Holistic Transition,19.79,TWh,F.51,0
+industrial_h2_twh,Falling Behind,1.91,TWh,F.51,0
+industrial_h2_twh,Ten Year Forecast,9.88,TWh,F.51,0

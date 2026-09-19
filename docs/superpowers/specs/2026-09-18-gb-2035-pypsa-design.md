@@ -173,7 +173,7 @@ onshore wind, fixed offshore wind, CCGT, OCGT, gas CCS and hydrogen to power).
 | Target year, weather year | 2035, 2019 | | assumption: 2019 is a non-COVID year with a Zenodo cutout |
 | Annual zonal load, Holistic Transition | 388.3 x 1.07 = 415.5 | TWh | derived: FES 2025 F.53 consumer demand x transmission-and-distribution losses uplift; the uplift reconciles to FES DB.ED1 system demand net of electrolysis |
 | Annual zonal load, Electric Engagement | 407.8 x 1.07 = 436.3 | TWh | derived, same method |
-| Zonal demand split | population weights by zone | share | published: author population estimates per zone in `config/demand_weights.csv` (the PyPSA-GB `zone_definitions.csv` covers only 37 GSPs and leaves Z1_1, Z1_2, Z1_3, Z4 and Z10 without weight); FES 2025 GSP building blocks remain the stretch upgrade |
+| Zonal demand split | population weights by zone | share | assumption: author population estimates per zone in `config/demand_weights.csv` (the PyPSA-GB `zone_definitions.csv` covers only 37 GSPs and leaves Z1_1, Z1_2, Z1_3, Z4 and Z10 without weight); FES 2025 GSP building blocks remain the stretch upgrade |
 | Nuclear fleet 2035 | 5.0 (Hinkley Point C 3.26 at 51.209N 3.130W; Sizewell B 1.20 at 52.215N 1.620E) | GW | published: FES 2025 F.62 total; plant data EDF |
 | Interconnector capacity 2035 | 19.4, split by landing zone pro rata to `links_future.csv` | GW | published: FES 2025 F.61 (HT) |
 | Interconnector price, both directions | 65 | GBP/MWh | assumption: rounded 2024 GB day-ahead annual mean; single flat price, sensitivity in docs |
