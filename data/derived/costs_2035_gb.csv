@@ -1,0 +1,16 @@
+technology,capex_gbp,capex_basis,fom_gbp_per_yr,vom_gbp_per_mwh,efficiency,lifetime_yr,source
+onwind,1280000.0,MW,38400.0,1.47152,1.0,35.0,DESNZ EGC 2025 Annex A
+offwind,2570000.0,MW,138700.0,0.022695,1.0,30.0,DESNZ EGC 2025 Annex A
+solar,430000.0,MW,8800.0,0.0,1.0,38.0,DESNZ EGC 2025 Annex A
+nuclear,9184848.229999999,MW,116647.57252099998,3.7901499999999997,0.326,40.0,"PyPSA technology-data v0.15.0 'nuclear' (EUR/kW_e, currency year 2025.0) at 0.85 GBP/EUR"
+ccgt,1020000.0,MW,22900.0,5.0,0.54,25.0,DESNZ EGC 2025 Annex A
+ocgt,620000.0,MW,16400.0,5.0,0.35,25.0,DESNZ EGC 2025 Annex A
+battery_inverter,147743.94,MW,613.72832676,0.0,0.96,10.0,"PyPSA technology-data v0.15.0 'battery inverter' (EUR/kW, currency year 2025.0) at 0.85 GBP/EUR"
+battery_storage,134106.115,MWh,0.0,0.0,1.0,27.5,"PyPSA technology-data v0.15.0 'battery storage' (EUR/kWh, currency year 2025.0) at 0.85 GBP/EUR"
+electrolysis,1442791.4449999998,MW,57711.65779999999,0.0,0.6374,25.0,"PyPSA technology-data v0.15.0 'electrolysis' (EUR/kW_e, currency year 2025.0) at 0.85 GBP/EUR"
+h2_store,1988.83,MWh,0.0,0.0,1.0,100.0,"PyPSA technology-data v0.15.0 'hydrogen storage underground' (EUR/kWh, currency year 2025.0) at 0.85 GBP/EUR"
+hvdc_submarine,2626.5,MW-km,65.6625,0.0,1.0,40.0,"PyPSA technology-data v0.15.0 'HVDC submarine' (EUR/MW/km, currency year 2025.0) at 0.85 GBP/EUR"
+hvac_overhead,612.0,MW-km,9.18,0.0,1.0,40.0,"PyPSA technology-data v0.15.0 'HVAC overhead' (EUR/MW/km, currency year 2025.0) at 0.85 GBP/EUR"
+ccgt_existing,0.0,MW,22900.0,5.0,0.5,25.0,not used (no capex)
+gas_ccs,2220000.0,MW,35500.0,6.0,0.47,25.0,DESNZ EGC 2025 Annex A
+h2_ccgt,1270000.0,MW,21400.0,5.0,0.51,25.0,DESNZ EGC 2025 Annex A

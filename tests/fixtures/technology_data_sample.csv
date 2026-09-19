@@ -1,0 +1,43 @@
+technology,parameter,value,unit,source,further description,currency_year
+onwind,investment,1000,EUR/kW,test,,2025
+onwind,FOM,2.0,%/year,test,,2025
+onwind,VOM,1.0,EUR/MWh,test,,2025
+onwind,lifetime,30,years,test,,2025
+battery storage,investment,100,EUR/kWh,test,,2025
+battery storage,lifetime,20,years,test,,2025
+battery inverter,investment,200,EUR/kW,test,,2025
+battery inverter,FOM,1.0,%/year,test,,2025
+battery inverter,lifetime,10,years,test,,2025
+battery inverter,efficiency,0.96,per unit,test,,2025
+HVDC submarine,investment,3000,EUR/MW/km,test,,2025
+HVDC submarine,FOM,2.5,%/year,test,,2025
+HVDC submarine,lifetime,40,years,test,,2025
+electrolysis,investment,1500,EUR/kW_e,test,,2025
+electrolysis,FOM,4.0,%/year,test,,2025
+electrolysis,efficiency,0.64,per unit,test,,2025
+electrolysis,lifetime,25,years,test,,2025
+offwind,investment,2000,EUR/kW_e,test,,2025
+offwind,FOM,2.25,%/year,test,,2025
+offwind,lifetime,30,years,test,,2025
+solar-utility,investment,440,EUR/kW_e,test,,2025
+solar-utility,FOM,2.5,%/year,test,,2025
+solar-utility,lifetime,40,years,test,,2025
+CCGT,investment,1100,EUR/kW,test,,2025
+CCGT,FOM,3.3,%/year,test,,2025
+CCGT,VOM,5.5,EUR/MWh,test,,2025
+CCGT,efficiency,0.585,per unit,test,,2025
+CCGT,lifetime,25,years,test,,2025
+OCGT,investment,570,EUR/kW,test,,2025
+OCGT,FOM,1.8,%/year,test,,2025
+OCGT,VOM,6.0,EUR/MWh,test,,2025
+OCGT,efficiency,0.415,per unit,test,,2025
+OCGT,lifetime,25,years,test,,2025
+nuclear,investment,10800,EUR/kW,test,,2025
+nuclear,FOM,1.27,%/year,test,,2025
+nuclear,VOM,4.5,EUR/MWh,test,,2025
+nuclear,lifetime,40,years,test,,2025
+hydrogen storage underground,investment,2.34,EUR/kWh,test,,2025
+hydrogen storage underground,lifetime,100,years,test,,2025
+HVAC overhead,investment,720,EUR/MW/km,test,,2025
+HVAC overhead,FOM,1.5,%/year,test,,2025
+HVAC overhead,lifetime,40,years,test,,2025
