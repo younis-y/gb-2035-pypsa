@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import pandas as pd
 import pytest
 from typer.testing import CliRunner
 
@@ -43,6 +44,29 @@ def test_run_test_scenario_end_to_end(repo_root: Path, tmp_path: Path):
     r = runner.invoke(app, ["report", "--root", str(repo_root), "--results-dir", str(tmp_path)])
     assert r.exit_code == 0
     assert (tmp_path / "summary.csv").exists()
+
+    costs_before = pd.read_csv(out / "costs.csv")
+    total_before = float(costs_before.loc[costs_before["kind"] == "total", "gbp_per_yr"].iloc[0])
+    summary_before = pd.read_csv(out / "summary_row.csv")
+    bn_before = float(summary_before["total_cost_gbp_bn_per_yr"].iloc[0])
+
+    r = runner.invoke(
+        app,
+        ["extract", "--scenario", "test", "--root", str(repo_root), "--results-dir", str(tmp_path)],
+    )
+    assert r.exit_code == 0, r.stdout
+    costs_after = pd.read_csv(out / "costs.csv")
+    total_after = float(costs_after.loc[costs_after["kind"] == "total", "gbp_per_yr"].iloc[0])
+    summary_after = pd.read_csv(out / "summary_row.csv")
+    bn_after = float(summary_after["total_cost_gbp_bn_per_yr"].iloc[0])
+    assert total_after == pytest.approx(total_before, rel=1e-9)
+    assert bn_after == pytest.approx(bn_before, rel=1e-9)
+
+
+def test_version_accepts_root(repo_root: Path):
+    r = runner.invoke(app, ["version", "--root", str(repo_root)])
+    assert r.exit_code == 0
+    assert "0.1.0" in r.stdout
 
 
 def test_unknown_scenario_fails_cleanly(repo_root: Path, tmp_path: Path):

@@ -87,8 +87,12 @@ markers = [
 # battery-reproduction test uses that API verbatim, so ignore pulp's own deprecation noise.
 # xarray's netCDF4 backend assigns into an ndarray's `.shape` when writing/reading `.nc` files,
 # a pattern NumPy 2.5 deprecates; nothing in this project can act on it upstream.
+# xarray probes every optional backend (including cfgrib, for GRIB files this project never
+# reads) when it first opens a `.nc` file; the runner has no system ecCodes library, so the probe
+# warns. Nothing in this project can act on it.
 filterwarnings = [
     "ignore:pandas infers the `str` dtype for string data:FutureWarning",
     "ignore::DeprecationWarning:pulp",
     "ignore:Setting the shape on a NumPy array has been deprecated:DeprecationWarning",
+    "ignore:Engine 'cfgrib' loading failed:RuntimeWarning",
 ]

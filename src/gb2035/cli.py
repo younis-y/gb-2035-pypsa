@@ -70,12 +70,12 @@ def _git_sha(root: Path) -> str:
 
 
 @app.callback()
-def _version_callback() -> None:
+def _app_callback() -> None:
     """gb2035 command line."""
 
 
 @app.command()
-def version() -> None:
+def version(root: RootOpt = Path()) -> None:
     console.print(__version__)
 
 
