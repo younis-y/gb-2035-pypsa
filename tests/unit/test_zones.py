@@ -55,6 +55,13 @@ def test_nearest_zone_for_offshore_point(zones):
     assert nearest_zone(df, "lon", "lat", "EPSG:4326", zones).iloc[0] in {"Z8", "Z12", "Z7"}
 
 
+def test_nearest_zone_respects_max_distance(zones):
+    far = pd.DataFrame({"lon": [3.0], "lat": [56.5]})
+    assert pd.notna(nearest_zone(far, "lon", "lat", "EPSG:4326", zones).iloc[0])
+    bounded = nearest_zone(far, "lon", "lat", "EPSG:4326", zones, max_distance_m=5_000.0)
+    assert pd.isna(bounded.iloc[0])
+
+
 def test_land_areas(zones):
     area = zone_land_area_km2(zones)
     assert set(area.index) == set(LAND_ZONES)

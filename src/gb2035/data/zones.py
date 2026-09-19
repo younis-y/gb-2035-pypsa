@@ -103,11 +103,17 @@ def nearest_zone(
     crs: str,
     zones: gpd.GeoDataFrame,
     kinds: tuple[str, ...] = ("land",),
+    max_distance_m: float | None = None,
 ) -> pd.Series:
-    """Nearest zone of the requested kinds, measured in EPSG:27700 metres."""
+    """Nearest zone of the requested kinds, measured in EPSG:27700 metres.
+
+    With the default ``max_distance_m=None`` every point gets a nearest zone,
+    however far away. Passing a bound returns NaN for points further than that
+    from every requested-kind polygon.
+    """
     polys = zones[zones["kind"].isin(kinds)].to_crs(OSGB)
     pts = _points(df, x_col, y_col, crs, OSGB)
-    joined = gpd.sjoin_nearest(pts, polys[["geometry"]], how="left")
+    joined = gpd.sjoin_nearest(pts, polys[["geometry"]], how="left", max_distance=max_distance_m)
     joined = joined[~joined.index.duplicated(keep="first")]
     result: pd.Series = joined["zone"].reindex(df.index).astype(object)
     return result

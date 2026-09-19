@@ -11,6 +11,10 @@ import pandas as pd
 from gb2035.data.zones import assign_zone, nearest_zone
 
 THERMAL_TYPES: dict[str, str] = {"CCGT": "ccgt", "OCGT": "ocgt"}
+# Coastline generalisation misses are sub-kilometre (Hinkley Point C is 372m outside its
+# polygon); Northern Ireland is about 40km from the nearest GB zone. 5km snaps the former
+# without ever absorbing a genuinely wrong or non-GB coordinate.
+COASTAL_SNAP_M = 5_000.0
 
 
 def _read_stations(path: Path) -> pd.DataFrame:
@@ -21,6 +25,10 @@ def _read_stations(path: Path) -> pd.DataFrame:
         .astype(str)
         .str.replace("\xa0", " ", regex=False)
         .str.split(",", expand=True)
+        # a header-only (zero-row) file splits to zero float64 columns; restore the two
+        # string columns .str.strip() below needs.
+        .reindex(columns=range(2))
+        .astype(object)
     )
     df["lat"] = pd.to_numeric(geo[0].str.strip(), errors="coerce")
     df["lon"] = pd.to_numeric(geo[1].str.strip(), errors="coerce")
@@ -49,7 +57,7 @@ def build_fleet_by_zone(
     missing = plants["zone"].isna()
     if missing.any():
         plants.loc[missing, "zone"] = nearest_zone(
-            plants.loc[missing], "lon", "lat", "EPSG:4326", zones
+            plants.loc[missing], "lon", "lat", "EPSG:4326", zones, max_distance_m=COASTAL_SNAP_M
         )
     unassigned = plants.loc[plants["zone"].isna(), "p_nom_mw"].sum()
     if unassigned > 0.02 * plants["p_nom_mw"].sum():

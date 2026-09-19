@@ -27,6 +27,33 @@ def test_fixture_fleet(fixtures_dir: Path, repo_root: Path, zones):
     assert set(fleet.columns) == {"zone", "technology", "p_nom_mw"}
 
 
+STATIONS_HEADER = (
+    "Company Name,Station Name,Fuel,Type,Installed Capacity (MW),"
+    'Year of commission or year generation began,"Location:\n'
+    'Scotland, Wales, Northern Ireland or English region",Geolocation\n'
+)
+
+
+def test_far_offshore_plant_trips_guard(tmp_path: Path, repo_root: Path, zones):
+    stations = tmp_path / "stations_far_offshore.csv"
+    stations.write_text(
+        STATIONS_HEADER
+        + 'Uniper,Connahs Quay,Natural Gas,CCGT,1380,1996,Wales,"53.231, -3.081"\n'
+        + 'Test,Offshore Rig,Natural Gas,CCGT,5000,2020,North Sea,"56.5, 3.0"\n',
+        encoding="latin-1",
+    )
+    with pytest.raises(ValueError, match="outside every zone"):
+        build_fleet_by_zone(stations, repo_root / "config" / "committed_plants.csv", zones)
+
+
+def test_coastal_near_miss_is_snapped(tmp_path: Path, repo_root: Path, zones):
+    stations = tmp_path / "stations_empty.csv"
+    stations.write_text(STATIONS_HEADER, encoding="latin-1")
+    fleet = build_fleet_by_zone(stations, repo_root / "config" / "committed_plants.csv", zones)
+    totals = fleet.groupby("technology")["p_nom_mw"].sum()
+    assert totals["nuclear"] == 3260.0 + 1198.0
+
+
 @pytest.mark.slow
 def test_real_fleet_totals(repo_root: Path, zones):
     raw = repo_root / "data" / "raw" / "power_stations_locations.csv"
