@@ -40,12 +40,26 @@ ResultsOpt = Annotated[
 ScenarioOpt = Annotated[
     str, typer.Option("--scenario", help="Scenario name from config/scenarios.yaml.")
 ]
+ResolutionHoursOpt = Annotated[
+    int | None,
+    typer.Option(
+        "--resolution-hours",
+        help="Override settings.resolution_hours (e.g. 3 for 3-hourly snapshots).",
+    ),
+]
 
 
 def _ctx(root: Path, results_dir: Path | None) -> tuple[ProjectPaths, Settings, Path]:
     paths = ProjectPaths(root.resolve())
     settings = load_settings(paths.config / "settings.yaml")
     return paths, settings, (results_dir or paths.results).resolve()
+
+
+def _with_resolution(settings: Settings, resolution_hours: int | None) -> Settings:
+    """Override `settings.resolution_hours`, or return `settings` unchanged when not given."""
+    if resolution_hours is None:
+        return settings
+    return settings.model_copy(update={"resolution_hours": resolution_hours})
 
 
 def _scenario(paths: ProjectPaths, name: str) -> Scenario:
@@ -179,10 +193,14 @@ def _build(paths: ProjectPaths, settings: Settings, scenario: Scenario) -> pypsa
 
 @app.command("build-network")
 def build_network_cmd(
-    scenario: ScenarioOpt, root: RootOpt = Path(), results_dir: ResultsOpt = None
+    scenario: ScenarioOpt,
+    root: RootOpt = Path(),
+    results_dir: ResultsOpt = None,
+    resolution_hours: ResolutionHoursOpt = None,
 ) -> None:
     """Build and save the unsolved network."""
     paths, settings, results = _ctx(root, results_dir)
+    settings = _with_resolution(settings, resolution_hours)
     sc = _scenario(paths, scenario)
     n = _build(paths, settings, sc)
     out = results / sc.name
@@ -208,6 +226,7 @@ def _run(paths: ProjectPaths, settings: Settings, sc: Scenario, results: Path) -
         "pypsa_version": pypsa.__version__,
         "solve_seconds": round(seconds, 1),
         "snapshots": len(n.snapshots),
+        "resolution_hours": settings.resolution_hours,
         "total_cost_gbp_per_yr": result.total_cost_gbp_per_yr,
         "lp_objective_gbp_per_yr": result.lp_objective_gbp_per_yr,
         "fixed_asset_cost_gbp_per_yr": result.fixed_asset_cost_gbp_per_yr,
@@ -221,17 +240,27 @@ def _run(paths: ProjectPaths, settings: Settings, sc: Scenario, results: Path) -
 
 @app.command("solve")
 def solve_cmd(
-    scenario: ScenarioOpt, root: RootOpt = Path(), results_dir: ResultsOpt = None
+    scenario: ScenarioOpt,
+    root: RootOpt = Path(),
+    results_dir: ResultsOpt = None,
+    resolution_hours: ResolutionHoursOpt = None,
 ) -> None:
     """Build, solve and extract (alias of run)."""
     paths, settings, results = _ctx(root, results_dir)
+    settings = _with_resolution(settings, resolution_hours)
     _run(paths, settings, _scenario(paths, scenario), results)
 
 
 @app.command("run")
-def run_cmd(scenario: ScenarioOpt, root: RootOpt = Path(), results_dir: ResultsOpt = None) -> None:
+def run_cmd(
+    scenario: ScenarioOpt,
+    root: RootOpt = Path(),
+    results_dir: ResultsOpt = None,
+    resolution_hours: ResolutionHoursOpt = None,
+) -> None:
     """Build, solve and extract one scenario."""
     paths, settings, results = _ctx(root, results_dir)
+    settings = _with_resolution(settings, resolution_hours)
     _run(paths, settings, _scenario(paths, scenario), results)
 
 
@@ -263,8 +292,30 @@ def extract_cmd(
 
 
 @app.command("report")
-def report_cmd(root: RootOpt = Path(), results_dir: ResultsOpt = None) -> None:
-    """Write results/summary.csv across every solved scenario."""
-    _, _, results = _ctx(root, results_dir)
+def report_cmd(
+    root: RootOpt = Path(),
+    results_dir: ResultsOpt = None,
+    update_readme_block: Annotated[bool, typer.Option("--update-readme")] = False,
+) -> None:
+    """Write results/summary.csv, README figures under docs/figures, and optionally the README
+    table."""
+    from gb2035.data.fes import load_fes
+    from gb2035.report.figures import make_figures
+    from gb2035.report.readme import summary_markdown, update_readme
+    from gb2035.results.summary import summarise
+
+    paths, _, results = _ctx(root, results_dir)
     path = write_summary(results)
+    summary = summarise(results)
     console.print(f"summary -> {path}")
+    if len(summary) and (results / "cap5").exists():
+        figs = make_figures(
+            summary,
+            results,
+            load_fes(paths.data_derived / "fes2025_gb_2035.csv"),
+            paths.root / "docs" / "figures",
+        )
+        console.print(f"{len(figs)} figures -> docs/figures")
+    if update_readme_block:
+        update_readme(paths.root / "README.md", summary_markdown(summary))
+        console.print("README summary block updated")

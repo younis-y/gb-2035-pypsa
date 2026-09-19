@@ -69,6 +69,27 @@ def test_version_accepts_root(repo_root: Path):
     assert "0.1.0" in r.stdout
 
 
+def test_run_accepts_resolution_hours(repo_root: Path, tmp_path: Path):
+    r = runner.invoke(
+        app,
+        [
+            "run",
+            "--scenario",
+            "test",
+            "--resolution-hours",
+            "3",
+            "--root",
+            str(repo_root),
+            "--results-dir",
+            str(tmp_path),
+        ],
+    )
+    assert r.exit_code == 0, r.stdout
+    meta = json.loads((tmp_path / "test" / "run_meta.json").read_text())
+    assert meta["snapshots"] == 56
+    assert meta["resolution_hours"] == 3
+
+
 def test_unknown_scenario_fails_cleanly(repo_root: Path, tmp_path: Path):
     r = runner.invoke(
         app, ["run", "--scenario", "nope", "--root", str(repo_root), "--results-dir", str(tmp_path)]
