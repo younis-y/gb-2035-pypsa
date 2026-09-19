@@ -1,0 +1,68 @@
+"""Solve a network with HiGHS and report status."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any, cast
+
+import pypsa
+
+from gb2035.config import Settings
+
+
+class SolveError(RuntimeError):
+    """The solver did not return an optimal solution."""
+
+
+def fixed_asset_cost_gbp_per_yr(n: pypsa.Network) -> float:
+    """Annual fixed cost of capacity the LP never prices.
+
+    PyPSA puts `capital_cost` in the objective only for extendable components, so the fixed O&M
+    carried by sunk `*_existing` units is real money the objective cannot see. Add it back.
+    """
+    total = 0.0
+    for df, nom in (
+        (n.generators, "p_nom"),
+        (n.storage_units, "p_nom"),
+        (n.links, "p_nom"),
+        (n.stores, "e_nom"),
+    ):
+        fixed = df[~df[f"{nom}_extendable"]]
+        total += float(cast(Any, (fixed["capital_cost"] * fixed[nom]).sum()))
+    return total
+
+
+@dataclass(frozen=True)
+class SolveResult:
+    status: str
+    condition: str
+    objective: float
+    objective_constant: float
+    fixed_asset_cost_gbp_per_yr: float
+
+    @property
+    def lp_objective_gbp_per_yr(self) -> float:
+        return self.objective + self.objective_constant
+
+    @property
+    def total_cost_gbp_per_yr(self) -> float:
+        return self.lp_objective_gbp_per_yr + self.fixed_asset_cost_gbp_per_yr
+
+
+def solve(n: pypsa.Network, settings: Settings) -> SolveResult:
+    status, condition = n.optimize(
+        solver_name=settings.solver_name,
+        solver_options=dict(settings.solver_options),
+        include_objective_constant=False,
+    )
+    if status != "ok" or condition != "optimal":
+        msg = f"solve failed: status={status} condition={condition}"
+        raise SolveError(msg)
+    constant = float(getattr(n, "objective_constant", 0.0) or 0.0)
+    return SolveResult(
+        status=str(status),
+        condition=str(condition),
+        objective=float(cast(Any, n.objective)),
+        objective_constant=constant,
+        fixed_asset_cost_gbp_per_yr=fixed_asset_cost_gbp_per_yr(n),
+    )
