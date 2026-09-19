@@ -105,7 +105,13 @@ def capacity_mix_by_cap(summary: pd.DataFrame, out: Path) -> Path:
 
 
 def cost_and_shadow_price(summary: pd.DataFrame, out: Path) -> Path:
-    df = _caps(summary)
+    """Cost and CO2 dual against realised emissions.
+
+    Sorted by emissions, not by cap: `uncapped` is not a cap at all and lands at about 4.6 Mt,
+    between `cap5` and `cap2`, so plotting the series in `CAP_ORDER` made the line double back
+    on itself.
+    """
+    df = _caps(summary).sort_values("emissions_mt", ascending=False)
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(10, 4))
     a1.plot(df["emissions_mt"], df["total_cost_gbp_bn_per_yr"], marker="o", color=BLUE)
     a1.set_xlabel("Emissions (MtCO2/yr)")

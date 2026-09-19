@@ -118,7 +118,10 @@ def test_repo_config_files_load(repo_root: Path):
     assert settings.target_year == 2035
     assumptions = load_assumptions(repo_root / "config" / "assumptions.yaml")
     assert all(a.source for a in assumptions.values())
-    assert SteelSettings().h2_lhv_mwh_per_t == assumptions["h2_lhv_mwh_per_t"].value
+    steel = SteelSettings()
+    assert steel.h2_lhv_mwh_per_t == assumptions["h2_lhv_mwh_per_t"].value
+    assert steel.dri_electricity_mwh_per_t == assumptions["dri_electricity_mwh_per_t"].value
+    assert steel.h2_dri_mt_steel == assumptions["h2_dri_mt_steel"].value
     names = list_scenarios(repo_root / "config" / "scenarios.yaml")
     for required in [
         "test",

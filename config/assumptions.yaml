@@ -159,6 +159,16 @@ h2_dri_kg_per_t:
   unit: kg H2 per t steel
   source: "Vogl, Ahman and Nilsson 2018, Journal of Cleaner Production 203"
   confidence: published
+dri_electricity_mwh_per_t:
+  value: 0.7
+  unit: MWh per t steel
+  source: "Vogl, Ahman and Nilsson 2018: hydrogen-DRI-EAF electricity excluding electrolysis"
+  confidence: published
+h2_dri_mt_steel:
+  value: 3.0
+  unit: Mt per year
+  source: "Tata Steel Port Talbot EAF nameplate 3 Mt/yr, used as the hydrogen-DRI sensitivity tonnage"
+  confidence: assumption
 pumped_hydro_hours:
   value: 8.0
   unit: hours
