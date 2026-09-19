@@ -17,8 +17,11 @@ class SolveError(RuntimeError):
 def fixed_asset_cost_gbp_per_yr(n: pypsa.Network) -> float:
     """Annual fixed cost of capacity the LP never prices.
 
-    PyPSA puts `capital_cost` in the objective only for extendable components, so the fixed O&M
-    carried by sunk `*_existing` units is real money the objective cannot see. Add it back.
+    PyPSA puts `capital_cost` in the objective only for extendable components, so any cost carried
+    by a fixed one is real money the objective cannot see. This sums `capital_cost x capacity` over
+    every non-extendable Generator, StorageUnit, Link and Store. Today only the `*_existing` units
+    contribute: pre-existing nuclear, pumped hydro and the interconnectors are fixed too, but were
+    given no capital cost, and so add nothing.
     """
     total = 0.0
     for df, nom in (
