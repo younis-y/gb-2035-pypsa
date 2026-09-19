@@ -46,6 +46,27 @@ def test_build_costs_converts_and_overrides(fixtures_dir: Path, tmp_path: Path):
     assert "DESNZ" in c.loc["gas_ccs", "source"]
 
 
+def test_sources_accumulate_across_overrides(fixtures_dir: Path, tmp_path: Path):
+    overrides = tmp_path / "ov.csv"
+    overrides.write_text(
+        "technology,parameter,value,unit,source\n"
+        "onwind,capex_gbp,1280000,GBP/MW,DESNZ capex\n"
+        "onwind,lifetime_yr,35,years,DESNZ lifetime\n"
+        "ccgt_existing,fom_gbp_per_yr,22900,GBP/MW/yr,DESNZ fixed costs\n"
+        "ccgt_existing,lifetime_yr,25,years,not used (no capex)\n"
+    )
+    c = build_costs(fixtures_dir / "technology_data_sample.csv", overrides, eur_to_gbp=0.85)
+    assert "PyPSA technology-data" in c.loc["onwind", "source"]
+    assert (
+        "DESNZ capex" in c.loc["onwind", "source"] and "DESNZ lifetime" in c.loc["onwind", "source"]
+    )
+    assert "DESNZ fixed costs" in c.loc["ccgt_existing", "source"]
+    assert (
+        "currency year 2025 " in c.loc["onwind", "source"]
+        or "currency year 2025)" in c.loc["onwind", "source"]
+    )
+
+
 def test_capital_cost_helpers(fixtures_dir: Path, tmp_path: Path):
     overrides = tmp_path / "ov.csv"
     overrides.write_text("technology,parameter,value,unit,source\n")
@@ -81,3 +102,5 @@ def test_committed_costs_table(repo_root: Path):
     assert c.loc["electrolysis", "capex_gbp"] == pytest.approx(1697.4017 * 1000 * 0.85, rel=1e-4)
     assert c.loc["h2_store", "capex_gbp"] == pytest.approx(2.3398 * 1000 * 0.85, rel=1e-3)
     assert (c["source"].str.len() > 0).all()
+    assert "DESNZ" in c.loc["ccgt_existing", "source"]
+    assert "technology-data" in c.loc["onwind", "source"]

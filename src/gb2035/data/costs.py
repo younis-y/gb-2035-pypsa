@@ -72,7 +72,7 @@ def _from_technology_data(td: pd.DataFrame, name: str, eur_to_gbp: float) -> dic
         else 25.0,
         "source": (
             f"PyPSA technology-data v0.15.0 '{name}' ({inv['unit']}, "
-            f"currency year {inv['currency_year']}) at {eur_to_gbp} GBP/EUR"
+            f"currency year {int(cast(Any, inv['currency_year']))}) at {eur_to_gbp} GBP/EUR"
         ),
     }
 
@@ -103,7 +103,10 @@ def build_costs(technology_data_csv: Path, overrides_csv: Path, eur_to_gbp: floa
             msg = f"override parameter {parameter!r} not allowed"
             raise KeyError(msg)
         rows[technology][parameter] = float(cast(Any, rec.value))
-        rows[technology]["source"] = str(rec.source)
+        prior = str(rows[technology]["source"])
+        new = str(rec.source)
+        if new and new not in prior:
+            rows[technology]["source"] = f"{prior}; {new}" if prior else new
     out = pd.DataFrame.from_dict(rows, orient="index")[COLUMNS]
     out.index.name = "technology"
     return out
