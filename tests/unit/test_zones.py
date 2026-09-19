@@ -15,7 +15,7 @@ from gb2035.data.zones import (
 )
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def zones(repo_root: Path):
     return load_zones(repo_root / "data" / "derived" / "zones.geojson")
 
