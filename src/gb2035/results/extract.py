@@ -230,17 +230,34 @@ def duals(n: pypsa.Network) -> pd.DataFrame:
 
 
 def flows(n: pypsa.Network) -> pd.DataFrame:
+    """One row per inter-zone corridor: sunk capacity, new build, and the flow over both.
+
+    Under `transmission_expandable` a corridor is two parallel links, the fixed `{name}` and the
+    extendable `{name} new`. They are one route, so their capacities add and their flows sum
+    before utilisation is measured against the total.
+    """
     w = _weights(n)
+    tx = n.links[n.links["carrier"].isin(["AC", "DC"])]
     rows: list[dict[str, Any]] = []
-    for name, link in n.links[n.links["carrier"].isin(["AC", "DC"])].iterrows():
-        p = n.links_t.p0[name]
-        cap = float(link["p_nom_opt"]) if link["p_nom_extendable"] else float(link["p_nom"])
+    for name in (c for c in tx.index if not str(c).endswith(" new")):
+        link = tx.loc[name]
+        members = [name]
+        new_mw = 0.0
+        expansion = f"{name} new"
+        if expansion in tx.index:
+            members.append(expansion)
+            new_mw = float(tx.at[expansion, "p_nom_opt"])
+        existing_mw = float(link["p_nom"])
+        cap = existing_mw + new_mw
+        p = n.links_t.p0[members].sum(axis=1)
         rows.append(
             {
                 "link": name,
                 "bus0": link["bus0"],
                 "bus1": link["bus1"],
-                "p_nom_opt_mw": cap,
+                "p_nom_existing_mw": existing_mw,
+                "p_nom_new_mw": new_mw,
+                "p_nom_total_mw": cap,
                 "twh_forward": float((p.clip(lower=0) * w).sum()) / MWH_PER_TWH,
                 "twh_reverse": float((-p.clip(upper=0) * w).sum()) / MWH_PER_TWH,
                 "max_utilisation": float(p.abs().max() / cap) if cap > 0 else 0.0,
@@ -351,6 +368,8 @@ def summary_row(n: pypsa.Network, scenario_name: str, solve: SolveResult) -> pd.
     new_gw = cap[~cap["existing"]].groupby("carrier")["p_nom_opt"].sum() / 1e3
     curt = curtailment(n)
     em = emissions(n).set_index("carrier")["mt_co2"]
+    # The export row is negative, so adding the two gives GB's net position on the wires.
+    twh = energy(n).groupby("carrier")["twh"].sum()
     h2 = hydrogen(n)
     green = float(h2[(h2["node"] == "Teesside") & (h2["metric"] == "green_h2_twh")]["value"].sum())
     blue = float(h2[(h2["node"] == "Teesside") & (h2["metric"] == "blue_h2_twh")]["value"].sum())
@@ -361,6 +380,7 @@ def summary_row(n: pypsa.Network, scenario_name: str, solve: SolveResult) -> pd.
         "fixed_asset_cost_gbp_bn_per_yr": solve.fixed_asset_cost_gbp_per_yr / 1e9,
         "shadow_carbon_price_gbp_per_t": shadow_carbon_price(n),
         "emissions_mt": float(em.get("total", 0.0)),
+        "net_imports_twh": float(twh.get("import", 0.0)) + float(twh.get("export", 0.0)),
         "onwind_gw": float(gen_gw.get("onwind", 0.0)),
         "offwind_gw": float(gen_gw.get("offwind", 0.0)),
         "solar_gw": float(gen_gw.get("solar", 0.0)),

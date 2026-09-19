@@ -9,10 +9,15 @@ interconnector_total_gw:
   unit: GW
   source: "FES 2025 Data Workbook V006, sheet F.61, Holistic Transition 2035"
   confidence: published
-interconnector_price_gbp_mwh:
+interconnector_import_price_gbp_mwh:
   value: 65.0
   unit: GBP/MWh
   source: "Author assumption: rounded 2024 GB day-ahead annual mean (Elexon MID APX series)"
+  confidence: assumption
+interconnector_export_price_gbp_mwh:
+  value: 45.0
+  unit: GBP/MWh
+  source: "Author assumption: GB renewable surplus coincides with neighbours' surplus, so exports clear below the import price; 45 sits at about 70 percent of the 65 GBP/MWh import assumption"
   confidence: assumption
 interconnector_price_sensitivity_gbp_mwh:
   value: 100.0

@@ -14,7 +14,9 @@ from gb2035.results.extract import (
     dispatch_hourly,
     energy,
     extract_all,
+    flows,
     shadow_carbon_price,
+    summary_row,
     write_results,
 )
 
@@ -70,7 +72,7 @@ def test_cap_binds_and_dual_positive(solved):
 def test_capacities_flag_every_sunk_unit(solved):
     n, *_ = solved
     caps = capacities(n)
-    for carrier in ("import", "nuclear", "pumped_hydro", "AC", "DC"):
+    for carrier in ("import", "export", "nuclear", "pumped_hydro", "AC", "DC"):
         rows = caps[caps["carrier"] == carrier]
         assert not rows.empty and rows["existing"].all(), f"{carrier} is fixed, not new build"
     retiring = caps[caps["name"].str.startswith("ccgt_existing")]
@@ -86,6 +88,70 @@ def test_energy_rows_state_their_commodity(solved):
     assert table.at["onwind", "bus_carrier"] == "AC"
     assert table.at["h2_turbine", "bus_carrier"] == "AC"
     assert table.at["electrolysis", "twh"] <= 0, "electrolysis draws power, it does not supply it"
+
+
+def test_interconnector_trade_is_asymmetric_and_nets_out(solved):
+    """Imports and exports are separate one-way generators, and the summary nets them.
+
+    A single `p_min_pu = -1` generator let exports earn the import price, which paid for 105 GW
+    of solar built to sell abroad. Imports may only flow in, exports only out, and the export
+    row is a negative AC injection that `net_imports_twh` carries with its sign.
+    """
+    n, result, scenario = solved
+    table = energy(n).set_index("carrier")
+    assert table.at["import", "twh"] >= 0, "the import leg may only flow into GB"
+    assert table.at["export", "twh"] <= 0, "the export leg may only flow out of GB"
+    assert table.at["export", "bus_carrier"] == "AC"
+    imports = n.generators_t.p[n.generators.index[n.generators["carrier"] == "import"]]
+    exports = n.generators_t.p[n.generators.index[n.generators["carrier"] == "export"]]
+    assert (imports >= -1e-6).all().all() and (exports <= 1e-6).all().all()
+    row = summary_row(n, scenario.name, result).iloc[0]
+    assert row["net_imports_twh"] == pytest.approx(
+        float(table.at["import", "twh"]) + float(table.at["export", "twh"])
+    )
+    hourly = dispatch_hourly(n)
+    assert "export" in hourly.columns and (hourly["export"] <= 1e-6).all()
+
+
+def test_expansion_is_never_dearer_than_the_fixed_grid(repo_root: Path):
+    """Transmission expansion is optional, so it cannot raise the cost of the fixed grid.
+
+    Setting every `* new` link to zero reproduces the fixed network exactly, so the expansion
+    LP minimises over a superset and its objective must be no higher. Charging capex on the
+    existing 198 GW broke that: `cap5_tx_expansion` came out 3.3 bn GBP/yr dearer than `cap5`
+    with an identical CO2 dual. Both are solved over the `test` week with its simplex options.
+    """
+    paths = ProjectPaths(repo_root)
+    settings = load_settings(paths.config / "settings.yaml")
+    inputs = load_inputs(paths)
+    test_scenario = load_scenario("test", paths.config / "scenarios.yaml")
+    window = {
+        "snapshots": test_scenario.snapshots,
+        "solver_options": test_scenario.solver_options,
+    }
+    solved_pair = {}
+    for name in ("cap5", "cap5_tx_expansion"):
+        scenario = load_scenario(name, paths.config / "scenarios.yaml").model_copy(update=window)
+        n = build_network(inputs, scenario, settings)
+        assert len(n.snapshots) == 168, "both must span the same one-week window"
+        solved_pair[name] = (n, solve(n, settings, scenario))
+    fixed_lp = solved_pair["cap5"][1].lp_objective_gbp_per_yr
+    expansion_lp = solved_pair["cap5_tx_expansion"][1].lp_objective_gbp_per_yr
+    assert expansion_lp <= fixed_lp * (1 + 1e-6), (
+        f"expansion {expansion_lp:,.0f} must not exceed fixed {fixed_lp:,.0f} GBP/yr"
+    )
+    # One row per corridor whatever the scenario, with the split spelled out.
+    fixed_flows = flows(solved_pair["cap5"][0])
+    expansion_flows = flows(solved_pair["cap5_tx_expansion"][0])
+    assert len(fixed_flows) == 31 and len(expansion_flows) == 31
+    assert (fixed_flows["p_nom_new_mw"] == 0).all(), "a fixed grid can build nothing"
+    assert fixed_flows["p_nom_existing_mw"].tolist() == pytest.approx(
+        expansion_flows["p_nom_existing_mw"].tolist()
+    )
+    assert expansion_flows["p_nom_total_mw"].tolist() == pytest.approx(
+        (expansion_flows["p_nom_existing_mw"] + expansion_flows["p_nom_new_mw"]).tolist()
+    )
+    assert (expansion_flows["max_utilisation"] <= 1.0 + 1e-6).all()
 
 
 def test_dispatch_hourly_balances(solved):

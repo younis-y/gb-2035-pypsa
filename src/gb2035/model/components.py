@@ -55,6 +55,7 @@ def add_carriers(n: pypsa.Network, scenario: Scenario, settings: Settings) -> No
         "battery": 0.0,
         "pumped_hydro": 0.0,
         "import": 0.0,
+        "export": 0.0,
         "electrolysis": 0.0,
         "h2_store": 0.0,
         "blue_h2": scenario.hydrogen.blue_h2_co2_t_per_mwh,
@@ -74,28 +75,30 @@ def add_buses(n: pypsa.Network, inputs: ModelInputs) -> None:
     )
 
 
+def _link_expansion_cost_per_mw_yr(
+    inputs: ModelInputs, name: str, carrier: str, discount_rate: float
+) -> float:
+    """Annuitised capex plus FOM for one megawatt of new capacity along a corridor."""
+    km = inputs.link_distance_km.get(name, 100.0)
+    tech = "hvdc_submarine" if carrier == "DC" else "hvac_overhead"
+    c = inputs.costs.loc[tech]
+    return (
+        annuity(discount_rate, float(cast(Any, c["lifetime_yr"])))
+        * float(cast(Any, c["capex_gbp"]))
+        + float(cast(Any, c["fom_gbp_per_yr"]))
+    ) * km
+
+
 def add_links(
     n: pypsa.Network, inputs: ModelInputs, scenario: Scenario, settings: Settings
 ) -> None:
+    """The built grid, plus a parallel `* new` link per corridor when expansion is allowed.
+
+    The existing capacity is sunk, so it is fixed and free of capital cost in every scenario.
+    Making it extendable with `p_nom_min = p_nom` instead would have PyPSA charge
+    `capital_cost x p_nom_opt`, pricing all 198 GW of today's grid as if it were new build.
+    """
     links = inputs.links
-    kwargs: dict[str, Any] = {}
-    if scenario.transmission_expandable:
-        costs: list[float] = []
-        for name, row in links.iterrows():
-            km = inputs.link_distance_km.get(str(name), 100.0)
-            tech = "hvdc_submarine" if row["carrier"] == "DC" else "hvac_overhead"
-            c = inputs.costs.loc[tech]
-            per_mw_yr = (
-                annuity(settings.discount_rate, float(cast(Any, c["lifetime_yr"])))
-                * float(cast(Any, c["capex_gbp"]))
-                + float(cast(Any, c["fom_gbp_per_yr"]))
-            ) * km
-            costs.append(per_mw_yr)
-        kwargs = {
-            "p_nom_extendable": True,
-            "p_nom_min": links["p_nom"].tolist(),
-            "capital_cost": costs,
-        }
     n.add(
         "Link",
         links.index.tolist(),
@@ -105,29 +108,71 @@ def add_links(
         p_nom=links["p_nom"].tolist(),
         p_min_pu=-1.0,
         efficiency=1.0,
-        **kwargs,
+    )
+    if not scenario.transmission_expandable:
+        return
+    n.add(
+        "Link",
+        [f"{name} new" for name in links.index],
+        bus0=links["bus0"].tolist(),
+        bus1=links["bus1"].tolist(),
+        carrier=links["carrier"].tolist(),
+        p_nom=0.0,
+        p_nom_extendable=True,
+        p_min_pu=-1.0,
+        efficiency=1.0,
+        capital_cost=[
+            _link_expansion_cost_per_mw_yr(
+                inputs, str(name), str(row["carrier"]), settings.discount_rate
+            )
+            for name, row in links.iterrows()
+        ],
     )
 
 
 def add_interconnectors(
     n: pypsa.Network, inputs: ModelInputs, scenario: Scenario, settings: Settings
 ) -> None:
+    """One import and one export generator per interconnector, priced apart.
+
+    A single generator with `p_min_pu = -1` and one marginal cost earns the import price on
+    exports, which paid for 105 GW of solar built to sell abroad at 100 GBP/MWh. Splitting the
+    two directions lets exports clear below imports, as a renewable surplus shared with GB's
+    neighbours does. Each direction carries the full scaled capacity.
+    """
     ic = inputs.interconnectors
     scale = settings.interconnector_total_gw * 1000.0 / float(ic["p_nom"].sum())
-    price = (
-        scenario.interconnector_price_gbp_mwh
-        if scenario.interconnector_price_gbp_mwh is not None
-        else settings.interconnector_price_gbp_mwh
+    p_nom = (ic["p_nom"] * scale).tolist()
+    import_price = (
+        scenario.interconnector_import_price_gbp_mwh
+        if scenario.interconnector_import_price_gbp_mwh is not None
+        else settings.interconnector_import_price_gbp_mwh
+    )
+    export_price = (
+        scenario.interconnector_export_price_gbp_mwh
+        if scenario.interconnector_export_price_gbp_mwh is not None
+        else settings.interconnector_export_price_gbp_mwh
     )
     n.add(
         "Generator",
-        [f"ic {name}" for name in ic.index],
+        [f"ic {name} import" for name in ic.index],
         bus=ic["bus1"].tolist(),
         carrier="import",
-        p_nom=(ic["p_nom"] * scale).tolist(),
-        p_min_pu=-1.0,
+        p_nom=p_nom,
+        p_min_pu=0.0,
         p_max_pu=1.0,
-        marginal_cost=price,
+        marginal_cost=import_price,
+    )
+    # Dispatch is negative, so `marginal_cost x p` is negative: the export price is revenue.
+    n.add(
+        "Generator",
+        [f"ic {name} export" for name in ic.index],
+        bus=ic["bus1"].tolist(),
+        carrier="export",
+        p_nom=p_nom,
+        p_min_pu=-1.0,
+        p_max_pu=0.0,
+        marginal_cost=export_price,
     )
 
 

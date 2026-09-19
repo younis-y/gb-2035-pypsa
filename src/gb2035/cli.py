@@ -13,7 +13,14 @@ import typer
 from rich.console import Console
 
 from gb2035 import __version__
-from gb2035.config import Scenario, Settings, list_scenarios, load_scenario, load_settings
+from gb2035.config import (
+    Scenario,
+    Settings,
+    deep_merge,
+    list_scenarios,
+    load_scenario,
+    load_settings,
+)
 from gb2035.data.costs import build_costs
 from gb2035.data.demand import load_neso_demand
 from gb2035.data.fes import extract_fes_2035
@@ -277,6 +284,10 @@ def extract_cmd(
     out = results / sc.name
     n = pypsa.Network(str(out / "network.nc"))
     constant = float(getattr(n, "objective_constant", 0.0) or 0.0)
+    # The HiGHS algorithm the run used, resolved exactly as `solve()` resolves it: the scenario's
+    # override merged over settings.solver_options. `settings.solver_name` is the PyPSA backend
+    # ("highs"), so reporting it here would contradict the run's own run_meta.json.
+    options = deep_merge(dict(settings.solver_options), sc.solver_options or {})
     write_results(
         extract_all(
             n,
@@ -287,7 +298,7 @@ def extract_cmd(
                 float(cast(Any, n.objective)),
                 constant,
                 fixed_asset_cost_gbp_per_yr(n),
-                settings.solver_name,
+                str(options.get("solver", "default")),
             ),
         ),
         out,

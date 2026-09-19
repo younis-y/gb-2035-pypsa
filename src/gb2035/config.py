@@ -22,7 +22,8 @@ class Settings(BaseModel):
     eur_to_gbp: float = 0.85
     losses_uplift: float = 1.07
     interconnector_total_gw: float = 19.4
-    interconnector_price_gbp_mwh: float = 65.0
+    interconnector_import_price_gbp_mwh: float = 65.0
+    interconnector_export_price_gbp_mwh: float = 45.0
     gas_price_gbp_mwh_th: float = 24.0
     gas_co2_t_per_mwh_th: float = 0.184
     gas_ccs_capture_rate: float = Field(default=0.90, ge=0, le=1)
@@ -36,6 +37,17 @@ class Settings(BaseModel):
     pumped_hydro_round_trip_efficiency: float = Field(default=0.75, gt=0, le=1)
     solver_name: str = "highs"
     solver_options: dict[str, Any] = Field(default_factory=lambda: {"output_flag": False})
+
+    @model_validator(mode="after")
+    def _exports_clear_below_imports(self) -> Settings:
+        """An export price above the import price is a money pump: buy in, sell out, repeat."""
+        if self.interconnector_export_price_gbp_mwh > self.interconnector_import_price_gbp_mwh:
+            msg = (
+                "interconnector_export_price_gbp_mwh must not exceed "
+                "interconnector_import_price_gbp_mwh"
+            )
+            raise ValueError(msg)
+        return self
 
 
 class HydrogenSettings(BaseModel):
@@ -79,8 +91,10 @@ class Scenario(BaseModel):
     carbon_price_gbp_t: float | None = Field(default=None, ge=0)
     demand_pathway: Pathway = "Holistic Transition"
     hydrogen: HydrogenSettings = Field(default_factory=HydrogenSettings)
-    # Overrides Settings.interconnector_price_gbp_mwh when set (import-price sensitivity runs).
-    interconnector_price_gbp_mwh: float | None = Field(default=None, ge=0)
+    # Each overrides the matching Settings price when set; either direction may move alone
+    # (the `cap5_import_100` sensitivity lifts imports and leaves exports where they are).
+    interconnector_import_price_gbp_mwh: float | None = Field(default=None, ge=0)
+    interconnector_export_price_gbp_mwh: float | None = Field(default=None, ge=0)
     transmission_expandable: bool = False
     steel: SteelSettings | None = None
     snapshots: SnapshotWindow | None = None

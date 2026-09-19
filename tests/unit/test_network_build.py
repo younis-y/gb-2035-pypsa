@@ -35,6 +35,7 @@ def test_component_counts(built):
     assert len(n.buses) == 21, "20 zones plus the Teesside hydrogen bus"
     assert (n.links.carrier.isin(["AC", "DC"])).sum() == 31
     assert (n.generators.carrier == "import").sum() == 14
+    assert (n.generators.carrier == "export").sum() == 14
     assert len(n.loads) == 21, "20 zonal loads plus industrial hydrogen"
     assert n.generators.carrier.notna().all() and (n.generators.carrier != "").all()
     assert (n.generators.p_nom_min <= n.generators.p_nom_max).all()
@@ -42,8 +43,8 @@ def test_component_counts(built):
     assert n.global_constraints.at["co2_cap", "constant"] == pytest.approx(5.0e6)
     # Brownfield capacity is a separate fixed unit per zone, so the totals are greenfield plus
     # one `*_existing` unit for every zone REPD gives capacity in: 20 + 20 onwind, 20 + 17 solar,
-    # 9 + 12 offwind, 2 nuclear, 36 gas, 20 gas_ccs, 14 import, 1 blue_h2.
-    assert len(n.generators) == 171
+    # 9 + 12 offwind, 2 nuclear, 36 gas, 20 gas_ccs, 14 import, 14 export, 1 blue_h2.
+    assert len(n.generators) == 185
     assert len(n.storage_units) == 41, "20 + 18 battery plus 3 pumped hydro"
     assert len(n.stores) == 1
 
@@ -94,9 +95,13 @@ def test_key_components(built):
     assert n.storage_units.at["battery_existing Z14", "p_nom"] == pytest.approx(
         inputs.repd.query("zone == 'Z14' and technology == 'battery'")["p_nom_mw"].sum()
     )
-    assert n.generators.loc[n.generators.carrier == "import", "p_nom"].sum() == pytest.approx(
-        19_400.0
-    )
+    # Each direction carries the full FES 2035 interconnector capacity: 19.4 GW in, 19.4 GW out.
+    imports = n.generators[n.generators["carrier"] == "import"]
+    exports = n.generators[n.generators["carrier"] == "export"]
+    assert imports["p_nom"].sum() == pytest.approx(19_400.0)
+    assert exports["p_nom"].sum() == pytest.approx(19_400.0)
+    assert (imports["p_min_pu"] == 0.0).all() and (imports["p_max_pu"] == 1.0).all()
+    assert (exports["p_min_pu"] == -1.0).all() and (exports["p_max_pu"] == 0.0).all()
     assert n.generators.at["offwind DOGGER_BANK", "bus"] == "Z8"
     # The REPD floor now lives on the fixed unit; the extendable generator is pure greenfield.
     assert n.generators.at["onwind Z7", "p_nom_min"] == 0.0
@@ -131,6 +136,7 @@ def test_no_cap_no_price_scenario_has_no_constraint(repo_root: Path, built):
 
 
 def test_import_price_sensitivity_overrides_settings(repo_root: Path, built):
+    """`cap5_import_100` lifts the import price alone; exports keep the settings default."""
     n, inputs, scenario, settings = built
     paths = ProjectPaths(repo_root)
     import_scenario = load_scenario("cap5_import_100", paths.config / "scenarios.yaml")
@@ -139,15 +145,28 @@ def test_import_price_sensitivity_overrides_settings(repo_root: Path, built):
         inputs, import_scenario.model_copy(update={"snapshots": scenario.snapshots}), settings
     )
     imports_100 = n_100.generators[n_100.generators["carrier"] == "import"]
-    assert not imports_100.empty
+    exports_100 = n_100.generators[n_100.generators["carrier"] == "export"]
+    assert not imports_100.empty and not exports_100.empty
     assert (imports_100["marginal_cost"] == 100.0).all()
+    assert (exports_100["marginal_cost"] == 45.0).all(), "only the import price is overridden"
     imports_test = n.generators[n.generators["carrier"] == "import"]
-    assert not imports_test.empty
+    exports_test = n.generators[n.generators["carrier"] == "export"]
+    assert not imports_test.empty and not exports_test.empty
     assert (imports_test["marginal_cost"] == 65.0).all()
+    # Exports clear below the import price, so a surplus megawatt cannot be round-tripped at a
+    # profit: selling at 45 and buying back at 65 always loses money.
+    assert (exports_test["marginal_cost"] == 45.0).all()
 
 
 def test_tx_expansion_prices_every_link(repo_root: Path, built):
-    _, inputs, scenario, settings = built
+    """Expansion is a parallel link built from zero, so the sunk grid is never charged capex.
+
+    `p_nom_min = p_nom` on an extendable link makes PyPSA price the whole existing 198 GW at
+    `capital_cost x p_nom_opt`, which cost the expansion scenario 3.3 bn GBP/yr more than the
+    fixed one for an identical CO2 dual. The existing links must stay exactly as the fixed case
+    builds them and every megawatt of new-build capex must sit on a separate `* new` link.
+    """
+    n_fixed, inputs, scenario, settings = built
     paths = ProjectPaths(repo_root)
     tx_scenario = load_scenario("cap5_tx_expansion", paths.config / "scenarios.yaml")
     # Reuse the test scenario's one-week window so this stays a structural check, not a full year.
@@ -155,7 +174,23 @@ def test_tx_expansion_prices_every_link(repo_root: Path, built):
         inputs, tx_scenario.model_copy(update={"snapshots": scenario.snapshots}), settings
     )
     tx = n.links[n.links.carrier.isin(["AC", "DC"])]
-    assert len(tx) == 31
-    assert tx["p_nom_extendable"].all()
-    assert (tx["capital_cost"] > 0).all()
-    assert (tx["p_nom_min"] == tx["p_nom"]).all()
+    fixed = n_fixed.links[n_fixed.links.carrier.isin(["AC", "DC"])]
+    existing = tx[~tx.index.str.endswith(" new")]
+    new = tx[tx.index.str.endswith(" new")]
+    assert len(existing) == 31 and len(new) == 31
+    # The built grid is sunk: identical to the non-expandable scenario, and free of capex.
+    assert existing.index.tolist() == fixed.index.tolist()
+    assert not existing["p_nom_extendable"].any(), "existing capacity must not be extendable"
+    assert (existing["capital_cost"] == 0.0).all(), "sunk grid must not be charged new-build capex"
+    assert existing["p_nom"].tolist() == pytest.approx(fixed["p_nom"].tolist())
+    # Expansion starts from zero and carries the whole per-MW-year cost of new build.
+    assert new.index.tolist() == [f"{name} new" for name in fixed.index]
+    assert new["p_nom_extendable"].all()
+    assert (new["p_nom"] == 0.0).all() and (new["p_nom_min"] == 0.0).all()
+    assert (new["capital_cost"] > 0).all()
+    assert (new["p_min_pu"] == -1.0).all() and (new["efficiency"] == 1.0).all()
+    assert new["bus0"].tolist() == fixed["bus0"].tolist()
+    assert new["bus1"].tolist() == fixed["bus1"].tolist()
+    assert new["carrier"].tolist() == fixed["carrier"].tolist()
+    # A non-expandable scenario carries no expansion links at all.
+    assert not n_fixed.links.index.str.endswith(" new").any()

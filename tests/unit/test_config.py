@@ -54,13 +54,33 @@ def test_scenario_allows_neither_cap_nor_price():
     assert s.co2_cap_mt is None and s.carbon_price_gbp_t is None
 
 
-def test_scenario_interconnector_price_override_defaults_none():
+def test_scenario_interconnector_price_overrides_default_none():
     s = Scenario(name="free", demand_pathway="Holistic Transition")
-    assert s.interconnector_price_gbp_mwh is None
+    assert s.interconnector_import_price_gbp_mwh is None
+    assert s.interconnector_export_price_gbp_mwh is None
     priced = Scenario(
-        name="priced", demand_pathway="Holistic Transition", interconnector_price_gbp_mwh=100.0
+        name="priced",
+        demand_pathway="Holistic Transition",
+        interconnector_import_price_gbp_mwh=100.0,
     )
-    assert priced.interconnector_price_gbp_mwh == 100.0
+    assert priced.interconnector_import_price_gbp_mwh == 100.0
+    assert priced.interconnector_export_price_gbp_mwh is None, "one direction may move alone"
+
+
+def test_settings_price_imports_above_exports():
+    """Exports must clear at or below the import price, or the model round-trips for free money."""
+    s = Settings()
+    assert s.interconnector_import_price_gbp_mwh == 65.0
+    assert s.interconnector_export_price_gbp_mwh == 45.0
+    with pytest.raises(ValidationError):
+        Settings(
+            interconnector_import_price_gbp_mwh=45.0,
+            interconnector_export_price_gbp_mwh=65.0,
+        )
+    equal = Settings(
+        interconnector_import_price_gbp_mwh=60.0, interconnector_export_price_gbp_mwh=60.0
+    )
+    assert equal.interconnector_export_price_gbp_mwh == 60.0, "equal prices are not arbitrage"
 
 
 def test_load_scenario_merges_defaults(tmp_path: Path):

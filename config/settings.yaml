@@ -6,7 +6,8 @@ discount_rate: 0.07
 eur_to_gbp: 0.85
 losses_uplift: 1.07
 interconnector_total_gw: 19.4
-interconnector_price_gbp_mwh: 65.0
+interconnector_import_price_gbp_mwh: 65.0
+interconnector_export_price_gbp_mwh: 45.0
 gas_price_gbp_mwh_th: 24.0
 gas_co2_t_per_mwh_th: 0.184
 gas_ccs_capture_rate: 0.90
