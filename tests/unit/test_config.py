@@ -54,6 +54,15 @@ def test_scenario_allows_neither_cap_nor_price():
     assert s.co2_cap_mt is None and s.carbon_price_gbp_t is None
 
 
+def test_scenario_interconnector_price_override_defaults_none():
+    s = Scenario(name="free", demand_pathway="Holistic Transition")
+    assert s.interconnector_price_gbp_mwh is None
+    priced = Scenario(
+        name="priced", demand_pathway="Holistic Transition", interconnector_price_gbp_mwh=100.0
+    )
+    assert priced.interconnector_price_gbp_mwh == 100.0
+
+
 def test_load_scenario_merges_defaults(tmp_path: Path):
     doc = {
         "defaults": {
@@ -103,6 +112,7 @@ def test_repo_config_files_load(repo_root: Path):
         "cap5_no_h2",
         "cap5_ee_demand",
         "cap5_tx_expansion",
+        "cap5_import_100",
     ]:
         assert required in names
     test = load_scenario("test", repo_root / "config" / "scenarios.yaml")

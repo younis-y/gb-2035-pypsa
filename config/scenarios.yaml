@@ -33,6 +33,10 @@ scenarios:
     description: cap5 with extendable inter-zone links
     co2_cap_mt: 5.0
     transmission_expandable: true
+  cap5_import_100:
+    description: cap5 with interconnector import and export priced at 100 GBP/MWh
+    co2_cap_mt: 5.0
+    interconnector_price_gbp_mwh: 100.0
   cap5_steel:
     description: cap5 plus EAF loads at Port Talbot and Scunthorpe (stretch)
     co2_cap_mt: 5.0

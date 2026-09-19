@@ -130,6 +130,22 @@ def test_no_cap_no_price_scenario_has_no_constraint(repo_root: Path, built):
     assert "co2_cap" not in n.global_constraints.index
 
 
+def test_import_price_sensitivity_overrides_settings(repo_root: Path, built):
+    n, inputs, scenario, settings = built
+    paths = ProjectPaths(repo_root)
+    import_scenario = load_scenario("cap5_import_100", paths.config / "scenarios.yaml")
+    # Reuse the test scenario's one-week window so this stays a structural check, not a full year.
+    n_100 = build_network(
+        inputs, import_scenario.model_copy(update={"snapshots": scenario.snapshots}), settings
+    )
+    imports_100 = n_100.generators[n_100.generators["carrier"] == "import"]
+    assert not imports_100.empty
+    assert (imports_100["marginal_cost"] == 100.0).all()
+    imports_test = n.generators[n.generators["carrier"] == "import"]
+    assert not imports_test.empty
+    assert (imports_test["marginal_cost"] == 65.0).all()
+
+
 def test_tx_expansion_prices_every_link(repo_root: Path, built):
     _, inputs, scenario, settings = built
     paths = ProjectPaths(repo_root)

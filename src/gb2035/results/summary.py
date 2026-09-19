@@ -17,6 +17,7 @@ ORDER = [
     "cap5_no_h2",
     "cap5_ee_demand",
     "cap5_tx_expansion",
+    "cap5_import_100",
     "cap5_steel",
     "test",
 ]

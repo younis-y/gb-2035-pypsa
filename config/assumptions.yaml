@@ -14,6 +14,11 @@ interconnector_price_gbp_mwh:
   unit: GBP/MWh
   source: "Author assumption: rounded 2024 GB day-ahead annual mean (Elexon MID APX series)"
   confidence: assumption
+interconnector_price_sensitivity_gbp_mwh:
+  value: 100.0
+  unit: GBP/MWh
+  source: "Author assumption: stress value above the 2024 GB day-ahead mean, in line with 2022 to 2023 price levels"
+  confidence: assumption
 gas_price_gbp_mwh_th:
   value: 24.0
   unit: GBP/MWh thermal

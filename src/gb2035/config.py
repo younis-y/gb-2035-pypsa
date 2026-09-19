@@ -79,6 +79,8 @@ class Scenario(BaseModel):
     carbon_price_gbp_t: float | None = Field(default=None, ge=0)
     demand_pathway: Pathway = "Holistic Transition"
     hydrogen: HydrogenSettings = Field(default_factory=HydrogenSettings)
+    # Overrides Settings.interconnector_price_gbp_mwh when set (import-price sensitivity runs).
+    interconnector_price_gbp_mwh: float | None = Field(default=None, ge=0)
     transmission_expandable: bool = False
     steel: SteelSettings | None = None
     snapshots: SnapshotWindow | None = None

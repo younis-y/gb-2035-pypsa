@@ -109,9 +109,16 @@ def add_links(
     )
 
 
-def add_interconnectors(n: pypsa.Network, inputs: ModelInputs, settings: Settings) -> None:
+def add_interconnectors(
+    n: pypsa.Network, inputs: ModelInputs, scenario: Scenario, settings: Settings
+) -> None:
     ic = inputs.interconnectors
     scale = settings.interconnector_total_gw * 1000.0 / float(ic["p_nom"].sum())
+    price = (
+        scenario.interconnector_price_gbp_mwh
+        if scenario.interconnector_price_gbp_mwh is not None
+        else settings.interconnector_price_gbp_mwh
+    )
     n.add(
         "Generator",
         [f"ic {name}" for name in ic.index],
@@ -120,7 +127,7 @@ def add_interconnectors(n: pypsa.Network, inputs: ModelInputs, settings: Setting
         p_nom=(ic["p_nom"] * scale).tolist(),
         p_min_pu=-1.0,
         p_max_pu=1.0,
-        marginal_cost=settings.interconnector_price_gbp_mwh,
+        marginal_cost=price,
     )
 
 

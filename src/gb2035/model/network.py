@@ -50,7 +50,7 @@ def build_network(inputs: ModelInputs, scenario: Scenario, settings: Settings) -
     add_carriers(n, scenario, settings)
     add_buses(n, inputs)
     add_links(n, inputs, scenario, settings)
-    add_interconnectors(n, inputs, settings)
+    add_interconnectors(n, inputs, scenario, settings)
     add_loads(n, inputs, scenario, settings)
     add_renewables(n, inputs, scenario, settings)
     add_thermal(n, inputs, scenario, settings)
