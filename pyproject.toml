@@ -83,6 +83,12 @@ markers = [
 ]
 # PyPSA 1.3 coerces pandas 3.0 string columns back to object dtype on every `add` and warns
 # about it. Nothing in this project can act on it; ignore that one message only.
+# pulp 3.x's own API (LpVariable.dicts, PULP_CBC_CMD) is deprecated ahead of PuLP 4.0; the
+# battery-reproduction test uses that API verbatim, so ignore pulp's own deprecation noise.
+# xarray's netCDF4 backend assigns into an ndarray's `.shape` when writing/reading `.nc` files,
+# a pattern NumPy 2.5 deprecates; nothing in this project can act on it upstream.
 filterwarnings = [
     "ignore:pandas infers the `str` dtype for string data:FutureWarning",
+    "ignore::DeprecationWarning:pulp",
+    "ignore:Setting the shape on a NumPy array has been deprecated:DeprecationWarning",
 ]

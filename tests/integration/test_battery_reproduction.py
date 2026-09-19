@@ -41,7 +41,8 @@ def pulp_profit(prices: np.ndarray) -> float:
 def pypsa_profit(prices: np.ndarray) -> float:
     n = pypsa.Network()
     n.set_snapshots(pd.date_range("2021-03-10", periods=len(prices), freq="h"))
-    n.add("Bus", "grid")
+    n.add("Carrier", "AC")
+    n.add("Bus", "grid", carrier="AC")
     n.add(
         "Generator",
         "market",

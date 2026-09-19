@@ -22,3 +22,5 @@ jobs:
         run: uv run mypy
       - name: Tests
         run: uv run pytest -m "not network" --runslow
+      - name: Snakemake dry run
+        run: uv run snakemake --snakefile workflow/Snakefile -n --cores 1 results/summary.csv
