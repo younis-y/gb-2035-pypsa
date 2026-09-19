@@ -50,7 +50,8 @@ From `REPD_Publication_Q2_2026.csv`, filtered to five technologies (onshore/offs
 solar, battery, pumped hydro) and two statuses, Operational and Under Construction: capacity
 already built or committed, the model's floor. Northern Ireland rows are dropped;
 17 MW of multi-site portfolio rows (REPD refs 1613, 1616) have no coordinates and are
-dropped too, a known loss. Onshore points use point-in-polygon on OSGB coordinates.
+dropped too, a known loss; the 17 MW was observed during the build, since only the surviving
+rows reach the committed table. Onshore points use point-in-polygon on OSGB coordinates.
 Offshore wind inside one of the three named offshore polygons is attributed to its landing
 zone: Dogger Bank and Hornsea to Z8, East Anglia to Z12. Anything outside every polygon
 falls back to the nearest land zone,
@@ -65,8 +66,9 @@ From `demanddata_2019.csv`. NESO's ND excludes embedded generation, so embedded 
 solar are added back to recover 2035 gross demand. Each half-hour is timestamped from
 settlement date and period, then averaged to hourly. Clock-change days are stamped naively:
 this duplicates two half-hours on 2019-10-27 and fabricates one hour on 2019-03-31, about
-0.0003 percent of annual energy, and does not propagate because the series is later rescaled
-to a chosen FES demand total. Only the national series lives here;
+0.0003 percent of annual energy (measured during the build; the committed parquet holds only
+the corrected hourly series), and does not propagate because the series is later rescaled to
+a chosen FES demand total. Only the national series lives here;
 the zonal split (`config/demand_weights.csv`) and FES-pathway scaling happen later.
 Regenerate: `gb2035 build-derived`.
 
@@ -97,9 +99,10 @@ wind (turbine NREL_ReferenceTurbine_2020ATB_15MW_offshore) for the three named o
 polygons, plus a generic offshore column per land zone (their mean). Every shape is clipped
 to the cutout's bounds before atlite runs, buffering outward in 0.25-degree steps if needed,
 because the cutout ends at longitude 1.75 while the East Anglia polygon reaches about
-longitude 3.15. East Anglia's clipped profile comes from the nearest covered cells west of
-the site, a documented bias. Onshore figures above 0.50, Shetland 0.615, Western Isles 0.518, Argyll 0.537, come from ERA5's
-roughly 25 km cells blending marine boundary-layer wind into small island zones, so the
+longitude 3.15, both observed during the build (the 765 MB cutout is not committed). East
+Anglia's clipped profile comes from the nearest covered cells west of the site, a documented
+bias. Onshore figures above 0.50, Shetland 0.615, Western Isles 0.518, Argyll 0.537, come
+from ERA5's roughly 25 km cells blending marine boundary-layer wind into small island zones, so the
 plausibility band tested was widened to 0.15-0.65 onshore (0.35-0.65
 offshore, 0.08-0.14 solar). Regenerate: `gb2035 build-profiles --cutout data/raw/uk-2019.nc`
 (`profiles` extra).

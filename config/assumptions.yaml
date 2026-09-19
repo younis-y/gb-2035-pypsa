@@ -144,6 +144,11 @@ nuclear_2035_gw:
   unit: GW
   source: "FES 2025 F.62 Holistic Transition 2035"
   confidence: published
+etys_2035_b6_capability_gw:
+  value: 19.3
+  unit: GW
+  source: "NESO ETYS 2025 Boundary Chart Data, boundary B6 capability including planned reinforcements, Holistic Transition background, 2035 (https://www.neso.energy/document/383896/download)"
+  confidence: published
 port_talbot_eaf_twh:
   value: 1.5
   unit: TWh/yr

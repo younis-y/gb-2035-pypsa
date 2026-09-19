@@ -1,3 +1,5 @@
+# Assumptions
+
 Generated from `config/assumptions.yaml` by `gb2035 report --update-readme`.
 
 | Key | Value | Unit | Confidence | Source |
@@ -12,6 +14,7 @@ Generated from `config/assumptions.yaml` by `gb2035 report --update-readme`.
 | dri_electricity_mwh_per_t | 0.7 | MWh per t steel | published | Vogl, Ahman and Nilsson 2018: hydrogen-DRI-EAF electricity excluding electrolysis |
 | electrolysis_efficiency | 0.67 | ratio LHV | derived | PyPSA technology-data v0.15.0 electrolysis 2035 (0.637) and PyPSA-GB hydrogen rule (0.70); midpoint |
 | ets_price_gbp_t | 55 | GBP/tCO2 | published | UK ETS allowance price, mid-2025 market level |
+| etys_2035_b6_capability_gw | 19.3 | GW | published | NESO ETYS 2025 Boundary Chart Data, boundary B6 capability including planned reinforcements, Holistic Transition background, 2035 (https://www.neso.energy/document/383896/download) |
 | eur_to_gbp | 0.85 | GBP per EUR | published | ECB euro reference rate, 2025 annual average |
 | gas_ccs_capture_rate | 0.9 | ratio | published | PyPSA technology-data v0.15.0, CCGT capture rate |
 | gas_co2_t_per_mwh_th | 0.184 | tCO2/MWh thermal | published | DESNZ Greenhouse gas reporting conversion factors 2024, natural gas gross CV |

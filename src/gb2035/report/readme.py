@@ -44,6 +44,8 @@ def assumptions_markdown(path: Path) -> str:
     header = "| " + " | ".join(ASSUMPTIONS_COLUMNS) + " |"
     sep = "|" + "|".join("---" for _ in ASSUMPTIONS_COLUMNS) + "|"
     lines = [
+        "# Assumptions",
+        "",
         "Generated from `config/assumptions.yaml` by `gb2035 report --update-readme`.",
         "",
         header,

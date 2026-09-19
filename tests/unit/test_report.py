@@ -159,7 +159,11 @@ def test_optimised_vs_fes_returns_none_when_no_cap_scenario_present(tmp_path: Pa
 
 
 def test_assumptions_markdown_lists_header_and_both_rows(tmp_path: Path):
-    """A two-entry YAML in, a lead-in sentence plus a header and both rows out, sorted by key."""
+    """A two-entry YAML in, a `# Assumptions` heading, a lead-in sentence and a table out.
+
+    The heading makes the generated `docs/assumptions.md` a document in its own right rather
+    than a bare table; rows stay sorted by key.
+    """
     path = tmp_path / "assumptions.yaml"
     path.write_text(
         "beta:\n"
@@ -174,6 +178,7 @@ def test_assumptions_markdown_lists_header_and_both_rows(tmp_path: Path):
         "  confidence: published\n"
     )
     md = assumptions_markdown(path)
+    assert md.startswith("# Assumptions\n")
     assert "Generated from `config/assumptions.yaml` by `gb2035 report --update-readme`." in md
     assert "| Key | Value | Unit | Confidence | Source |" in md
     assert "| alpha | 1.5 | GW | published | Test source A |" in md

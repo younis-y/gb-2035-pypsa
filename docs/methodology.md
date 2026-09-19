@@ -23,13 +23,17 @@ parallel `<corridor> new` link per corridor, extendable from zero, priced from H
 cost per MW-km and distance; the existing link stays fixed and free of capital cost, so only
 genuinely new MW are charged.
 
-Interconnectors are two `Generator`s per landing bus, an import leg and an export leg,
-each carrying that bus's full share of 19.4 GW (FES 2025 Holistic Transition, scaled pro
-rata from the NESO register), priced separately at 65 GBP/MWh import and 45 GBP/MWh export,
-so exports clear below imports as a GB surplus usually meets a surplus next door. Both legs
-are price-taking up to capacity, and imports carry no territorial emissions. Because each
-leg carries the full capacity, `capacities.csv` sums to 38.8 GW of interconnector generator
-`p_nom` for 19.4 GW of physical capacity; only one leg can be non-zero in a given hour.
+Each interconnector becomes two `Generator`s at its landing bus, an import leg and an export
+leg, and each leg carries that interconnector's full capacity, scaled pro rata so the fleet
+sums to 19.4 GW (FES 2025 Holistic Transition, from the NESO register). A landing bus that
+hosts more than one interconnector therefore carries more than one pair. The legs are priced
+separately at 65 GBP/MWh import and 45 GBP/MWh export, so exports clear below imports as a GB
+surplus usually meets a surplus next door. Both are price-taking up to capacity, and imports
+carry no territorial emissions. Because each leg carries the full capacity, `capacities.csv`
+sums to 38.8 GW of interconnector generator `p_nom` for 19.4 GW of physical capacity. Nothing
+stops a pair running in both directions at once: it simply never pays to, because buying at
+65 to sell at 45 loses 20 GBP/MWh. That is an economic consequence of the price spread, not a
+modelled constraint, and it would need one if the prices were ever set the other way up.
 
 ## Technologies and brownfield convention
 
@@ -46,6 +50,16 @@ FOM only) and an extendable greenfield unit from zero (annuitised capex plus FOM
 
 Nuclear's 4.46 GW is below FES 2025's 5.04 GW: only the two named stations are fixed.
 
+The greenfield caps in `config/renewable_caps.yaml` are national (60 GW onshore, 150 GW
+solar, 150 GW offshore), but they are applied zonally: onshore and solar are split across the
+twenty land zones by land area and each zone's extendable unit gets that share as its
+`p_nom_max`, while offshore is split by the named lease-area and coastal shares. Existing
+REPD capacity never counts against a cap, because it sits in a separate fixed unit. The
+consequence is that a national total can stay well short of its cap while individual zones
+are exhausted: at `cap2` the model builds 27.7 GW of new onshore against the 60 GW national
+cap, and yet 10 of the 20 onshore zones are at their land-area share to the megawatt. The
+zonal caps, not the national ones, are what push the model into progressively worse sites.
+
 The battery holds 2 hours at rated power, 90 percent round-trip split as the square root
 each way, with a 0.09 GBP/MWh wear cost from the author's PuLP model.
 
@@ -55,8 +69,9 @@ capped at 1.2 GW).
 
 ## Time and weather
 
-Snapshots run hourly through 2035, using 2019 for wind, solar and the shape of demand,
-scaled to a FES 2035 total (8,760 snapshots, weight 1). The `test` CI scenario takes one
+Snapshots are 2019 timestamps, the weather and demand year, standing for 2035: the model
+carries no 2035 calendar. Wind, solar and the shape of demand all come from 2019, with demand
+rescaled to a FES 2035 pathway total (8,760 snapshots, weight 1). The `test` CI scenario takes one
 high-demand January week (168 snapshots), weighted up to match a full year's magnitude.
 `resolution_hours` can thin a year to every third hour, 2,920 snapshots weighted 3 so annual
 totals stay right: a subsample, not an average.
@@ -105,18 +120,20 @@ defined; twelve feed the sweep, and `test` is the one-week CI check.
 ## Resolution and solver
 
 The full sweep runs at 3-hourly resolution with HiGHS's PDLP (first-order) solver at 1e-5
-feasibility tolerance. On a four-week slice, simplex took about 20 minutes to reach optimal;
-scaled to a full year it did not finish within hours. Interior point without crossover was
-faster on those four weeks, about three minutes, but ended at status "unknown" rather
-than "optimal", since skipping crossover leaves infeasibility above HiGHS's threshold. PDLP
-solved the full 3-hourly year in about 9 minutes at "optimal".
+feasibility tolerance. The probe that settled this was run during the build and its timings
+live in the build log, not in a committed file. On a four-week slice, simplex took about 20
+minutes to reach optimal; scaled to a full year it did not finish within hours. Interior
+point without crossover was faster on those four weeks, about three minutes, but ended at
+status "unknown" rather than "optimal", since skipping crossover leaves infeasibility above
+HiGHS's threshold. PDLP solved a 3-hourly year at "optimal", in about 9 minutes on the probe
+and 6 to 63 minutes across the published scenarios (`solve_seconds` in each
+`results/<scenario>/run_meta.json`).
 
-In the published sweep PDLP solved each 3-hourly year in 6 to 63 minutes, with one
-exception. `cap0p5`, the 0.5 MtCO2 cap, never converged and was killed after 1 hour 50
-minutes, so it is not in the results: that cap leaves only about 0.4 Mt for unabated gas once
-blue hydrogen's 0.1 Mt is paid for, which puts the LP on the near-vertical part of the
-abatement curve, exactly where a first-order method crawls. The sweep therefore reports 30 down to 2 MtCO2, and `cap2`
-is the tightest converged cap.
+One scenario is the exception. `cap0p5`, the 0.5 MtCO2 cap, never converged and was killed
+after 1 hour 50 minutes, so it is not in the results: that cap leaves only about 0.4 Mt for
+unabated gas once blue hydrogen's 0.1 Mt is paid for, which puts the LP on the near-vertical
+part of the abatement curve, exactly where a first-order method crawls. The sweep therefore
+reports 30 down to 2 MtCO2, and `cap2` is the tightest converged cap.
 
 PDLP satisfies constraints only to within tolerance, not at an exact vertex, so its duals
 are less precise than a simplex solution's, including the shadow carbon price, and cost
