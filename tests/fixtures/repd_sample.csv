@@ -1,0 +1,8 @@
+Ref ID,Site Name,Technology Type,Installed Capacity (MWelec),Development Status (short),Country,X-coordinate,Y-coordinate
+1,Whitelee,Wind Onshore,539,Operational,Scotland,255000,647000
+2,Hornsea Two,Wind Offshore,1386,Operational,England,600000,420000
+3,Cleve Hill,Solar Photovoltaics,373,Under Construction,England ,603000,164000
+4,Belfast BESS,Battery,50,Operational,Northern Ireland,335000,375000
+5,Broken row,Solar Photovoltaics,n/a,Operational,England,400000,200000
+6,Dinorwig,Pumped Storage Hydroelectricity,1728,Operational,Wales,259000,359000
+7,Refused Farm,Wind Onshore,100,Application Refused,England,450000,300000
