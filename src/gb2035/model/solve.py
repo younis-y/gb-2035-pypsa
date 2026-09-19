@@ -7,7 +7,7 @@ from typing import Any, cast
 
 import pypsa
 
-from gb2035.config import Settings
+from gb2035.config import Scenario, Settings, deep_merge
 
 
 class SolveError(RuntimeError):
@@ -42,6 +42,7 @@ class SolveResult:
     objective: float
     objective_constant: float
     fixed_asset_cost_gbp_per_yr: float
+    solver: str
 
     @property
     def lp_objective_gbp_per_yr(self) -> float:
@@ -52,10 +53,19 @@ class SolveResult:
         return self.lp_objective_gbp_per_yr + self.fixed_asset_cost_gbp_per_yr
 
 
-def solve(n: pypsa.Network, settings: Settings) -> SolveResult:
+def solve(n: pypsa.Network, settings: Settings, scenario: Scenario | None = None) -> SolveResult:
+    """Solve with `settings.solver_options`, merging `scenario.solver_options` over it when set.
+
+    Some scenarios need a different HiGHS solver than the settings default: the one-week `test`
+    scenario pins simplex because PDLP's termination status is not deterministic across platforms
+    at that horizon (optimal on macOS ARM64, "unknown" on Linux x86_64 CI, for the same inputs).
+    """
+    options = settings.solver_options
+    if scenario is not None and scenario.solver_options:
+        options = deep_merge(dict(settings.solver_options), scenario.solver_options)
     status, condition = n.optimize(
         solver_name=settings.solver_name,
-        solver_options=dict(settings.solver_options),
+        solver_options=dict(options),
         include_objective_constant=False,
     )
     if status != "ok" or condition != "optimal":
@@ -68,4 +78,5 @@ def solve(n: pypsa.Network, settings: Settings) -> SolveResult:
         objective=float(cast(Any, n.objective)),
         objective_constant=constant,
         fixed_asset_cost_gbp_per_yr=fixed_asset_cost_gbp_per_yr(n),
+        solver=str(options.get("solver", "default")),
     )

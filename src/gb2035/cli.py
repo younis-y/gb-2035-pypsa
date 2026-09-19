@@ -217,7 +217,7 @@ def build_network_cmd(
 def _run(paths: ProjectPaths, settings: Settings, sc: Scenario, results: Path) -> None:
     n = _build(paths, settings, sc)
     t0 = time.perf_counter()
-    result = solve(n, settings)
+    result = solve(n, settings, sc)
     seconds = time.perf_counter() - t0
     out = results / sc.name
     write_results(extract_all(n, sc.name, result), out)
@@ -229,6 +229,7 @@ def _run(paths: ProjectPaths, settings: Settings, sc: Scenario, results: Path) -
         "solve_seconds": round(seconds, 1),
         "snapshots": len(n.snapshots),
         "resolution_hours": settings.resolution_hours,
+        "solver": result.solver,
         "total_cost_gbp_per_yr": result.total_cost_gbp_per_yr,
         "lp_objective_gbp_per_yr": result.lp_objective_gbp_per_yr,
         "fixed_asset_cost_gbp_per_yr": result.fixed_asset_cost_gbp_per_yr,
@@ -271,7 +272,7 @@ def extract_cmd(
     scenario: ScenarioOpt, root: RootOpt = Path(), results_dir: ResultsOpt = None
 ) -> None:
     """Re-extract tables from a saved solved network."""
-    paths, _settings, results = _ctx(root, results_dir)
+    paths, settings, results = _ctx(root, results_dir)
     sc = _scenario(paths, scenario)
     out = results / sc.name
     n = pypsa.Network(str(out / "network.nc"))
@@ -286,6 +287,7 @@ def extract_cmd(
                 float(cast(Any, n.objective)),
                 constant,
                 fixed_asset_cost_gbp_per_yr(n),
+                settings.solver_name,
             ),
         ),
         out,

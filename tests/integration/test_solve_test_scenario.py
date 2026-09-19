@@ -28,7 +28,7 @@ def solved(repo_root: Path):
     inputs = load_inputs(paths)
     scenario = load_scenario("test", paths.config / "scenarios.yaml")
     n = build_network(inputs, scenario, settings)
-    result = solve(n, settings)
+    result = solve(n, settings, scenario)
     return n, result, scenario
 
 

@@ -84,6 +84,9 @@ class Scenario(BaseModel):
     transmission_expandable: bool = False
     steel: SteelSettings | None = None
     snapshots: SnapshotWindow | None = None
+    # Merged over Settings.solver_options when set, for scenarios that need a different solver
+    # (e.g. the CI test week uses simplex; see model/solve.py).
+    solver_options: dict[str, Any] | None = None
 
     @model_validator(mode="after")
     def _cap_xor_price(self) -> Scenario:

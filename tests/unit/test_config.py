@@ -123,6 +123,29 @@ def test_repo_config_files_load(repo_root: Path):
     )
 
 
+def test_test_scenario_overrides_solver_to_simplex(repo_root: Path):
+    """PDLP's termination status is not deterministic across platforms at the one-week horizon
+    (optimal on macOS ARM64, "unknown" on Linux x86_64 CI for the same inputs); the CI regression
+    harness pins `test` to simplex instead. Other scenarios take the settings default (PDLP)."""
+    test_scenario = load_scenario("test", repo_root / "config" / "scenarios.yaml")
+    assert test_scenario.solver_options is not None
+    assert test_scenario.solver_options["solver"] == "simplex"
+    cap5 = load_scenario("cap5", repo_root / "config" / "scenarios.yaml")
+    assert cap5.solver_options is None
+
+
+def test_solver_options_merge_selects_simplex_for_test_and_pdlp_for_cap5(repo_root: Path):
+    """The same deep_merge(settings.solver_options, scenario.solver_options or {}) that
+    model.solve.solve() applies, exercised directly against the repo's real config."""
+    settings = load_settings(repo_root / "config" / "settings.yaml")
+    test_scenario = load_scenario("test", repo_root / "config" / "scenarios.yaml")
+    cap5 = load_scenario("cap5", repo_root / "config" / "scenarios.yaml")
+    test_options = deep_merge(dict(settings.solver_options), test_scenario.solver_options or {})
+    cap5_options = deep_merge(dict(settings.solver_options), cap5.solver_options or {})
+    assert test_options["solver"] == "simplex"
+    assert cap5_options["solver"] == "pdlp"
+
+
 def test_pumped_hydro_settings_match_assumptions(repo_root: Path):
     settings = load_settings(repo_root / "config" / "settings.yaml")
     a = load_assumptions(repo_root / "config" / "assumptions.yaml")

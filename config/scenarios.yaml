@@ -11,6 +11,11 @@ scenarios:
     description: One January week, every technology, used by CI with an expected objective
     co2_cap_mt: 5.0
     snapshots: {start: "2019-01-14", end: "2019-01-20"}
+    # The one-week regression harness uses simplex: PDLP's termination status is not
+    # deterministic across platforms at this short horizon (optimal on macOS ARM64,
+    # "unknown" on Linux x86_64 CI, for the same inputs). Full-year scenarios keep PDLP
+    # from settings.yaml.
+    solver_options: {solver: simplex, threads: 4}
   uncapped:
     description: Reference with the UK ETS carbon price and no cap
     carbon_price_gbp_t: 55.0
