@@ -153,6 +153,9 @@ def add_interconnectors(
         if scenario.interconnector_export_price_gbp_mwh is not None
         else settings.interconnector_export_price_gbp_mwh
     )
+    if export_price > import_price:
+        msg = "interconnector export price must not exceed the import price"
+        raise ValueError(msg)
     n.add(
         "Generator",
         [f"ic {name} import" for name in ic.index],

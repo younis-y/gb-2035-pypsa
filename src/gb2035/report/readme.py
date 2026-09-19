@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from gb2035.config import load_assumptions
+
 START, END = "<!-- summary:start -->", "<!-- summary:end -->"
 COLUMNS = [
     ("scenario", "Scenario", "{}"),
@@ -30,6 +32,26 @@ def summary_markdown(summary: pd.DataFrame) -> str:
     lines = [header, sep]
     for _, row in summary.iterrows():
         lines.append("| " + " | ".join(fmt.format(row[c]) for c, _, fmt in cols) + " |")
+    return "\n".join(lines)
+
+
+ASSUMPTIONS_COLUMNS = ("Key", "Value", "Unit", "Confidence", "Source")
+
+
+def assumptions_markdown(path: Path) -> str:
+    """Render `config/assumptions.yaml` as a sourced Markdown table, sorted by key."""
+    assumptions = load_assumptions(path)
+    header = "| " + " | ".join(ASSUMPTIONS_COLUMNS) + " |"
+    sep = "|" + "|".join("---" for _ in ASSUMPTIONS_COLUMNS) + "|"
+    lines = [
+        "Generated from `config/assumptions.yaml` by `gb2035 report --update-readme`.",
+        "",
+        header,
+        sep,
+    ]
+    for key in sorted(assumptions):
+        a = assumptions[key]
+        lines.append(f"| {key} | {a.value:g} | {a.unit} | {a.confidence} | {a.source} |")
     return "\n".join(lines)
 
 

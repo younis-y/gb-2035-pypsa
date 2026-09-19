@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 from gb2035.report.figures import make_figures, optimised_vs_fes
-from gb2035.report.readme import summary_markdown, update_readme
+from gb2035.report.readme import assumptions_markdown, summary_markdown, update_readme
 
 
 def test_summary_markdown_has_one_row_per_scenario():
@@ -38,9 +38,9 @@ def test_update_readme_replaces_block(tmp_path: Path):
 def test_make_figures_writes_five_pngs(tmp_path: Path):
     """`make_figures` on a two-row synthetic summary produces all five README figures.
 
-    Covers every `summary_row.csv` column (see task-15-brief context) plus the `*_new_gw`
-    greenfield columns `optimised_vs_fes` overlays per controller decision 1, and a minimal
-    FES frame carrying the six metrics `optimised_vs_fes` reads.
+    Covers every `summary_row.csv` column, plus the `*_new_gw` greenfield columns
+    `optimised_vs_fes` overlays per controller decision 1, and a minimal FES frame carrying the
+    six metrics `optimised_vs_fes` reads.
     """
     summary = pd.DataFrame(
         {
@@ -50,6 +50,7 @@ def test_make_figures_writes_five_pngs(tmp_path: Path):
             "fixed_asset_cost_gbp_bn_per_yr": [2.1, 2.4],
             "shadow_carbon_price_gbp_per_t": [120.0, 300.5],
             "emissions_mt": [5.0, 2.0],
+            "net_imports_twh": [-3.6, -8.2],
             "onwind_gw": [40.0, 45.0],
             "offwind_gw": [70.0, 90.0],
             "solar_gw": [60.0, 70.0],
@@ -155,3 +156,26 @@ def test_optimised_vs_fes_returns_none_when_no_cap_scenario_present(tmp_path: Pa
     summary = pd.DataFrame({"scenario": ["cap5_no_h2"]})
     fes = pd.DataFrame({"metric": [], "pathway": [], "value": []})
     assert optimised_vs_fes(summary, fes, tmp_path) is None
+
+
+def test_assumptions_markdown_lists_header_and_both_rows(tmp_path: Path):
+    """A two-entry YAML in, a lead-in sentence plus a header and both rows out, sorted by key."""
+    path = tmp_path / "assumptions.yaml"
+    path.write_text(
+        "beta:\n"
+        "  value: 42.0\n"
+        "  unit: GBP/MWh\n"
+        "  source: Test source B\n"
+        "  confidence: assumption\n"
+        "alpha:\n"
+        "  value: 1.5\n"
+        "  unit: GW\n"
+        "  source: Test source A\n"
+        "  confidence: published\n"
+    )
+    md = assumptions_markdown(path)
+    assert "Generated from `config/assumptions.yaml` by `gb2035 report --update-readme`." in md
+    assert "| Key | Value | Unit | Confidence | Source |" in md
+    assert "| alpha | 1.5 | GW | published | Test source A |" in md
+    assert "| beta | 42 | GBP/MWh | assumption | Test source B |" in md
+    assert md.index("| alpha") < md.index("| beta"), "rows must be sorted by key"

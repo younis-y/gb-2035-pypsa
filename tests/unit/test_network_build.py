@@ -158,6 +158,19 @@ def test_import_price_sensitivity_overrides_settings(repo_root: Path, built):
     assert (exports_test["marginal_cost"] == 45.0).all()
 
 
+def test_export_price_above_import_price_raises(repo_root: Path, built):
+    """A scenario overriding only the export leg is a money pump the same way a raw Settings
+    mismatch is: buy in at the (unmoved) 65 GBP/MWh import price, sell out at 80, repeat.
+    `Settings` validates its own two fields, but the merge in `add_interconnectors` can produce
+    the same mismatch from a scenario override alone, so it must guard the effective prices too.
+    """
+    _, inputs, scenario, settings = built
+    bad = scenario.model_copy(update={"interconnector_export_price_gbp_mwh": 80.0})
+    assert settings.interconnector_import_price_gbp_mwh == 65.0
+    with pytest.raises(ValueError, match="export price"):
+        build_network(inputs, bad, settings)
+
+
 def test_tx_expansion_prices_every_link(repo_root: Path, built):
     """Expansion is a parallel link built from zero, so the sunk grid is never charged capex.
 

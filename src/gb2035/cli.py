@@ -316,7 +316,7 @@ def report_cmd(
     table."""
     from gb2035.data.fes import load_fes
     from gb2035.report.figures import make_figures
-    from gb2035.report.readme import summary_markdown, update_readme
+    from gb2035.report.readme import assumptions_markdown, summary_markdown, update_readme
     from gb2035.results.summary import summarise
 
     paths, _, results = _ctx(root, results_dir)
@@ -334,3 +334,6 @@ def report_cmd(
     if update_readme_block:
         update_readme(paths.root / "README.md", summary_markdown(summary))
         console.print("README summary block updated")
+        assumptions_doc = paths.root / "docs" / "assumptions.md"
+        assumptions_doc.write_text(assumptions_markdown(paths.config / "assumptions.yaml") + "\n")
+        console.print(f"{assumptions_doc} updated")

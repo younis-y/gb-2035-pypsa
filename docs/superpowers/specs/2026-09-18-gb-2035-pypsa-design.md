@@ -289,6 +289,10 @@ Per scenario under `results/{scenario}/`: `network.nc` (git-ignored), `capacitie
 `hydrogen.csv`, `dispatch_hourly.parquet`. Across scenarios: `results/summary.csv`. The
 CSVs for the headline scenarios are committed; parquet and netCDF are not.
 
+`capacities.csv` lists both interconnector legs (`ic {name} import` and `ic {name} export`,
+each at the interconnector's capacity, so generator p_nom sums to twice the physical 19.4 GW).
+`costs.csv` carries memo rows flagged by `is_memo` that must not be summed with component rows.
+
 ## 12. Streamlit app
 
 Read-only over `results/` and `data/derived/zones.geojson`, so it starts in seconds and
