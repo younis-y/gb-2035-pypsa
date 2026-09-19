@@ -74,7 +74,7 @@ def retrieve(
             raise RetrieveError(msg)
         if path.exists():
             if entry.sha256 is None and pin:
-                digest = sha256_of(path)
+                digest = _verify(entry, path)
                 action: Literal["downloaded", "verified", "pinned"] = "pinned"
             else:
                 digest = _verify(entry, path)
@@ -86,7 +86,7 @@ def retrieve(
                 msg = f"{name}: download failed from {entry.url}: {exc}"
                 raise RetrieveError(msg) from exc
             if entry.sha256 is None and pin:
-                digest = sha256_of(path)
+                digest = _verify(entry, path)
                 action = "pinned"
             else:
                 digest = _verify(entry, path)
