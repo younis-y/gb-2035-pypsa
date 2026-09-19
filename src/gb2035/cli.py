@@ -44,6 +44,8 @@ ResolutionHoursOpt = Annotated[
     int | None,
     typer.Option(
         "--resolution-hours",
+        min=1,
+        max=24,
         help="Override settings.resolution_hours (e.g. 3 for 3-hourly snapshots).",
     ),
 ]

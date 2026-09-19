@@ -90,6 +90,25 @@ def test_run_accepts_resolution_hours(repo_root: Path, tmp_path: Path):
     assert meta["resolution_hours"] == 3
 
 
+def test_run_rejects_resolution_hours_out_of_range(repo_root: Path, tmp_path: Path):
+    r = runner.invoke(
+        app,
+        [
+            "run",
+            "--scenario",
+            "test",
+            "--resolution-hours",
+            "0",
+            "--root",
+            str(repo_root),
+            "--results-dir",
+            str(tmp_path),
+        ],
+    )
+    assert r.exit_code != 0
+    assert not (tmp_path / "test" / "run_meta.json").exists()
+
+
 def test_unknown_scenario_fails_cleanly(repo_root: Path, tmp_path: Path):
     r = runner.invoke(
         app, ["run", "--scenario", "nope", "--root", str(repo_root), "--results-dir", str(tmp_path)]

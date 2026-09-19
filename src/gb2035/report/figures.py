@@ -134,7 +134,19 @@ def _new_build_gw(row: pd.Series, total_col: str) -> float:
 
 def optimised_vs_fes(
     summary: pd.DataFrame, fes: pd.DataFrame, out: Path, scenario: str = "cap2"
-) -> Path:
+) -> Path | None:
+    """The model's cap2 (by default) build against FES, or the tightest cap actually solved.
+
+    Mid-sweep, `scenario` may not have a row yet: fall back to the tightest `CAP_ORDER` scenario
+    present in `summary` instead of raising, and return `None` (skip the figure) only when no cap
+    scenario has been solved at all yet - `make_figures` drops `None`s from its result.
+    """
+    present = set(summary["scenario"])
+    if scenario not in present:
+        available = [c for c in CAP_ORDER if c in present]
+        if not available:
+            return None
+        scenario = available[-1]
     row = summary[summary["scenario"] == scenario].iloc[0]
     pairs = [
         ("Offshore wind", "offwind_gw", fes_value(fes, "offshore_wind_gw", "Holistic Transition")),
@@ -155,13 +167,14 @@ def optimised_vs_fes(
     model_x = [i - 0.2 for i in x]
     fes_x = [i + 0.2 for i in x]
     # Stack the model bar so the greenfield build (hatched) is visible against existing
-    # capacity (solid) within the same "total installed" bar - controller decision 1.
+    # capacity (solid) within the same total-installed bar - controller decision 1. The two
+    # segments' labelled values sum to the total installed capacity.
     ax.bar(
         model_x,
         existing,
         width=0.4,
         color=BLUE,
-        label=f"This model ({scenario}) - total installed",
+        label=f"This model ({scenario}) - existing capacity",
     )
     ax.bar(
         model_x,
@@ -247,10 +260,11 @@ def make_figures(
     summary: pd.DataFrame, results_root: Path, fes: pd.DataFrame, out_dir: Path
 ) -> list[Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
-    return [
+    candidates: list[Path | None] = [
         capacity_mix_by_cap(summary, out_dir),
         cost_and_shadow_price(summary, out_dir),
         optimised_vs_fes(summary, fes, out_dir),
         storage_by_cap(summary, out_dir),
         teesside_hydrogen(summary, out_dir),
     ]
+    return [path for path in candidates if path is not None]
