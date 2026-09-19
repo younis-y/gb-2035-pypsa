@@ -1,0 +1,32 @@
+# Thin Snakemake wrapper over the gb2035 CLI so the DAG is explicit and reproducible.
+# Usage: uv run snakemake --snakefile workflow/Snakefile --cores 4 results/summary.csv
+from pathlib import Path
+
+from gb2035.config import list_scenarios
+
+ROOT = Path(workflow.basedir).parent
+RESOLUTION = config.get("resolution_hours", 1)
+SCENARIOS = [s for s in list_scenarios(ROOT / "config" / "scenarios.yaml") if s != "test"]
+DERIVED = ["fleet_by_zone.csv", "repd_by_zone.csv", "demand_2019_hourly.parquet", "fes2025_gb_2035.csv", "costs_2035_gb.csv"]
+
+rule all:
+    input: "results/summary.csv"
+
+rule retrieve:
+    output: touch("data/raw/.retrieved")
+    shell: "uv run gb2035 retrieve --root {ROOT}"
+
+rule derived:
+    input: "data/raw/.retrieved"
+    output: expand("data/derived/{name}", name=DERIVED)
+    shell: "uv run gb2035 build-derived --root {ROOT}"
+
+rule run_scenario:
+    input: expand("data/derived/{name}", name=DERIVED), "data/derived/cf_2019_zonal.parquet"
+    output: "results/{scenario}/summary_row.csv", "results/{scenario}/run_meta.json"
+    shell: "uv run gb2035 run --scenario {wildcards.scenario} --root {ROOT} --resolution-hours {RESOLUTION}"
+
+rule summary:
+    input: expand("results/{scenario}/summary_row.csv", scenario=SCENARIOS)
+    output: "results/summary.csv"
+    shell: "uv run gb2035 report --root {ROOT}"

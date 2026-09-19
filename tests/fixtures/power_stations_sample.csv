@@ -1,0 +1,7 @@
+Company Name,Station Name,Fuel,Type,Installed Capacity (MW),Year of commission or year generation began,"Location:
+Scotland, Wales, Northern Ireland or English region",Geolocation
+Uniper,Connahs Quay,Natural Gas,CCGT,1380,1996,Wales,"53.231, -3.081"
+SSE,Keadby,Natural Gas,CCGT,735,1996,Yorkshire and the Humber,"53.594, -0.752"
+EPUKI,Corby,Natural Gas,OCGT,350,1993,East Midlands,"52.518, -0.706"
+Uniper,Ratcliffe,Coal,Coal,2000,1968,East Midlands,"52.865, -1.255"
+EDF,Heysham 2,Nuclear,Nuclear,1250,1988,North West,"54.029, -2.916"

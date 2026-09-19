@@ -1,0 +1,119 @@
+{
+  "pypsa_gb_buses": {
+    "url": "https://raw.githubusercontent.com/andrewlyden/PyPSA-GB/8e084afe4fb2d4be86f270d3f12ad3315eee2a3a/data/network/zonal/buses.csv",
+    "filename": "buses.csv",
+    "licence": "MIT (PyPSA-GB, Andrew Lyden)",
+    "source_note": "17-zone GB topology inherited from UK-Calliope",
+    "sha256": "610f4da4d9cbc14a81ac8d1c3dda69f355a4a50c8cf7eec61ed193c4551fe468",
+    "md5": null,
+    "size_bytes": 512
+  },
+  "pypsa_gb_links": {
+    "url": "https://raw.githubusercontent.com/andrewlyden/PyPSA-GB/8e084afe4fb2d4be86f270d3f12ad3315eee2a3a/data/network/zonal/links.csv",
+    "filename": "links.csv",
+    "licence": "MIT (PyPSA-GB)",
+    "source_note": "",
+    "sha256": "1e3e238ab870a8c089ca5c1224aec68d818fa480a259d3ecfcb9ad9edea97f87",
+    "md5": null,
+    "size_bytes": 1028
+  },
+  "pypsa_gb_links_future": {
+    "url": "https://raw.githubusercontent.com/andrewlyden/PyPSA-GB/8e084afe4fb2d4be86f270d3f12ad3315eee2a3a/data/network/zonal/links_future.csv",
+    "filename": "links_future.csv",
+    "licence": "MIT (PyPSA-GB)",
+    "source_note": "",
+    "sha256": "9d5669397281ebe2f5dbeb83ca1d41b99ea388b75926170e5893442273a18286",
+    "md5": null,
+    "size_bytes": 641
+  },
+  "pypsa_gb_zone_definitions": {
+    "url": "https://raw.githubusercontent.com/andrewlyden/PyPSA-GB/8e084afe4fb2d4be86f270d3f12ad3315eee2a3a/data/network/zonal/zone_definitions.csv",
+    "filename": "zone_definitions.csv",
+    "licence": "MIT (PyPSA-GB)",
+    "source_note": "",
+    "sha256": "91f893465881b33c7f6a55edd47b430d209c9a619eab5512e9e184fc45634682",
+    "md5": null,
+    "size_bytes": 1134
+  },
+  "pypsa_gb_zones_geojson": {
+    "url": "https://raw.githubusercontent.com/andrewlyden/PyPSA-GB/8e084afe4fb2d4be86f270d3f12ad3315eee2a3a/data/network/zonal/zones.geojson",
+    "filename": "zones.geojson",
+    "licence": "MIT (PyPSA-GB)",
+    "source_note": "",
+    "sha256": "35edbef76aaf244722ff79aa240fdac28c4a3cda55629ee87f91c50b6aa05547",
+    "md5": null,
+    "size_bytes": 271496
+  },
+  "pypsa_gb_transmission_2030": {
+    "url": "https://raw.githubusercontent.com/andrewlyden/PyPSA-GB/8e084afe4fb2d4be86f270d3f12ad3315eee2a3a/data/network/zonal/transmission_grid_2030.yaml",
+    "filename": "transmission_grid_2030.yaml",
+    "licence": "MIT (PyPSA-GB); UK-Calliope link capacities with source URLs",
+    "source_note": "",
+    "sha256": "6ff5f1881a7b20c36445fe620e6733deb386bb9dd2b68bbf695b4e923df774f8",
+    "md5": null,
+    "size_bytes": 6313
+  },
+  "pypsa_gb_power_stations": {
+    "url": "https://raw.githubusercontent.com/andrewlyden/PyPSA-GB/8e084afe4fb2d4be86f270d3f12ad3315eee2a3a/data/generators/power_stations_locations.csv",
+    "filename": "power_stations_locations.csv",
+    "licence": "MIT (PyPSA-GB); data DUKES 5.11 (OGL v3)",
+    "source_note": "latin-1 encoded; Geolocation column is 'lat,<nbsp>lon'",
+    "sha256": "d9d66e543ef4cadcda5010b58ba00441c403702a491b5fe8355dd430162a1954",
+    "md5": null,
+    "size_bytes": 11116
+  },
+  "repd_q2_2026": {
+    "url": "https://assets.publishing.service.gov.uk/media/6a6cbdc00c36759b5ccaa305/REPD_Publication_Q2_2026.csv",
+    "filename": "REPD_Publication_Q2_2026.csv",
+    "licence": "Open Government Licence v3 (DESNZ)",
+    "source_note": "latin-1 encoded; coordinates EPSG:27700",
+    "sha256": "84c1b5f958a934d8b4b86ec88f50bdcf43830ded7ff2efc27bffca0c98695035",
+    "md5": null,
+    "size_bytes": 5087389
+  },
+  "neso_demand_2019": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/dd9de980-d724-415a-b344-d8ae11321432/download/demanddata_2019.csv",
+    "filename": "demanddata_2019.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "",
+    "sha256": "0084d546dcdba0af21b7414f1a1b0ab308a9de8460884aa8e550fd0e858b38da",
+    "md5": null,
+    "size_bytes": 1554786
+  },
+  "fes2025_workbook": {
+    "url": "https://www.neso.energy/document/364551/download",
+    "filename": "fes2025_data_workbook.xlsx",
+    "licence": "NESO Open Data Licence",
+    "source_note": "Future Energy Scenarios 2025 Data Workbook V006",
+    "sha256": "f11b9a2c08084d4c4596d67d9e498f46c8739d942ad7dd383580365e10405593",
+    "md5": null,
+    "size_bytes": 19467587
+  },
+  "technology_data_costs_2035": {
+    "url": "https://raw.githubusercontent.com/PyPSA/technology-data/v0.15.0/outputs/costs_2035.csv",
+    "filename": "costs_2035.csv",
+    "licence": "GPL-3.0 code, CC-BY-4.0 data (PyPSA technology-data v0.15.0)",
+    "source_note": "",
+    "sha256": "fc8e1895d85d31fa792815fe5b1408bb2ffe7240c73bb5b72ed8beff517482c0",
+    "md5": null,
+    "size_bytes": 281407
+  },
+  "desnz_generation_costs_2025_annex_a": {
+    "url": "https://assets.publishing.service.gov.uk/media/69d8efec96c86b7513170229/annex-a-additional-estimates-and-key-assumptions-2025.xlsx",
+    "filename": "desnz_generation_costs_2025_annex_a.xlsx",
+    "licence": "Open Government Licence v3 (DESNZ)",
+    "source_note": "",
+    "sha256": "a6233e478d7d1b1c6471781a397e8ba2d3bed511e2eccfb597edb2011ecf20ea",
+    "md5": null,
+    "size_bytes": 1807935
+  },
+  "zenodo_cutout_uk_2019": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2019.nc/content",
+    "filename": "uk-2019.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2019_zonal.parquet",
+    "sha256": "bdc0e5713caa78e7c16133532bf4a3454cf54312d52ba0b523b31e6bdddd188b",
+    "md5": "07853e0850eb1f5bbd818ac756f22b30",
+    "size_bytes": 764817815
+  }
+}

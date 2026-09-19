@@ -1,0 +1,27 @@
+# National GREENFIELD build caps split to zones. Onshore and solar are split by land area;
+# offshore by the shares below (offshore polygons land at Z8 and Z12; other entries are generic
+# coastal units). REPD capacity that already exists or is under construction is NOT counted
+# against these caps: it is added as separate fixed `*_existing` units, so the effective
+# national ceiling is this cap plus the REPD floor.
+#
+# Every number here is a sourced entry in config/assumptions.yaml:
+#   onwind_national_gw       -> onshore_cap_national_gw
+#   solar_national_gw        -> solar_cap_national_gw
+#   offwind_national_gw      -> offshore_cap_national_gw
+#   offwind_shares.DOGGER_BANK -> offwind_share_dogger_bank
+#   offwind_shares.HORNSEA     -> offwind_share_hornsea
+#   offwind_shares.EAST_ANGLIA -> offwind_share_east_anglia
+#   the six coastal-zone shares sum to offwind_share_other_coastal
+onwind_national_gw: 60.0
+solar_national_gw: 150.0
+offwind_national_gw: 150.0
+offwind_shares:
+  DOGGER_BANK: 0.35
+  HORNSEA: 0.25
+  EAST_ANGLIA: 0.25
+  Z2: 0.03
+  Z7: 0.03
+  Z15: 0.03
+  Z16: 0.02
+  Z17: 0.02
+  Z13: 0.02

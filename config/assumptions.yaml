@@ -1,0 +1,192 @@
+losses_uplift:
+  value: 1.07
+  unit: ratio
+  source: "FES 2025 Data Workbook V006, sheets F.53 and DB.ED1 (https://www.neso.energy/document/364551/download)"
+  confidence: derived
+  note: "Consumer demand x 1.07 reconciles to FES system demand net of electrolysis; DUKES 5.2 losses are 7 to 8 percent"
+interconnector_total_gw:
+  value: 19.4
+  unit: GW
+  source: "FES 2025 Data Workbook V006, sheet F.61, Holistic Transition 2035"
+  confidence: published
+interconnector_price_gbp_mwh:
+  value: 65.0
+  unit: GBP/MWh
+  source: "Author assumption: rounded 2024 GB day-ahead annual mean (Elexon MID APX series)"
+  confidence: assumption
+interconnector_price_sensitivity_gbp_mwh:
+  value: 100.0
+  unit: GBP/MWh
+  source: "Author assumption: stress value above the 2024 GB day-ahead mean, in line with 2022 to 2023 price levels"
+  confidence: assumption
+gas_price_gbp_mwh_th:
+  value: 24.0
+  unit: GBP/MWh thermal
+  source: "DESNZ Fossil fuel price assumptions 2024, central gas 2035 (https://www.gov.uk/government/publications/fossil-fuel-price-assumptions-2024)"
+  confidence: published
+gas_co2_t_per_mwh_th:
+  value: 0.184
+  unit: tCO2/MWh thermal
+  source: "DESNZ Greenhouse gas reporting conversion factors 2024, natural gas gross CV"
+  confidence: published
+gas_ccs_capture_rate:
+  value: 0.90
+  unit: ratio
+  source: "PyPSA technology-data v0.15.0, CCGT capture rate"
+  confidence: published
+ccs_transport_storage_gbp_t:
+  value: 9.0
+  unit: GBP/tCO2
+  source: "DESNZ Electricity Generation Costs 2025 Annex A, Gas CCUS 2035, CO2 capture and storage cost"
+  confidence: published
+electrolysis_efficiency:
+  value: 0.67
+  unit: ratio LHV
+  source: "PyPSA technology-data v0.15.0 electrolysis 2035 (0.637) and PyPSA-GB hydrogen rule (0.70); midpoint"
+  confidence: derived
+hydrogen_turbine_efficiency:
+  value: 0.50
+  unit: ratio
+  source: "PyPSA-GB rules/hydrogen.smk (0.50); DESNZ 2025 CCHT 2035 gives 0.51"
+  confidence: published
+battery_round_trip_efficiency:
+  value: 0.90
+  unit: ratio
+  source: "younis-y/gb-weather-to-price-forecasting scripts/03_price_prediction_main.py EFFICIENCY_RTE"
+  confidence: published
+battery_wear_cost_gbp_mwh:
+  value: 0.09
+  unit: GBP/MWh
+  source: "0.1 EUR/MWh DEGRADATION_COST in the same script, converted at 0.85"
+  confidence: derived
+teesside_share_of_uk_hydrogen:
+  value: 0.25
+  unit: ratio
+  source: "Tees Valley Combined Authority hydrogen strategy key findings 2023: up to 2.5 GW of the UK 10 GW 2030 ambition"
+  confidence: published
+teesside_industrial_h2_twh_ht:
+  value: 5.0
+  unit: TWh/yr
+  source: "FES 2025 F.51 industrial hydrogen demand HT 2035 (19.79 TWh) x 0.25"
+  confidence: derived
+teesside_industrial_h2_twh_ee:
+  value: 1.3
+  unit: TWh/yr
+  source: "FES 2025 F.51 industrial hydrogen demand EE 2035 (5.14 TWh) x 0.25"
+  confidence: derived
+teesside_committed_electrolysis_mw:
+  value: 0.0
+  unit: MW
+  source: "bp cancelled HyGreen Teesside, 4 March 2025 (Energy Voice report)"
+  confidence: published
+blue_h2_max_mw:
+  value: 1200.0
+  unit: MW H2
+  source: "bp H2Teesside planned 1.2 GW hydrogen output (bp, 2025)"
+  confidence: published
+blue_h2_cost_gbp_mwh:
+  value: 70.0
+  unit: GBP/MWh H2
+  source: "DESNZ Hydrogen production costs 2021, CCUS-enabled range for 2035, upper-middle"
+  confidence: assumption
+blue_h2_co2_t_per_mwh:
+  value: 0.02
+  unit: tCO2/MWh H2
+  source: "Derived: 0.27 tCO2/MWh H2 direct emissions from natural gas reforming at 95 percent capture"
+  confidence: derived
+power_sector_emissions_2024_mt:
+  value: 37.5
+  unit: MtCO2e
+  source: "DESNZ 2024 UK greenhouse gas emissions provisional figures, electricity supply"
+  confidence: published
+ets_price_gbp_t:
+  value: 55.0
+  unit: GBP/tCO2
+  source: "UK ETS allowance price, mid-2025 market level"
+  confidence: published
+discount_rate:
+  value: 0.07
+  unit: ratio
+  source: "Author assumption; DESNZ 2025 hurdle rates span 0.076 to 0.101"
+  confidence: assumption
+solver_tolerance:
+  value: 1.0e-5
+  unit: ratio
+  source: "HiGHS PDLP primal/dual feasibility tolerance; simplex needs 20 min for four weeks and hours for a year on this LP"
+  confidence: assumption
+eur_to_gbp:
+  value: 0.85
+  unit: GBP per EUR
+  source: "ECB euro reference rate, 2025 annual average"
+  confidence: published
+onshore_cap_national_gw:
+  value: 60.0
+  unit: GW
+  source: "Author assumption informed by FES 2025 F.56 (38.4 GW HT 2035) and younis-y/uk-onshore-wind-siting"
+  confidence: assumption
+solar_cap_national_gw:
+  value: 150.0
+  unit: GW
+  source: "Author assumption informed by FES 2025 F.57 (61.8 GW HT 2035)"
+  confidence: assumption
+offshore_cap_national_gw:
+  value: 150.0
+  unit: GW
+  source: "Author assumption informed by the Crown Estate leasing pipeline and FES 2025 F.55 (86.1 GW HT 2035)"
+  confidence: assumption
+nuclear_2035_gw:
+  value: 5.04
+  unit: GW
+  source: "FES 2025 F.62 Holistic Transition 2035"
+  confidence: published
+port_talbot_eaf_twh:
+  value: 1.5
+  unit: TWh/yr
+  source: "Tata Steel 3 Mt/yr EAF x 0.5 MWh/t"
+  confidence: derived
+scunthorpe_eaf_twh:
+  value: 1.5
+  unit: TWh/yr
+  source: "Author assumption: consented EAF plan capacity unconfirmed; mirrors Port Talbot"
+  confidence: assumption
+h2_dri_kg_per_t:
+  value: 51.0
+  unit: kg H2 per t steel
+  source: "Vogl, Ahman and Nilsson 2018, Journal of Cleaner Production 203"
+  confidence: published
+pumped_hydro_hours:
+  value: 8.0
+  unit: hours
+  source: "Dinorwig 1,728 MW / 9.1 GWh about 5 h and Cruachan 440 MW about 10 h; fleet average, author assumption"
+  confidence: assumption
+pumped_hydro_round_trip_efficiency:
+  value: 0.75
+  unit: ratio
+  source: "Author assumption: 70 to 80 percent typical for GB pumped storage"
+  confidence: assumption
+h2_lhv_mwh_per_t:
+  value: 33.33
+  unit: MWh per t H2
+  source: "Hydrogen lower heating value 120 MJ/kg = 33.33 kWh/kg"
+  confidence: published
+offwind_share_dogger_bank:
+  value: 0.35
+  unit: ratio
+  source: "Author assumption informed by Crown Estate Round 4 and ScotWind leasing geography and FES 2025 F.55 (86.1 GW HT 2035)"
+  confidence: assumption
+offwind_share_hornsea:
+  value: 0.25
+  unit: ratio
+  source: "Author assumption informed by Crown Estate Round 4 and ScotWind leasing geography and FES 2025 F.55 (86.1 GW HT 2035)"
+  confidence: assumption
+offwind_share_east_anglia:
+  value: 0.25
+  unit: ratio
+  source: "Author assumption informed by Crown Estate Round 4 and ScotWind leasing geography and FES 2025 F.55 (86.1 GW HT 2035)"
+  confidence: assumption
+offwind_share_other_coastal:
+  value: 0.15
+  unit: ratio
+  source: "Author assumption informed by Crown Estate Round 4 and ScotWind leasing geography and FES 2025 F.55 (86.1 GW HT 2035)"
+  confidence: assumption
+  note: "Split across the six generic coastal units Z2, Z7, Z13, Z15, Z16 and Z17 in config/renewable_caps.yaml"

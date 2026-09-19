@@ -1,0 +1,3 @@
+name,technology,lat,lon,p_nom_mw,source
+Hinkley Point C,nuclear,51.209,-3.130,3260,"EDF Energy, two EPR units, 3.26 GW"
+Sizewell B,nuclear,52.215,1.620,1198,"EDF Energy, PWR, operating life extended to 2055"
