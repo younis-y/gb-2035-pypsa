@@ -33,3 +33,4 @@ h2_ccgt,fom_gbp_per_yr,21400,GBP/MW/yr,"DESNZ EGC 2025 Annex A: fixed O&M 14500 
 h2_ccgt,vom_gbp_per_mwh,5,GBP/MWh,"DESNZ EGC 2025 Annex A"
 h2_ccgt,efficiency,0.51,ratio,"DESNZ EGC 2025 Annex A"
 h2_ccgt,lifetime_yr,25,years,"DESNZ EGC 2025 Annex A"
+pumped_hydro,fom_gbp_per_yr,40000,GBP/MW/yr,"Author assumption in the range of hydro fixed O&M: DESNZ EGC 2025 Annex A gives no pumped storage line, and 40000 GBP/MW/yr sits between the CCGT (22900) and offshore wind (138700) fixed costs, consistent with a long-lived civil asset with low turnover"

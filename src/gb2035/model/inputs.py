@@ -14,7 +14,7 @@ from gb2035.data.costs import load_costs
 from gb2035.data.demand import load_zone_weights
 from gb2035.data.fes import load_fes
 from gb2035.data.profiles import load_profiles
-from gb2035.data.zones import OFFSHORE_LANDING, OFFSHORE_ZONES, load_zones
+from gb2035.data.zones import LAND_ZONES, OFFSHORE_LANDING, OFFSHORE_ZONES, load_zones
 from gb2035.paths import ProjectPaths
 
 
@@ -50,6 +50,7 @@ class ModelInputs:
     costs: pd.DataFrame
     fes: pd.DataFrame
     caps: RenewableCaps
+    ccs_zones: tuple[str, ...]
 
 
 def _link_distances(yaml_path: Path) -> dict[str, float]:
@@ -63,6 +64,24 @@ def _link_distances(yaml_path: Path) -> dict[str, float]:
                 out[f"{a}-{b}"] = km
                 out[f"{b}-{a}"] = km
     return out
+
+
+def load_ccs_zones(yaml_path: Path) -> tuple[str, ...]:
+    """The zones a gas CCS plant may be sited in, from config/ccs_zones.yaml.
+
+    A CCS plant needs a CO2 pipeline to a store, so it belongs only where a CCUS cluster reaches;
+    the file carries the cluster each zone stands for.
+    """
+    doc = yaml.safe_load(yaml_path.read_text()) or {}
+    zones = doc.get("ccs_zones")
+    if not isinstance(zones, list) or not zones:
+        msg = f"{yaml_path} must contain a non-empty `ccs_zones` list"
+        raise ValueError(msg)
+    unknown = [z for z in zones if z not in LAND_ZONES]
+    if unknown:
+        msg = f"{yaml_path}: unknown zones {unknown}"
+        raise ValueError(msg)
+    return tuple(str(z) for z in zones)
 
 
 def offshore_units(caps: RenewableCaps) -> list[tuple[str, str, str]]:
@@ -103,4 +122,5 @@ def load_inputs(paths: ProjectPaths) -> ModelInputs:
         costs=load_costs(d / "costs_2035_gb.csv"),
         fes=load_fes(d / "fes2025_gb_2035.csv"),
         caps=caps,
+        ccs_zones=load_ccs_zones(paths.config / "ccs_zones.yaml"),
     )

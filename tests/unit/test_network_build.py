@@ -6,6 +6,7 @@ import pytest
 
 from gb2035.config import load_scenario, load_settings
 from gb2035.data.demand import build_zonal_demand, demand_target_twh
+from gb2035.data.zones import LAND_ZONES
 from gb2035.model.inputs import load_inputs
 from gb2035.model.network import build_network, select_snapshots
 from gb2035.paths import ProjectPaths
@@ -64,8 +65,9 @@ def test_component_counts(built):
     assert n.global_constraints.at["co2_cap", "constant"] == pytest.approx(5.0e6)
     # Brownfield capacity is a separate fixed unit per zone, so the totals are greenfield plus
     # one `*_existing` unit for every zone REPD gives capacity in: 20 + 20 onwind, 20 + 17 solar,
-    # 9 + 12 offwind, 2 nuclear, 36 gas, 20 gas_ccs, 14 import, 14 export, 1 blue_h2.
-    assert len(n.generators) == 185
+    # 9 + 12 offwind, 2 nuclear, 36 gas, 6 gas_ccs, 14 import, 14 export, 1 blue_h2.
+    # Gas CCS is 6, not 20: it is offered only in the CCUS-cluster zones of config/ccs_zones.yaml.
+    assert len(n.generators) == 171
     assert len(n.storage_units) == 41, "20 + 18 battery plus 3 pumped hydro"
     assert len(n.stores) == 1
 
@@ -87,6 +89,43 @@ def test_existing_capacity_is_fixed_and_pays_fom_only(built):
         assert greenfield["p_nom_extendable"].all()
         assert (greenfield["p_nom_min"] == 0.0).all(), "floors moved to the fixed units"
         assert greenfield["capital_cost"].gt(fom).all(), "greenfield pays annuitised capex + FOM"
+
+
+def test_nuclear_and_pumped_hydro_carry_fixed_om(built):
+    """Sunk capacity pays fixed O&M whether or not the LP can see it.
+
+    Both are non-extendable, so `capital_cost` never enters the objective and the dispatch is
+    unchanged; `fixed_asset_cost_gbp_per_yr` adds it back after the solve. Leaving it at zero
+    understated the reported system cost by 520 m GBP/yr of nuclear FOM alone, while existing
+    wind, solar, offshore and batteries all paid theirs.
+    """
+    n, inputs, *_ = built
+    nuclear = n.generators[n.generators["carrier"] == "nuclear"]
+    assert not nuclear.empty
+    assert not nuclear["p_nom_extendable"].any(), "the LP cannot build or retire nuclear"
+    assert (nuclear["capital_cost"] > 0).all()
+    assert nuclear["capital_cost"].eq(float(inputs.costs.at["nuclear", "fom_gbp_per_yr"])).all()
+    pumped = n.storage_units[n.storage_units["carrier"] == "pumped_hydro"]
+    assert not pumped.empty
+    assert not pumped["p_nom_extendable"].any(), "the LP cannot build pumped hydro"
+    assert (pumped["capital_cost"] > 0).all()
+    assert pumped["capital_cost"].eq(float(inputs.costs.at["pumped_hydro", "fom_gbp_per_yr"])).all()
+
+
+def test_gas_ccs_is_sited_only_in_cluster_zones(built):
+    """Gas CCS needs a CO2 pipeline, so it may only be built where a cluster reaches.
+
+    Unrestricted, the LP smeared 3,616 MW of CCS across all 20 zones in `cap2` to shave
+    transmission, including 60.7 MW on Shetland and 48.9 MW on the Western Isles: islands with
+    neither a gas pipeline nor CO2 transport and storage.
+    """
+    n, inputs, *_ = built
+    sited = {
+        name.split(" ", 1)[1] for name in n.generators.index[n.generators["carrier"] == "gas_ccs"]
+    }
+    assert sited == set(inputs.ccs_zones)
+    assert set(inputs.ccs_zones) <= set(LAND_ZONES)
+    assert "Z1_1" not in sited and "Z1_2" not in sited, "no CCS on Shetland or the Western Isles"
 
 
 def test_key_components(built):

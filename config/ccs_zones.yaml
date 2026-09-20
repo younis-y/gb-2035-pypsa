@@ -1,0 +1,21 @@
+# Zones that may host gas CCS. A CCS plant needs a gas supply, a CO2 pipeline and a store to
+# pipe into, so it can only be built where a cluster reaches; left unrestricted the LP smears
+# sub-100 MW lumps of CCS across all 20 zones (including Shetland and the Western Isles) to shave
+# transmission, which reads as a siting result and is not one.
+#
+# Author assumption informed by the UK CCUS cluster sequencing (DESNZ Cluster Sequencing for
+# Carbon Capture, Usage and Storage, Track-1 and Track-2), mapped onto the 20 model zones:
+#   Z7  North England                    - Teesside, East Coast Cluster (Track-1)
+#   Z8  Yorkshire and Humber             - Humber, East Coast Cluster and Viking CCS (Track-1)
+#   Z9  North West England and N Wales   - Merseyside and North Wales, HyNet (Track-1)
+#   Z5  Central Scotland                 - Grangemouth, Acorn / Scottish Cluster (Track-2)
+#   Z13 South Wales and Severn           - South Wales industrial cluster (Track-2 candidate)
+#   Z16 South Central                    - Solent industrial cluster (Track-2 candidate)
+# The count is the sourced row `ccs_hosting_zones` in config/assumptions.yaml.
+ccs_zones:
+  - Z5
+  - Z7
+  - Z8
+  - Z9
+  - Z13
+  - Z16

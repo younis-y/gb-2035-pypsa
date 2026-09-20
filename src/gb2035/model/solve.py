@@ -19,9 +19,10 @@ def fixed_asset_cost_gbp_per_yr(n: pypsa.Network) -> float:
 
     PyPSA puts `capital_cost` in the objective only for extendable components, so any cost carried
     by a fixed one is real money the objective cannot see. This sums `capital_cost x capacity` over
-    every non-extendable Generator, StorageUnit, Link and Store. Today only the `*_existing` units
-    contribute: pre-existing nuclear, pumped hydro and the interconnectors are fixed too, but were
-    given no capital cost, and so add nothing.
+    every non-extendable Generator, StorageUnit, Link and Store. The `*_existing` units contribute,
+    and so do the sunk nuclear and pumped-hydro fleets, which carry their fixed O&M from the cost
+    table. The interconnectors and the built grid still carry none: their fixed costs are not in
+    scope for this model, so the total remains a slight understatement.
     """
     total = 0.0
     for df, nom in (

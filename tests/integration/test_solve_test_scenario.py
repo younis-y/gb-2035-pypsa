@@ -90,6 +90,30 @@ def test_energy_rows_state_their_commodity(solved):
     assert table.at["electrolysis", "twh"] <= 0, "electrolysis draws power, it does not supply it"
 
 
+def test_energy_ac_rows_sum_to_ac_load(solved):
+    """Every AC row is a signed net injection, so the column is a plain sum against demand.
+
+    The storage rows were gross discharge (`.clip(lower=0)`), which dropped charging entirely:
+    results/cap5/energy.csv summed to 429.90 TWh of AC supply against 415.48 TWh of demand, and
+    nothing in the table explained the 14.42 TWh gap. Inter-zone links are lossless, so with the
+    storage rows carried net the AC column must close on demand exactly.
+    """
+    n, *_ = solved
+    w = n.snapshot_weightings["generators"]
+    table = energy(n)
+    ac_twh = float(table.loc[table["bus_carrier"] == "AC", "twh"].sum())
+    ac_buses = n.buses.index[n.buses["carrier"] == "AC"]
+    ac_loads = [c for c in n.loads.index if n.loads.at[c, "bus"] in ac_buses]
+    dense = n.get_switchable_as_dense("Load", "p_set")
+    load_twh = float(dense[ac_loads].mul(w, axis=0).to_numpy().sum()) / 1e6
+    assert load_twh > 0
+    assert ac_twh == pytest.approx(load_twh, rel=1e-3)
+    battery = table[(table["carrier"] == "battery") & (table["bus_carrier"] == "AC")]
+    assert not battery.empty and float(battery["twh"].iloc[0]) < 0, (
+        "a cyclic battery is a net consumer over the year: its row is the round-trip loss"
+    )
+
+
 def test_interconnector_trade_is_asymmetric_and_nets_out(solved):
     """Imports and exports are separate one-way generators, and the summary nets them.
 

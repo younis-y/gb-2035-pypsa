@@ -188,9 +188,31 @@ def test_solver_options_merge_selects_simplex_for_test_and_pdlp_for_cap5(repo_ro
     assert cap5_options["solver"] == "pdlp"
 
 
-def test_pumped_hydro_settings_match_assumptions(repo_root: Path):
+# `resolution_hours` trades solve time for detail and is set per run rather than sourced; the
+# solver fields are not numbers, and the tolerance inside `solver_options` has its own
+# `solver_tolerance` row.
+SETTINGS_WITHOUT_ASSUMPTIONS = frozenset({"resolution_hours", "solver_name", "solver_options"})
+
+
+def test_settings_match_assumptions(repo_root: Path):
+    """Every number `Settings` ships as a default is a sourced row, and the two agree."""
     settings = load_settings(repo_root / "config" / "settings.yaml")
     a = load_assumptions(repo_root / "config" / "assumptions.yaml")
+    unsourced = sorted(
+        name
+        for name in Settings.model_fields
+        if name not in SETTINGS_WITHOUT_ASSUMPTIONS and name not in a
+    )
+    assert unsourced == [], f"Settings defaults with no sourced assumption: {unsourced}"
+    for name in Settings.model_fields:
+        if name in a:
+            assert getattr(settings, name) == a[name].value, name
+    # The five the review named, asserted by hand so a regression reports the field.
+    assert settings.battery_hours == a["battery_hours"].value
+    assert settings.existing_ccgt_efficiency == a["existing_ccgt_efficiency"].value
+    assert settings.nuclear_marginal_cost_gbp_mwh == a["nuclear_marginal_cost_gbp_mwh"].value
+    assert settings.weather_year == a["weather_year"].value
+    assert settings.target_year == a["target_year"].value
     assert settings.pumped_hydro_hours == a["pumped_hydro_hours"].value
     assert (
         settings.pumped_hydro_round_trip_efficiency == a["pumped_hydro_round_trip_efficiency"].value

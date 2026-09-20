@@ -21,7 +21,10 @@ TECHNOLOGY_DATA_MAP: dict[str, str] = {
     "hvdc_submarine": "HVDC submarine",
     "hvac_overhead": "HVAC overhead",
 }
-OVERRIDE_ONLY: tuple[str, ...] = ("ccgt_existing", "gas_ccs", "h2_ccgt")
+# Technologies technology-data has no usable row for. Each starts from an all-zero row and is
+# defined entirely by config/costs_overrides.csv. `pumped_hydro` is sunk capacity the LP never
+# builds, so only its fixed O&M matters.
+OVERRIDE_ONLY: tuple[str, ...] = ("ccgt_existing", "gas_ccs", "h2_ccgt", "pumped_hydro")
 COLUMNS = [
     "capex_gbp",
     "capex_basis",

@@ -111,9 +111,17 @@ def _bus_carrier(n: pypsa.Network, df: pd.DataFrame) -> pd.Series:
 def energy(n: pypsa.Network) -> pd.DataFrame:
     """Annual energy by carrier, each row labelled with the commodity it is measured in.
 
-    `blue_h2` is hydrogen, not electricity, so it must not be added to the power rows. The
-    `electrolysis` row is the electricity the electrolysers draw, carried negative to mark it as
-    consumption; `h2_turbine` is the electricity they give back.
+    Every row is a signed net injection at its bus, so the rows of one `bus_carrier` are a plain
+    column sum: on AC they add up to AC demand, because the inter-zone links are lossless.
+
+    - Generators are positive where they supply (`onwind`, `nuclear`, `gas`, `import`) and
+      negative where they withdraw: the one-way `export` leg dispatches negative.
+    - Storage is *net*: discharge minus charging. A cyclic battery therefore shows a small
+      negative row, its round-trip loss, not its gross discharge.
+    - `electrolysis` is the electricity the electrolysers draw, carried negative as consumption;
+      `h2_turbine` is the electricity they give back. Both are AC rows, taken off the link.
+    - `blue_h2` is hydrogen, not electricity (`bus_carrier == "H2"`), so it must never be added
+      to the power rows.
     """
     w = _weights(n)
     gen = (
@@ -125,7 +133,6 @@ def energy(n: pypsa.Network) -> pd.DataFrame:
     )
     su = (
         n.storage_units_t.p.mul(w, axis=0)
-        .clip(lower=0)
         .sum()
         .groupby([n.storage_units["carrier"], _bus_carrier(n, n.storage_units)])
         .sum()

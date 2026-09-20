@@ -1,3 +1,13 @@
+weather_year:
+  value: 2019.0
+  unit: calendar year
+  source: "Author choice: 2019 is the most recent pre-pandemic year with a complete NESO half-hourly demand series and full ERA5 coverage, so demand and weather are drawn from the same year with no lockdown distortion"
+  confidence: assumption
+target_year:
+  value: 2035.0
+  unit: calendar year
+  source: "FES 2025 Data Workbook V006 publishes 2035 for every pathway, and 2035 is the horizon of the UK sixth carbon budget period; the whole cost table is technology-data v0.15.0 costs_2035.csv"
+  confidence: assumption
 losses_uplift:
   value: 1.07
   unit: ratio
@@ -39,6 +49,22 @@ gas_ccs_capture_rate:
   unit: ratio
   source: "PyPSA technology-data v0.15.0, CCGT capture rate"
   confidence: published
+ccs_hosting_zones:
+  value: 6.0
+  unit: zones
+  source: "Author assumption informed by the UK CCUS cluster sequencing (DESNZ Cluster Sequencing for Carbon Capture, Usage and Storage): Teesside Z7 and Humber Z8 (East Coast Cluster, Track-1), Merseyside and North Wales Z9 (HyNet, Track-1), Grangemouth Z5 (Acorn/Scottish Cluster, Track-2), South Wales Z13 and Solent Z16 (Track-2 candidate industrial clusters)"
+  confidence: assumption
+  note: "The zones themselves are listed in config/ccs_zones.yaml; gas CCS is not offered anywhere else"
+existing_ccgt_efficiency:
+  value: 0.50
+  unit: ratio
+  source: "Author assumption: fleet average of the existing GB CCGT fleet, below the 0.54 new-build figure in DESNZ Electricity Generation Costs 2025 Annex A; the same value is the ccgt_existing efficiency override in config/costs_overrides.csv"
+  confidence: assumption
+nuclear_marginal_cost_gbp_mwh:
+  value: 8.0
+  unit: GBP/MWh
+  source: "Author assumption: fuel and variable O&M only, so the fixed fleet runs baseload under every cap; PyPSA technology-data v0.15.0 nuclear gives 3.79 GBP/MWh VOM and the balance is the fuel cycle"
+  confidence: assumption
 ccs_transport_storage_gbp_t:
   value: 9.0
   unit: GBP/tCO2
@@ -54,6 +80,11 @@ hydrogen_turbine_efficiency:
   unit: ratio
   source: "PyPSA-GB rules/hydrogen.smk (0.50); DESNZ 2025 CCHT 2035 gives 0.51"
   confidence: published
+battery_hours:
+  value: 2.0
+  unit: hours
+  source: "Author assumption: GB's built battery fleet is predominantly 1 to 2 hour duration (REPD Q2 2026 project durations), and 2 h is the upper end of what is being built; every battery in the model holds 2 h at rated power"
+  confidence: assumption
 battery_round_trip_efficiency:
   value: 0.90
   unit: ratio

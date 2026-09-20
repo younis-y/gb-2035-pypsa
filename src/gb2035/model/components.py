@@ -292,6 +292,9 @@ def add_thermal(
                 carrier="nuclear",
                 p_nom=nuclear_mw,
                 p_nom_extendable=False,
+                # Sunk like every other brownfield unit, so it pays FOM and no capex. Fixed
+                # capacity never reaches the objective, so this changes the reported cost only.
+                capital_cost=_fom(c, "nuclear"),
                 marginal_cost=settings.nuclear_marginal_cost_gbp_mwh,
                 efficiency=1.0,
             )
@@ -327,6 +330,11 @@ def add_thermal(
             + float(cast(Any, c.at["ocgt", "vom_gbp_per_mwh"]))
             + _carbon_adder(scenario, co2, eff_ocgt),
         )
+        # Gas CCS needs a CO2 pipeline to a store, so it is built only where a CCUS cluster
+        # reaches (config/ccs_zones.yaml). Unrestricted the LP smeared sub-100 MW lumps across
+        # all 20 zones, islands included, to shave transmission.
+        if z not in inputs.ccs_zones:
+            continue
         eff_ccs = float(cast(Any, c.at["gas_ccs", "efficiency"]))
         captured_t_per_mwh_el = co2 * settings.gas_ccs_capture_rate / eff_ccs
         residual = co2 * (1.0 - settings.gas_ccs_capture_rate)
@@ -395,6 +403,8 @@ def add_storage(
             efficiency_store=eta_ph,
             efficiency_dispatch=eta_ph,
             cyclic_state_of_charge=True,
+            # Sunk, so FOM only, from the override-only `pumped_hydro` row in the cost table.
+            capital_cost=_fom(inputs.costs, "pumped_hydro"),
         )
 
 
