@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import subprocess
 import time
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Annotated, Any, cast
 
@@ -27,7 +28,7 @@ from gb2035.data.fes import extract_fes_2035
 from gb2035.data.fleet import build_fleet_by_zone
 from gb2035.data.manifest import load_manifest, save_manifest
 from gb2035.data.repd import build_repd_by_zone
-from gb2035.data.retrieve import retrieve
+from gb2035.data.retrieve import RetrieveError, retrieve
 from gb2035.data.zones import load_zones
 from gb2035.model.inputs import load_inputs
 from gb2035.model.network import build_network
@@ -146,20 +147,46 @@ def retrieve_cmd(
         console.print(f"manifest updated: {paths.manifest}")
 
 
+COPIED_RAW_FILES: tuple[str, ...] = (
+    "buses.csv",
+    "links.csv",
+    "links_future.csv",
+    "zone_definitions.csv",
+    "zones.geojson",
+    "transmission_grid_2030.yaml",
+)
+BUILT_RAW_FILES: tuple[str, ...] = (
+    "power_stations_locations.csv",
+    "REPD_Publication_Q2_2026.csv",
+    "demanddata_2019.csv",
+    "fes2025_data_workbook.xlsx",
+    "costs_2035.csv",
+)
+
+
+def _require_raw_files(paths: ProjectPaths, filenames: Iterable[str]) -> None:
+    """Fail naming the file and the command that fetches it, not with a bare FileNotFoundError.
+
+    A fresh clone carries config/ and data/manifest.json but an empty data/raw, so every builder
+    below would otherwise die on whichever read came first.
+    """
+    entry_of = {entry.filename: name for name, entry in load_manifest(paths.manifest).items()}
+    for filename in filenames:
+        if (paths.data_raw / filename).exists():
+            continue
+        entry = entry_of.get(filename, filename)
+        msg = f"{filename} is missing from data/raw; run `gb2035 retrieve --only {entry}`"
+        raise RetrieveError(msg)
+
+
 @app.command("build-derived")
 def build_derived(root: RootOpt = Path()) -> None:
     """Rebuild every committed table under data/derived from data/raw."""
     paths, settings, _ = _ctx(root, None)
     raw, derived = paths.data_raw, paths.data_derived
+    _require_raw_files(paths, COPIED_RAW_FILES + BUILT_RAW_FILES)
     derived.mkdir(parents=True, exist_ok=True)
-    for name in [
-        "buses.csv",
-        "links.csv",
-        "links_future.csv",
-        "zone_definitions.csv",
-        "zones.geojson",
-        "transmission_grid_2030.yaml",
-    ]:
+    for name in COPIED_RAW_FILES:
         (derived / name).write_bytes((raw / name).read_bytes())
     zones = load_zones(derived / "zones.geojson")
     build_fleet_by_zone(

@@ -5,6 +5,7 @@ import yaml
 from pydantic import ValidationError
 
 from gb2035.config import (
+    HydrogenSettings,
     Scenario,
     Settings,
     SteelSettings,
@@ -122,7 +123,20 @@ def test_repo_config_files_load(repo_root: Path):
     assert steel.h2_lhv_mwh_per_t == assumptions["h2_lhv_mwh_per_t"].value
     assert steel.dri_electricity_mwh_per_t == assumptions["dri_electricity_mwh_per_t"].value
     assert steel.h2_dri_mt_steel == assumptions["h2_dri_mt_steel"].value
-    names = list_scenarios(repo_root / "config" / "scenarios.yaml")
+    # The field and the assumption row are named differently (`h2_kg_per_t` against
+    # `h2_dri_kg_per_t`), which is exactly how the 51 kg/t figure went unguarded.
+    assert steel.h2_kg_per_t == assumptions["h2_dri_kg_per_t"].value
+    hydrogen = HydrogenSettings()
+    assert hydrogen.turbine_efficiency == assumptions["hydrogen_turbine_efficiency"].value
+    assert hydrogen.blue_h2_max_mw == assumptions["blue_h2_max_mw"].value
+    assert hydrogen.blue_h2_cost_gbp_mwh == assumptions["blue_h2_cost_gbp_mwh"].value
+    assert hydrogen.blue_h2_co2_t_per_mwh == assumptions["blue_h2_co2_t_per_mwh"].value
+    assert hydrogen.blue_h2_enabled is False, (
+        "the fourth blue_h2_* default is a switch, not a sourced number: blue hydrogen is off "
+        "unless a scenario turns it on"
+    )
+    path = repo_root / "config" / "scenarios.yaml"
+    names = list_scenarios(path)
     for required in [
         "test",
         "uncapped",
@@ -136,8 +150,13 @@ def test_repo_config_files_load(repo_root: Path):
         "cap5_ee_demand",
         "cap5_tx_expansion",
         "cap5_import_100",
+        "cap5_steel",
     ]:
         assert required in names
+    # Deep-validate every scenario body, not only `test`: a typo'd or out-of-range field in any
+    # of them is a pydantic error here rather than a surprise mid-sweep.
+    for name in names:
+        assert load_scenario(name, path).name == name
     test = load_scenario("test", repo_root / "config" / "scenarios.yaml")
     assert (
         test.snapshots is not None

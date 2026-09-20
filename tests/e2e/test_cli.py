@@ -1,4 +1,5 @@
 import json
+import shutil
 from pathlib import Path
 
 import pandas as pd
@@ -132,6 +133,27 @@ def test_run_rejects_resolution_hours_out_of_range(repo_root: Path, tmp_path: Pa
     )
     assert r.exit_code != 0
     assert not (tmp_path / "test" / "run_meta.json").exists()
+
+
+def test_build_derived_names_the_retrieve_command_for_missing_raw(repo_root: Path, tmp_path: Path):
+    """A fresh clone has config/ and the manifest but an empty data/raw.
+
+    `build-derived` used to read straight through to `(raw / name).read_bytes()` and die with a
+    bare FileNotFoundError, which tells a new user nothing. It must name the missing file and the
+    exact command that fetches it.
+    """
+    shutil.copytree(repo_root / "config", tmp_path / "config")
+    (tmp_path / "data").mkdir()
+    shutil.copy(repo_root / "data" / "manifest.json", tmp_path / "data" / "manifest.json")
+    (tmp_path / "data" / "raw").mkdir()
+    r = runner.invoke(app, ["build-derived", "--root", str(tmp_path)])
+    assert r.exit_code != 0
+    message = r.stdout + str(r.exception)
+    assert "buses.csv" in message, message
+    assert "gb2035 retrieve --only pypsa_gb_buses" in message, message
+    assert not (tmp_path / "data" / "derived").exists(), (
+        "nothing is written when inputs are missing"
+    )
 
 
 def test_unknown_scenario_fails_cleanly(repo_root: Path, tmp_path: Path):

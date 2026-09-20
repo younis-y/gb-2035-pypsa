@@ -1,9 +1,11 @@
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from gb2035.config import load_scenario, load_settings
+from gb2035.data.demand import build_zonal_demand, demand_target_twh
 from gb2035.model.inputs import load_inputs
 from gb2035.model.network import build_network, select_snapshots
 from gb2035.paths import ProjectPaths
@@ -28,6 +30,25 @@ def test_snapshot_selection(built):
         inputs.demand.index, scenario.model_copy(update={"snapshots": None}), settings
     )
     assert len(full) == 8760
+
+
+def test_three_hourly_full_year_weights(built):
+    """Every headline number in results/ was produced at resolution_hours = 3; pin its invariants.
+
+    Three-hourly sampling must keep the year's length (2,920 snapshots x 3 h = 8,760 h of objective
+    weight) and must tell PyPSA that a store's state of charge now advances three hours per step,
+    or storage energy is silently divided by three.
+    """
+    _, inputs, scenario, settings = built
+    n = build_network(
+        inputs,
+        scenario.model_copy(update={"snapshots": None}),
+        settings.model_copy(update={"resolution_hours": 3}),
+    )
+    assert len(n.snapshots) == 2920
+    assert n.snapshot_weightings["objective"].sum() == pytest.approx(8760.0)
+    assert (n.snapshot_weightings["generators"] == 3.0).all()
+    assert (n.snapshot_weightings["stores"] == 3.0).all()
 
 
 def test_component_counts(built):
@@ -120,12 +141,25 @@ def test_key_components(built):
 
 
 def test_demand_energy_matches_target(built):
-    n, *_ = built
+    n, inputs, scenario, settings = built
     zonal = n.loads_t.p_set[[c for c in n.loads_t.p_set.columns if c.startswith("load ")]]
     weighted_twh = (zonal.sum(axis=1) * n.snapshot_weightings["objective"]).sum() / 1e6
     assert 350 < weighted_twh < 650, (
         "a winter week scaled to a year overshoots the 415 TWh annual target; order of magnitude only"
     )
+    # The week-scaled band above is +/-30 percent, so it cannot fail for the regression it names:
+    # dropping the 1.07 losses uplift lands at 451 TWh, well inside it. Over the whole year at
+    # hourly resolution the zonal split is exact, so assert against the FES target itself. This
+    # catches a lost uplift, a wrong demand pathway or a broken zonal split.
+    full = select_snapshots(
+        pd.DatetimeIndex(inputs.demand.index),
+        scenario.model_copy(update={"snapshots": None}),
+        settings.model_copy(update={"resolution_hours": 1}),
+    )
+    assert len(full) == 8760
+    target_twh = demand_target_twh(inputs.fes, scenario.demand_pathway, settings.losses_uplift)
+    year = build_zonal_demand(inputs.demand, inputs.weights, target_twh).loc[full]
+    assert float(year.to_numpy().sum()) / 1e6 == pytest.approx(target_twh, rel=0.005)
 
 
 def test_no_cap_no_price_scenario_has_no_constraint(repo_root: Path, built):
