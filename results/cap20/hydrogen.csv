@@ -3,7 +3,7 @@ Teesside,electrolysis_mw,0
 Teesside,electrolysis_utilisation,0
 Teesside,green_h2_twh,0
 Teesside,h2_store_mwh,0
-Teesside,h2_turbine_mw_h2_input,0.000873111
-Teesside,h2_to_power_twh_el,2.84325e-07
+Teesside,h2_turbine_mw_h2_input,0.000663124
+Teesside,h2_to_power_twh_el,3.05098e-07
 Teesside,blue_h2_twh,5
 Teesside,industrial_demand_twh,5

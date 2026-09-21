@@ -1,12 +1,12 @@
 {
   "scenario": "cap5_tx_expansion",
-  "git_sha": "f47bd8b",
+  "git_sha": "7728e99",
   "pypsa_version": "1.3.0",
-  "solve_seconds": 470.0,
+  "solve_seconds": 914.2,
   "snapshots": 2920,
   "resolution_hours": 3,
   "solver": "pdlp",
-  "total_cost_gbp_per_yr": 14834942737.014912,
-  "lp_objective_gbp_per_yr": 10211815385.551552,
-  "fixed_asset_cost_gbp_per_yr": 4623127351.46336
+  "total_cost_gbp_per_yr": 15468137956.673492,
+  "lp_objective_gbp_per_yr": 10211875724.776133,
+  "fixed_asset_cost_gbp_per_yr": 5256262231.89736
 }

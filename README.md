@@ -148,17 +148,17 @@ is always its 1.2 GW cap and only its TWh are meaningful.
 <!-- summary:start -->
 | Scenario | CO2 (Mt) | System cost (bn GBP/yr) | Shadow carbon price (GBP/t) | Onshore (GW) | Offshore (GW) | Solar (GW) | Battery (GW) | Electrolysis (GW) | Green H2 (TWh) | Blue H2 (TWh) |
 |---|---|---|---|---|---|---|---|---|---|---|
-| uncapped | 4.6 | 15.1 | 0 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
-| cap30 | 28.2 | 14.1 | 0 | 32 | 28 | 93 | 15 | 0.0 | 0.0 | 5.0 |
-| cap20 | 20.0 | 14.3 | 33 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
-| cap10 | 10.0 | 14.7 | 33 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
-| cap5 | 5.0 | 14.8 | 52 | 37 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
-| cap2 | 2.0 | 16.2 | 910 | 44 | 28 | 103 | 20 | 0.0 | 0.0 | 6.5 |
-| cap5_no_h2 | 5.0 | 14.5 | 52 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 0.0 |
-| cap5_ee_demand | 5.0 | 16.0 | 226 | 42 | 28 | 105 | 17 | 0.0 | 0.0 | 1.3 |
-| cap5_tx_expansion | 5.0 | 14.8 | 52 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
-| cap5_import_100 | 5.0 | 16.7 | 128 | 44 | 28 | 99 | 15 | 0.0 | 0.0 | 5.0 |
-| cap5_steel | 5.0 | 15.0 | 52 | 38 | 28 | 98 | 15 | 0.0 | 0.0 | 5.0 |
+| uncapped | 4.6 | 15.7 | 0 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
+| cap30 | 28.2 | 14.8 | 0 | 32 | 28 | 93 | 15 | 0.0 | 0.0 | 5.0 |
+| cap20 | 20.0 | 15.0 | 33 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
+| cap10 | 10.0 | 15.3 | 33 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
+| cap5 | 5.0 | 15.5 | 52 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
+| cap2 | 2.0 | 16.8 | 910 | 44 | 28 | 103 | 20 | 0.0 | 0.0 | 6.5 |
+| cap5_no_h2 | 5.0 | 15.1 | 52 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 0.0 |
+| cap5_ee_demand | 5.0 | 16.6 | 226 | 42 | 28 | 105 | 17 | 0.0 | 0.0 | 1.3 |
+| cap5_tx_expansion | 5.0 | 15.5 | 52 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
+| cap5_import_100 | 5.0 | 17.4 | 128 | 44 | 28 | 99 | 15 | 0.0 | 0.0 | 5.0 |
+| cap5_steel | 5.0 | 15.6 | 52 | 37 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
 <!-- summary:end -->
 
 ![Installed capacity by technology at each CO2 cap: offshore wind flat at 27.9 GW throughout while solar and onshore wind grow as the cap tightens.](docs/figures/capacity_mix_by_cap.png)

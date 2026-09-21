@@ -34,6 +34,10 @@ scenarios:
     co2_cap_mt: 5.0
     demand_pathway: Electric Engagement
     hydrogen: {industrial_demand_twh: 1.3}
+    # HiGHS cuPDLP-C ("pdlp") ended with status "unknown" three times on this LP (twice at the
+    # default 1e-5 feasibility tolerances, once at 1e-4) while the other ten full-year scenarios
+    # converged; HiGHS's native PDLP ("hipdlp") converges on it in about 25 minutes.
+    solver_options: {solver: hipdlp}
   cap5_tx_expansion:
     description: cap5 with extendable inter-zone links
     co2_cap_mt: 5.0
