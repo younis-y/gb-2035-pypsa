@@ -80,16 +80,19 @@ metrics come from named sheets: demand and peak demand (F.53, F.54), offshore/on
 (F.61), nuclear (F.62), hydrogen generation and gas CCUS (F.63, blocks 0 and 1), unabated
 gas (F.64), industrial hydrogen (F.51). Regenerate: `gb2035 build-derived`.
 
-### costs_2035_gb.csv (15 rows, indexed by technology)
+### costs_2035_gb.csv (16 rows, indexed by technology)
 
 Twelve technologies come from `costs_2035.csv`, converted EUR to GBP at 0.85
-(`config/assumptions.yaml`, ECB 2025 annual average). Three more (`ccgt_existing`,
-`gas_ccs`, `h2_ccgt`) come entirely from overrides. `config/costs_overrides.csv` applies
-DESNZ Generation Costs 2025 Annex A, 2035 medium scenario, to eight of the fifteen
-technologies: DESNZ capex is predevelopment plus
+(`config/assumptions.yaml`, ECB 2025 annual average). Four more (`ccgt_existing`,
+`gas_ccs`, `h2_ccgt`, `pumped_hydro`) come entirely from overrides.
+`config/costs_overrides.csv` applies DESNZ Generation Costs 2025 Annex A, 2035 medium
+scenario, to eight of the sixteen technologies: DESNZ capex is predevelopment plus
 construction cost, and DESNZ fixed O&M folds in insurance and grid connection.
 `ccgt_existing` keeps zero (sunk) capex but the DESNZ CCGT fixed cost, so retirement saves
-it. Regenerate: `gb2035 build-derived`.
+it. `pumped_hydro` is the ninth overridden technology and the one DESNZ does not cover: it
+carries zero capex (the fleet is built) and an author-assumption 40,000 GBP/MW/yr fixed O&M,
+so the sunk pumped-storage fleet is costed like every other brownfield asset.
+Regenerate: `gb2035 build-derived`.
 
 ### cf_2019_zonal.parquet (8,760 rows x 63 columns)
 
@@ -115,7 +118,7 @@ are copied byte-for-byte by `build-derived`, untransformed; only `zones.geojson`
 by model code (reprojected as above). `zone_definitions.csv` is not used
 for the demand split; see below. Regenerate: `gb2035 build-derived`.
 
-## Zonal demand weights and renewable caps
+## Zonal demand weights, renewable caps and CCS siting
 
 `config/demand_weights.csv` holds one population-share weight per land zone (20 rows),
 each an author estimate from ONS mid-2022 population, normalised to sum to 1. It exists
@@ -129,6 +132,13 @@ back separately as a fixed unit, never counted against the cap.
 Onshore and solar caps split by land area; offshore splits by named share: Dogger Bank 35
 percent, Hornsea 25 percent, East Anglia 25 percent, the remaining 15 percent spread across
 six generic coastal zones (Z2, Z7, Z13, Z15, Z16, Z17).
+
+`config/ccs_zones.yaml` lists the six zones a gas CCS plant may be built in: Z7 Teesside and
+Z8 Humber (East Coast Cluster), Z9 Merseyside and North Wales (HyNet), Z5 Grangemouth
+(Acorn), and Z13 South Wales and Z16 Solent as Track-2 candidates. It is an author assumption
+informed by the DESNZ CCUS cluster sequencing, sourced as `ccs_hosting_zones` in
+`config/assumptions.yaml`. Without it the optimiser sites CCS in every zone, islands
+included, because nothing in a transport-model LP knows a CO2 pipeline has to reach the site.
 
 ## Licences
 

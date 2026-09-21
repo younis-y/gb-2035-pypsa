@@ -44,8 +44,8 @@ FOM only) and an extendable greenfield unit from zero (annuitised capex plus FOM
 |---|---|---|
 | Onshore wind, solar | REPD floor | national total, split by land area |
 | Offshore wind | REPD MW per zone | three lease areas plus six coastal zones, by share |
-| Nuclear, pumped hydro | Hinkley Point C + Sizewell B (4.46 GW); DUKES pumped storage; no fixed cost | not modelled |
-| Existing gas | DUKES fleet, retirement only | new OCGT and gas CCS (90 percent capture) |
+| Nuclear, pumped hydro | Hinkley Point C + Sizewell B (4.46 GW); DUKES pumped storage; FOM only | not modelled |
+| Existing gas | DUKES fleet, retirement only | new OCGT everywhere; gas CCS (90 percent capture) only in CCUS-cluster zones |
 | Battery | REPD MW; only the inverter's FOM | 2 hour duration |
 
 Nuclear's 4.46 GW is below FES 2025's 5.04 GW: only the two named stations are fixed.
@@ -62,6 +62,12 @@ zonal caps, not the national ones, are what push the model into progressively wo
 
 The battery holds 2 hours at rated power, 90 percent round-trip split as the square root
 each way, with a 0.09 GBP/MWh wear cost from the author's PuLP model.
+
+Gas CCS is offered only where a CO2 pipeline could reach it: the six zones listed in
+`config/ccs_zones.yaml` (Z7 Teesside and Z8 Humber for the East Coast Cluster, Z9 Merseyside
+and North Wales for HyNet, Z5 Grangemouth for Acorn, and Z13 South Wales and Z16 Solent as
+Track-2 candidates). Unrestricted, the optimiser smeared sub-100 MW lumps of CCS across all
+twenty zones, Shetland and the Western Isles included, purely to shave transmission.
 
 The Teesside node couples to Z7 via an electrolysis link, a salt-cavern store and a turbine
 link, plus a flat industrial load and an optional blue-hydrogen generator (gas reforming,
@@ -91,15 +97,16 @@ resource cost and is not comparable with the capped scenarios.
 
 The objective minimises annualised capital cost, fixed and variable O&M, fuel, and, in
 `uncapped` only, carbon price. Capital cost per MW-year is capex times an annuity factor at
-the discount rate (0.07, override-able per technology) plus fixed O&M. Costs come from
-technology-data v0.15.0 for 2035, EUR to GBP at 0.85, with DESNZ Electricity Generation
-Costs 2025 overriding solar, onshore and offshore wind, CCGT, OCGT, gas CCS and
-hydrogen-to-power.
+the discount rate (0.07, one rate for every technology) plus fixed O&M. Lifetimes, not the
+rate, are what vary per technology: 38 years for solar, 35 for onshore wind, 30 for offshore,
+40 for nuclear and the grid, 25 for gas. Costs come from technology-data v0.15.0 for 2035,
+EUR to GBP at 0.85, with DESNZ Electricity Generation Costs 2025 overriding solar, onshore
+and offshore wind, CCGT, OCGT, gas CCS and hydrogen-to-power.
 
 PyPSA prices capital cost only on extendable capacity, so the objective misses brownfield
 FOM. The code adds this back after solving as `fixed_asset_cost`, so the reported total
-includes the sunk fleet's cost; nuclear, pumped hydro and interconnectors still carry none,
-so even that total understates the truth slightly.
+includes the sunk fleet's cost, nuclear and pumped hydro included. The interconnectors and
+the built grid still carry none, so even that total understates the truth slightly.
 
 ## Scenarios
 
@@ -148,8 +155,9 @@ carbon price, and about 1 GW shifted between new onshore wind and new solar.
 - No BECCS: keeps carbon accounting free of negative emissions.
 - No unit commitment or reserves: dispatch is a continuous LP, not mixed-integer.
 - Interconnector trade is price-taking, unbounded up to capacity at a fixed price each way.
-- Nuclear, pumped hydro and interconnectors carry no fixed cost, a small constant
-  understatement of cost.
+- The interconnectors and the built grid carry no fixed cost, a small constant
+  understatement of cost. Every other sunk asset, nuclear and pumped hydro included, pays
+  fixed O&M.
 - East Anglia's offshore profile uses the nearest ERA5 cells the cutout covers, short of the
   real lease area.
 - ERA5 overstates onshore capacity factors at a few small, coastal or island zones

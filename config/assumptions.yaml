@@ -128,7 +128,7 @@ blue_h2_cost_gbp_mwh:
 blue_h2_co2_t_per_mwh:
   value: 0.02
   unit: tCO2/MWh H2
-  source: "Derived: 0.27 tCO2/MWh H2 direct emissions from natural gas reforming at 95 percent capture"
+  source: "Derived: 0.27 tCO2/MWh H2 direct emissions from natural gas reforming at 92.5 percent capture, rounded to 0.02 (0.27 x 0.075 = 0.02025)"
   confidence: derived
 power_sector_emissions_2024_mt:
   value: 37.5

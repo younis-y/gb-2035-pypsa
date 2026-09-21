@@ -4,11 +4,13 @@ Generated from `config/assumptions.yaml` by `gb2035 report --update-readme`.
 
 | Key | Value | Unit | Confidence | Source |
 |---|---|---|---|---|
+| battery_hours | 2 | hours | assumption | Author assumption: GB's built battery fleet is predominantly 1 to 2 hour duration (REPD Q2 2026 project durations), and 2 h is the upper end of what is being built; every battery in the model holds 2 h at rated power |
 | battery_round_trip_efficiency | 0.9 | ratio | published | younis-y/gb-weather-to-price-forecasting scripts/03_price_prediction_main.py EFFICIENCY_RTE |
 | battery_wear_cost_gbp_mwh | 0.09 | GBP/MWh | derived | 0.1 EUR/MWh DEGRADATION_COST in the same script, converted at 0.85 |
-| blue_h2_co2_t_per_mwh | 0.02 | tCO2/MWh H2 | derived | Derived: 0.27 tCO2/MWh H2 direct emissions from natural gas reforming at 95 percent capture |
+| blue_h2_co2_t_per_mwh | 0.02 | tCO2/MWh H2 | derived | Derived: 0.27 tCO2/MWh H2 direct emissions from natural gas reforming at 92.5 percent capture, rounded to 0.02 (0.27 x 0.075 = 0.02025) |
 | blue_h2_cost_gbp_mwh | 70 | GBP/MWh H2 | assumption | DESNZ Hydrogen production costs 2021, CCUS-enabled range for 2035, upper-middle |
 | blue_h2_max_mw | 1200 | MW H2 | published | bp H2Teesside planned 1.2 GW hydrogen output (bp, 2025) |
+| ccs_hosting_zones | 6 | zones | assumption | Author assumption informed by the UK CCUS cluster sequencing (DESNZ Cluster Sequencing for Carbon Capture, Usage and Storage): Teesside Z7 and Humber Z8 (East Coast Cluster, Track-1), Merseyside and North Wales Z9 (HyNet, Track-1), Grangemouth Z5 (Acorn/Scottish Cluster, Track-2), South Wales Z13 and Solent Z16 (Track-2 candidate industrial clusters) |
 | ccs_transport_storage_gbp_t | 9 | GBP/tCO2 | published | DESNZ Electricity Generation Costs 2025 Annex A, Gas CCUS 2035, CO2 capture and storage cost |
 | discount_rate | 0.07 | ratio | assumption | Author assumption; DESNZ 2025 hurdle rates span 0.076 to 0.101 |
 | dri_electricity_mwh_per_t | 0.7 | MWh per t steel | published | Vogl, Ahman and Nilsson 2018: hydrogen-DRI-EAF electricity excluding electrolysis |
@@ -16,6 +18,7 @@ Generated from `config/assumptions.yaml` by `gb2035 report --update-readme`.
 | ets_price_gbp_t | 55 | GBP/tCO2 | published | UK ETS allowance price, mid-2025 market level |
 | etys_2035_b6_capability_gw | 19.3 | GW | published | NESO ETYS 2025 Boundary Chart Data, boundary B6 capability including planned reinforcements, Holistic Transition background, 2035 (https://www.neso.energy/document/383896/download) |
 | eur_to_gbp | 0.85 | GBP per EUR | published | ECB euro reference rate, 2025 annual average |
+| existing_ccgt_efficiency | 0.5 | ratio | assumption | Author assumption: fleet average of the existing GB CCGT fleet, below the 0.54 new-build figure in DESNZ Electricity Generation Costs 2025 Annex A; the same value is the ccgt_existing efficiency override in config/costs_overrides.csv |
 | gas_ccs_capture_rate | 0.9 | ratio | published | PyPSA technology-data v0.15.0, CCGT capture rate |
 | gas_co2_t_per_mwh_th | 0.184 | tCO2/MWh thermal | published | DESNZ Greenhouse gas reporting conversion factors 2024, natural gas gross CV |
 | gas_price_gbp_mwh_th | 24 | GBP/MWh thermal | published | DESNZ Fossil fuel price assumptions 2024, central gas 2035 (https://www.gov.uk/government/publications/fossil-fuel-price-assumptions-2024) |
@@ -29,6 +32,7 @@ Generated from `config/assumptions.yaml` by `gb2035 report --update-readme`.
 | interconnector_total_gw | 19.4 | GW | published | FES 2025 Data Workbook V006, sheet F.61, Holistic Transition 2035 |
 | losses_uplift | 1.07 | ratio | derived | FES 2025 Data Workbook V006, sheets F.53 and DB.ED1 (https://www.neso.energy/document/364551/download) |
 | nuclear_2035_gw | 5.04 | GW | published | FES 2025 F.62 Holistic Transition 2035 |
+| nuclear_marginal_cost_gbp_mwh | 8 | GBP/MWh | assumption | Author assumption: fuel and variable O&M only, so the fixed fleet runs baseload under every cap; PyPSA technology-data v0.15.0 nuclear gives 3.79 GBP/MWh VOM and the balance is the fuel cycle |
 | offshore_cap_national_gw | 150 | GW | assumption | Author assumption informed by the Crown Estate leasing pipeline and FES 2025 F.55 (86.1 GW HT 2035) |
 | offwind_share_dogger_bank | 0.35 | ratio | assumption | Author assumption informed by Crown Estate Round 4 and ScotWind leasing geography and FES 2025 F.55 (86.1 GW HT 2035) |
 | offwind_share_east_anglia | 0.25 | ratio | assumption | Author assumption informed by Crown Estate Round 4 and ScotWind leasing geography and FES 2025 F.55 (86.1 GW HT 2035) |
@@ -42,7 +46,9 @@ Generated from `config/assumptions.yaml` by `gb2035 report --update-readme`.
 | scunthorpe_eaf_twh | 1.5 | TWh/yr | assumption | Author assumption: consented EAF plan capacity unconfirmed; mirrors Port Talbot |
 | solar_cap_national_gw | 150 | GW | assumption | Author assumption informed by FES 2025 F.57 (61.8 GW HT 2035) |
 | solver_tolerance | 1e-05 | ratio | assumption | HiGHS PDLP primal/dual feasibility tolerance; simplex needs 20 min for four weeks and hours for a year on this LP |
+| target_year | 2035 | calendar year | assumption | FES 2025 Data Workbook V006 publishes 2035 for every pathway, and 2035 is the horizon of the UK sixth carbon budget period; the whole cost table is technology-data v0.15.0 costs_2035.csv |
 | teesside_committed_electrolysis_mw | 0 | MW | published | bp cancelled HyGreen Teesside, 4 March 2025 (Energy Voice report) |
 | teesside_industrial_h2_twh_ee | 1.3 | TWh/yr | derived | FES 2025 F.51 industrial hydrogen demand EE 2035 (5.14 TWh) x 0.25 |
 | teesside_industrial_h2_twh_ht | 5 | TWh/yr | derived | FES 2025 F.51 industrial hydrogen demand HT 2035 (19.79 TWh) x 0.25 |
 | teesside_share_of_uk_hydrogen | 0.25 | ratio | published | Tees Valley Combined Authority hydrogen strategy key findings 2023: up to 2.5 GW of the UK 10 GW 2030 ambition |
+| weather_year | 2019 | calendar year | assumption | Author choice: 2019 is the most recent pre-pandemic year with a complete NESO half-hourly demand series and full ERA5 coverage, so demand and weather are drawn from the same year with no lockdown distortion |

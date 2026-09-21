@@ -48,10 +48,21 @@ The scenario also carries an optional hydrogen-DRI block, off by default and in 
 committed sweep (`h2_dri_enabled: false`), sized for 3 Mt/yr of steel at Port Talbot: 51 kg
 of hydrogen per tonne and 0.7 MWh of electricity per tonne excluding electrolysis, both from
 Vogl, Ahman and Nilsson (2018), whose own total is 3.48 MWh/t including electrolysis. All
-three numbers are now sourced rows in `config/assumptions.yaml` (`h2_dri_kg_per_t`,
-`dri_electricity_mwh_per_t`, `h2_dri_mt_steel`), and
-`tests/unit/test_config.py::test_repo_config_files_load` asserts the matching `SteelSettings`
-defaults equal them, so the code and the sourced table cannot drift apart. Enabled, the block
+three numbers are sourced rows in `config/assumptions.yaml`, and
+`tests/unit/test_config.py::test_repo_config_files_load` asserts each against the
+`SteelSettings` default that carries it, so the code and the sourced table cannot drift apart:
+
+| `SteelSettings` field | `assumptions.yaml` key |
+|---|---|
+| `h2_kg_per_t` | `h2_dri_kg_per_t` |
+| `dri_electricity_mwh_per_t` | `dri_electricity_mwh_per_t` |
+| `h2_dri_mt_steel` | `h2_dri_mt_steel` |
+| `h2_lhv_mwh_per_t` | `h2_lhv_mwh_per_t` |
+
+The first pair is the one the names do not match on, and it was the pair the guard missed: the
+51 kg/t figure went unasserted until this table was written. The same test pins
+`HydrogenSettings.turbine_efficiency` to `hydrogen_turbine_efficiency` and the three numeric
+`blue_h2_*` defaults to their rows. Enabled, the block
 reuses the Teesside electrolysis-store-turbine node with blue hydrogen off. gb2035 has no
 PyPSA carrier called `DRIH2`: the borrowing is in spirit, an electrolytic, green-only route
 feeding steelmaking, rather than in exact naming.

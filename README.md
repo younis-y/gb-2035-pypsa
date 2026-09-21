@@ -178,9 +178,10 @@ One linear program sizes capacity and dispatches it together, across 20 GB trans
 joined by 31 fixed transport-model links. Every technology splits in two: a brownfield unit
 fixed at the REPD or DUKES capacity already built or under construction and charged fixed O&M
 only, and a greenfield unit extendable from zero at annuitised capex plus fixed O&M. Nuclear
-is the two committed stations (4.46 GW); pumped hydro and interconnectors are fixed and carry
-no fixed cost at all. Snapshots are 2019 timestamps, the weather and demand year, standing
-for 2035, with demand rescaled to a FES 2035 pathway total. A single PyPSA `GlobalConstraint`
+is the two committed stations (4.46 GW); it and pumped hydro are fixed and pay fixed O&M,
+while the interconnectors and the built grid carry no fixed cost at all. Snapshots are 2019
+timestamps, the weather and demand year, standing for 2035, with demand rescaled to a FES
+2035 pathway total. A single PyPSA `GlobalConstraint`
 caps annual CO2 from gas, gas CCS and blue hydrogen, and its dual is the shadow carbon price;
 `uncapped` drops the constraint and prices carbon at the UK ETS level instead. Costs are
 PyPSA technology-data v0.15.0 for 2035 at 0.85 GBP/EUR, with DESNZ Electricity Generation
@@ -258,8 +259,8 @@ Limitations recorded while building it:
   trade volumes are an upper bound on what a coupled market would deliver.
 - Dispatch is a continuous LP. No start costs, minimum stable generation, minimum up or down
   times, or reserve and inertia requirements.
-- Brownfield capacity is sunk and charged fixed O&M only, but pre-existing nuclear, pumped
-  hydro and interconnectors carry no fixed cost at all. Absolute system cost is therefore
+- Brownfield capacity is sunk and charged fixed O&M only. The interconnectors and the built
+  grid are the exception: they carry no fixed cost at all, so absolute system cost is still
   understated by roughly their fixed O&M. That understatement is the same in every scenario,
   so cost *differences* between scenarios are unaffected.
 - Nuclear is 4.46 GW, Hinkley Point C plus Sizewell B only, against FES 2025 Holistic
