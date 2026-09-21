@@ -19,6 +19,7 @@ import streamlit as st
 import yaml
 
 from gb2035.config import load_assumptions
+from gb2035.data.zones import LAND_ZONES, ZONE_LABELS
 from gb2035.results.summary import ORDER
 
 DEFAULT_SCENARIO = "cap5"
@@ -183,6 +184,78 @@ def read_assumptions_table(root: Path) -> pd.DataFrame:
     )
 
 
+@dataclass(frozen=True)
+class MapMetric:
+    """One choropleth colour source: which `zone_metrics` column, and its unit."""
+
+    column: str
+    unit: str
+
+
+MAP_METRICS: dict[str, MapMetric] = {
+    "New-build capacity (GW)": MapMetric("new_build_gw", "GW"),
+    "Total generation capacity (GW)": MapMetric("total_capacity_gw", "GW"),
+    "Demand-weighted price (GBP/MWh)": MapMetric("price_gbp_per_mwh", "GBP/MWh"),
+}
+# `capacities.csv` lists `ic * import` and `ic * export` at full capacity each, so summing both
+# legs would double-count the 19.4 GW of physical interconnection (README, "What this model
+# does not claim"). Zone capacity counts generation and storage only.
+TRADE_CARRIERS: frozenset[str] = frozenset({"import", "export"})
+PRICE_METRIC = "demand_weighted_price_gbp_per_mwh"
+
+
+def read_zone_geojson(root: Path) -> dict[str, Any]:
+    """The committed zone polygons: 20 land zones plus the three offshore lease areas."""
+    geojson: dict[str, Any] = json.loads((root / "data" / "derived" / "zones.geojson").read_text())
+    return geojson
+
+
+def read_bus_coordinates(root: Path) -> pd.DataFrame:
+    return pd.read_csv(root / "data" / "derived" / "buses.csv")
+
+
+def _as_bool(series: pd.Series) -> pd.Series:
+    """`existing` is bool in the committed CSVs; coerce a string column without lying."""
+    if series.dtype == bool:
+        return series
+    return series.astype(str).str.strip().str.lower().eq("true")
+
+
+def zone_metrics(capacities: pd.DataFrame, duals: pd.DataFrame) -> pd.DataFrame:
+    """One row per land zone: new build, total capacity and the demand-weighted price."""
+    built = capacities[
+        capacities["component"].isin(["Generator", "StorageUnit"])
+        & capacities["zone"].isin(LAND_ZONES)
+        & ~capacities["carrier"].isin(TRADE_CARRIERS)
+    ]
+    existing = _as_bool(built["existing"])
+    total = built.groupby("zone")["p_nom_opt"].sum() / 1e3
+    new = built[~existing].groupby("zone")["p_nom_opt"].sum() / 1e3
+    price = duals[duals["metric"] == PRICE_METRIC].set_index("zone")["value"]
+    index = pd.Index(list(LAND_ZONES), name="zone")
+    out = pd.DataFrame(index=index)
+    out["zone_name"] = [ZONE_LABELS[zone] for zone in index]
+    out["new_build_gw"] = new.reindex(index).fillna(0.0)
+    out["total_capacity_gw"] = total.reindex(index).fillna(0.0)
+    out["price_gbp_per_mwh"] = price.reindex(index)
+    return out.reset_index()
+
+
+def corridor_flows(flows: pd.DataFrame, buses: pd.DataFrame) -> pd.DataFrame:
+    """`flows.csv` with each corridor's endpoints and midpoint taken from the bus coordinates."""
+    coords = buses.set_index("name")
+    out = flows.copy()
+    out["net_twh"] = out["twh_forward"] - out["twh_reverse"]
+    out["lon0"] = out["bus0"].map(coords["x"])
+    out["lat0"] = out["bus0"].map(coords["y"])
+    out["lon1"] = out["bus1"].map(coords["x"])
+    out["lat1"] = out["bus1"].map(coords["y"])
+    out["lon_mid"] = (out["lon0"] + out["lon1"]) / 2.0
+    out["lat_mid"] = (out["lat0"] + out["lat1"]) / 2.0
+    out["label"] = out["bus0"] + " to " + out["bus1"]
+    return out.dropna(subset=["lon0", "lat0", "lon1", "lat1"]).reset_index(drop=True)
+
+
 # Cached views of the readers above. Assigned, not decorated: the pure function stays
 # importable for the unit tests, and mypy strict accepts the assignment whether or not the
 # installed Streamlit ships type information.
@@ -190,3 +263,5 @@ load_summary = st.cache_data(show_spinner=False)(read_summary)
 load_scenario_table = st.cache_data(show_spinner=False)(read_scenario_table)
 load_run_meta = st.cache_data(show_spinner=False)(read_run_meta)
 load_assumptions_table = st.cache_data(show_spinner=False)(read_assumptions_table)
+load_zone_geojson = st.cache_data(show_spinner=False)(read_zone_geojson)
+load_bus_coordinates = st.cache_data(show_spinner=False)(read_bus_coordinates)
