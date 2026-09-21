@@ -96,9 +96,33 @@ def test_read_scenario_table_reads_a_committed_csv(repo_root: Path):
     ]
 
 
-def test_read_scenario_table_names_the_missing_file(repo_root: Path):
-    with pytest.raises(FileNotFoundError, match="dispatch"):
+def test_read_scenario_table_names_the_missing_file(tmp_path: Path):
+    root = make_root(tmp_path)
+    scenario_dir = root / "results" / "solo"
+    scenario_dir.mkdir(parents=True)
+    (scenario_dir / "summary_row.csv").write_text("scenario\nsolo\n")
+    with pytest.raises(FileNotFoundError, match="capacities"):
+        read_scenario_table(root, "solo", "capacities")
+
+
+def test_read_scenario_table_rejects_an_unknown_table(repo_root: Path):
+    with pytest.raises(ValueError, match="unknown result table"):
         read_scenario_table(repo_root, DEFAULT_SCENARIO, "dispatch")
+
+
+def test_read_scenario_table_rejects_an_unknown_scenario(repo_root: Path):
+    with pytest.raises(ValueError, match="unknown scenario"):
+        read_scenario_table(repo_root, "not-a-real-scenario", "capacities")
+
+
+def test_read_scenario_table_rejects_a_traversal_scenario(repo_root: Path):
+    with pytest.raises(ValueError, match="unknown scenario"):
+        read_scenario_table(repo_root, "../../etc", "capacities")
+
+
+def test_read_scenario_table_rejects_an_absolute_scenario(repo_root: Path):
+    with pytest.raises(ValueError, match="unknown scenario"):
+        read_scenario_table(repo_root, "/etc", "capacities")
 
 
 def test_read_run_meta_describes_the_solve(repo_root: Path):
@@ -106,6 +130,30 @@ def test_read_run_meta_describes_the_solve(repo_root: Path):
     assert meta["scenario"] == DEFAULT_SCENARIO
     assert meta["snapshots"] > 0
     assert meta["pypsa_version"]
+
+
+def test_read_run_meta_names_the_missing_file(tmp_path: Path):
+    root = make_root(tmp_path)
+    scenario_dir = root / "results" / "solo"
+    scenario_dir.mkdir(parents=True)
+    (scenario_dir / "summary_row.csv").write_text("scenario\nsolo\n")
+    with pytest.raises(FileNotFoundError, match="run_meta"):
+        read_run_meta(root, "solo")
+
+
+def test_read_run_meta_rejects_an_unknown_scenario(repo_root: Path):
+    with pytest.raises(ValueError, match="unknown scenario"):
+        read_run_meta(repo_root, "not-a-real-scenario")
+
+
+def test_read_run_meta_rejects_a_traversal_scenario(repo_root: Path):
+    with pytest.raises(ValueError, match="unknown scenario"):
+        read_run_meta(repo_root, "../../etc")
+
+
+def test_read_run_meta_rejects_an_absolute_scenario(repo_root: Path):
+    with pytest.raises(ValueError, match="unknown scenario"):
+        read_run_meta(repo_root, "/etc")
 
 
 def test_scenario_descriptions_come_from_the_yaml(repo_root: Path):

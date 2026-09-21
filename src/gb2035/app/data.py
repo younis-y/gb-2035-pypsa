@@ -23,6 +23,19 @@ from gb2035.results.summary import ORDER
 
 DEFAULT_SCENARIO = "cap5"
 MARKER_FILES: tuple[str, ...] = ("config/scenarios.yaml", "results/summary.csv")
+RESULT_TABLES: frozenset[str] = frozenset(
+    {
+        "capacities",
+        "costs",
+        "curtailment",
+        "duals",
+        "emissions",
+        "energy",
+        "flows",
+        "hydrogen",
+        "summary_row",
+    }
+)
 
 
 def find_project_root(start: Path) -> Path:
@@ -100,7 +113,27 @@ def read_summary(root: Path) -> pd.DataFrame:
     return pd.read_csv(root / "results" / "summary.csv")
 
 
+def _require_known_scenario(root: Path, scenario: str) -> None:
+    """Reject a `scenario` that `available_scenarios` did not itself discover under `results/`.
+
+    `scenario` (and `table`, in `read_scenario_table` below) can come from outside the process
+    — a Streamlit `st.query_params` value, say — so it must never be trusted as a bare path
+    segment: a string such as "../../../etc" or "/etc" joins straight through
+    `Path.__truediv__` and can walk the read right out of `results/`. Restricting `scenario` to
+    a name this function already found on disk closes that off entirely: everything downstream
+    only ever joins a literal, known-good directory name.
+    """
+    known = available_scenarios(root)
+    if scenario not in known:
+        msg = f"unknown scenario {scenario!r}; known: {known}"
+        raise ValueError(msg)
+
+
 def read_scenario_table(root: Path, scenario: str, table: str) -> pd.DataFrame:
+    _require_known_scenario(root, scenario)
+    if table not in RESULT_TABLES:
+        msg = f"unknown result table {table!r}; known: {sorted(RESULT_TABLES)}"
+        raise ValueError(msg)
     path = root / "results" / scenario / f"{table}.csv"
     if not path.exists():
         msg = f"{path} is not a committed result table"
@@ -109,14 +142,18 @@ def read_scenario_table(root: Path, scenario: str, table: str) -> pd.DataFrame:
 
 
 def read_run_meta(root: Path, scenario: str) -> dict[str, Any]:
+    _require_known_scenario(root, scenario)
     path = root / "results" / scenario / "run_meta.json"
+    if not path.exists():
+        msg = f"{path} is not a committed run_meta.json"
+        raise FileNotFoundError(msg)
     meta: dict[str, Any] = json.loads(path.read_text())
     return meta
 
 
 def available_scenarios(root: Path) -> list[str]:
     """Scenario directories that carry a summary row, in the report's own order."""
-    names = sorted(p.parent.name for p in (root / "results").glob("*/summary_row.csv"))
+    names = [p.parent.name for p in (root / "results").glob("*/summary_row.csv")]
     rank = {name: i for i, name in enumerate(ORDER)}
     return sorted(names, key=lambda name: (rank.get(name, len(ORDER)), name))
 
