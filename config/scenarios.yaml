@@ -34,10 +34,10 @@ scenarios:
     co2_cap_mt: 5.0
     demand_pathway: Electric Engagement
     hydrogen: {industrial_demand_twh: 1.3}
-    # HiGHS PDLP ended with status "unknown" twice on this LP at the default 1e-5 feasibility
-    # tolerances while the other ten full-year scenarios converged; 1e-4 keeps PDLP and adds
-    # objective noise of order 1e-4 relative, far below the demand-pathway delta measured here.
-    solver_options: {primal_feasibility_tolerance: 1.0e-4, dual_feasibility_tolerance: 1.0e-4}
+    # HiGHS PDLP ended with status "unknown" three times on this LP (twice at the default 1e-5
+    # feasibility tolerances, once at 1e-4) while the other ten full-year scenarios converged;
+    # interior point with crossover returns a verified vertex optimum at the cost of a longer solve.
+    solver_options: {solver: ipm, run_crossover: "on"}
   cap5_tx_expansion:
     description: cap5 with extendable inter-zone links
     co2_cap_mt: 5.0

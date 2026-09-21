@@ -188,15 +188,14 @@ def test_solver_options_merge_selects_simplex_for_test_and_pdlp_for_cap5(repo_ro
     assert cap5_options["solver"] == "pdlp"
 
 
-def test_cap5_ee_demand_keeps_pdlp_at_looser_tolerances(repo_root: Path):
-    """cap5_ee_demand keeps PDLP but at 1e-4 feasibility tolerances: at the default 1e-5 HiGHS
-    PDLP ended with status "unknown" twice on the same inputs (config/scenarios.yaml)."""
+def test_cap5_ee_demand_uses_ipm_with_crossover(repo_root: Path):
+    """cap5_ee_demand pins HiGHS interior point with crossover: PDLP ended with status "unknown"
+    three times on this LP while the other full-year scenarios converged (config/scenarios.yaml)."""
     settings = load_settings(repo_root / "config" / "settings.yaml")
     scenario = load_scenario("cap5_ee_demand", repo_root / "config" / "scenarios.yaml")
     options = deep_merge(dict(settings.solver_options), scenario.solver_options or {})
-    assert options["solver"] == "pdlp"
-    assert options["primal_feasibility_tolerance"] == 1e-4
-    assert options["dual_feasibility_tolerance"] == 1e-4
+    assert options["solver"] == "ipm"
+    assert options["run_crossover"] == "on"
 
 
 # `resolution_hours` trades solve time for detail and is set per run rather than sourced; the
