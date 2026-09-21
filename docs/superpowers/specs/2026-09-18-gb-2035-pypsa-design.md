@@ -62,19 +62,22 @@ standard PyPSA component so the formulation is inspectable through PyPSA's own A
   polygons come from `buses.csv` and `zones.geojson`.
 - **31 inter-zone links** from `links.csv` as a transport model: `Link` components with
   `p_min_pu = -1`, `p_nom` fixed at the file's capacity, no losses. In the
-  `tx_expansion` scenario the links become extendable with `p_nom_min` at today's value
-  and a capital cost per MW derived from HVDC/HVAC cost per MW-km in technology-data and
-  the link distance in `transmission_grid_2030.yaml`.
+  `tx_expansion` scenario these stay fixed and free of capital cost, because the grid they
+  represent is already built; a parallel `{name} new` link per corridor is extendable from
+  zero and carries the capital cost per MW derived from HVDC/HVAC cost per MW-km in
+  technology-data and the link distance in `transmission_grid_2030.yaml`.
 - **Three offshore wind zones** (DOGGER_BANK, HORNSEA, EAST_ANGLIA polygons) supply
   capacity-factor series for offshore generators placed at their landing buses: Dogger
   Bank and Hornsea at Z8, East Anglia at Z12. Other zones with coastline keep a generic
   offshore generator using the nearest offshore polygon's profile, or none where FES
   places no offshore wind.
-- **Interconnectors** are `Generator` components at their landing buses with
-  `p_min_pu = -1` (negative dispatch is export), `p_nom` from `links_future.csv` and the
-  NESO interconnector register, scaled so the total equals the FES 2035 Holistic
-  Transition figure of 19.4 GW, and a flat per-country marginal price. Imports carry zero
-  territorial emissions. Both simplifications are documented.
+- **Interconnectors** are a pair of `Generator` components at each landing bus, an
+  import leg (`p_min_pu = 0`) and an export leg (`p_min_pu = -1`, `p_max_pu = 0`, so
+  negative dispatch earns revenue), each carrying the full `p_nom` from `links_future.csv`
+  and the NESO interconnector register, scaled so the total equals the FES 2035 Holistic
+  Transition figure of 19.4 GW. Each direction has its own flat price: exports clear below
+  imports, because a GB renewable surplus tends to coincide with its neighbours'. Imports
+  carry zero territorial emissions. Both simplifications are documented.
 - **One hydrogen bus**, `Teesside H2`, carrier `H2`, coupled to Z7.
 
 ### 4.2 Technologies
@@ -148,8 +151,8 @@ where the host allows it, SHA-256, size and licence. `gb2035 retrieve` downloads
 | Thermal, nuclear and hydro fleet | PyPSA-GB `data/generators/dukes_power_station_coordinates.csv` (DUKES 5.11 2025, 1,369 plants, EPSG:27700), MIT | `fleet_by_zone.csv`: zone x technology MW after point-in-polygon |
 | Renewables floor | DESNZ REPD Q2 2026 CSV, OGL v3; columns Technology Type, Installed Capacity (MWelec), Development Status (short), X-coordinate, Y-coordinate | `repd_by_zone.csv`: zone x technology MW for Operational and Under Construction |
 | Demand shape | NESO Historic Demand Data 2019 CSV, NESO Open Data Licence; gross underlying demand = ND + EMBEDDED_WIND_GENERATION + EMBEDDED_SOLAR_GENERATION, half-hourly averaged to hourly | `demand_2019_hourly.parquet` (national, 8,760 rows) |
-| Zonal demand split | PyPSA-GB `zone_definitions.csv` population weights summed by zone (first release); FES 2025 GSP building blocks joined to NESO GSP polygons (stretch) | `demand_weights.csv` |
-| 2035 totals | FES 2025 Data Workbook V006 sheets F.53 to F.64, DB.ED1, F.24 to F.26 | `fes2025_gb_2035.csv`: metric, pathway, value, unit, sheet |
+| Zonal demand split | author population estimates per zone in `config/demand_weights.csv` (the PyPSA-GB `zone_definitions.csv` covers only 37 GSPs and leaves Z1_1, Z1_2, Z1_3, Z4 and Z10 without weight); FES 2025 GSP building blocks remain the stretch upgrade | `demand_weights.csv` |
+| 2035 totals | FES 2025 Data Workbook V006 sheets F.51, F.53 to F.57, F.59 to F.64 | `fes2025_gb_2035.csv`: metric, pathway, value, unit, sheet |
 | Wind and solar profiles | Zenodo record 18325225 `uk-2019.nc` ERA5 cutout (765 MB, CC-BY 4.0) processed once with atlite over `zones.geojson` including the three offshore polygons | `cf_2019_zonal.parquet`: 8,760 x (zone, carrier), about 1 MB |
 | Technology costs | PyPSA technology-data `outputs/costs_2035.csv` at tag v0.15.0 (EUR 2025), converted to GBP at one documented rate; DESNZ Electricity Generation Costs 2025 Annex A (GBP 2024) overrides for solar, onshore, offshore, CCGT, OCGT, gas CCS, hydrogen to power | `costs_2035_gb.csv`: technology, parameter, value, unit, source |
 | Fuel and carbon prices | DESNZ fossil fuel price assumptions (central, 2035) and UK ETS | in `assumptions.yaml` with URLs |
@@ -173,10 +176,10 @@ onshore wind, fixed offshore wind, CCGT, OCGT, gas CCS and hydrogen to power).
 | Target year, weather year | 2035, 2019 | | assumption: 2019 is a non-COVID year with a Zenodo cutout |
 | Annual zonal load, Holistic Transition | 388.3 x 1.07 = 415.5 | TWh | derived: FES 2025 F.53 consumer demand x transmission-and-distribution losses uplift; the uplift reconciles to FES DB.ED1 system demand net of electrolysis |
 | Annual zonal load, Electric Engagement | 407.8 x 1.07 = 436.3 | TWh | derived, same method |
-| Zonal demand split | population weights by zone | share | published: PyPSA-GB `zone_definitions.csv` |
+| Zonal demand split | population weights by zone | share | assumption: author population estimates per zone in `config/demand_weights.csv` (the PyPSA-GB `zone_definitions.csv` covers only 37 GSPs and leaves Z1_1, Z1_2, Z1_3, Z4 and Z10 without weight); FES 2025 GSP building blocks remain the stretch upgrade |
 | Nuclear fleet 2035 | 5.0 (Hinkley Point C 3.26 at 51.209N 3.130W; Sizewell B 1.20 at 52.215N 1.620E) | GW | published: FES 2025 F.62 total; plant data EDF |
 | Interconnector capacity 2035 | 19.4, split by landing zone pro rata to `links_future.csv` | GW | published: FES 2025 F.61 (HT) |
-| Interconnector price, both directions | 65 | GBP/MWh | assumption: rounded 2024 GB day-ahead annual mean; single flat price, sensitivity in docs |
+| Interconnector price, import / export | 65 / 45 | GBP/MWh | assumption: imports at the rounded 2024 GB day-ahead annual mean; exports at about 70 percent of it, since a GB surplus coincides with its neighbours'; import sensitivity in docs |
 | Gas price 2035 | 24 | GBP/MWh thermal | published: DESNZ fossil fuel price assumptions, central case, converted from p/therm |
 | Gas emission factor | 0.184 | tCO2/MWh thermal | published: DESNZ GHG conversion factors, natural gas gross CV |
 | Existing CCGT efficiency | 0.50 | | assumption: fleet average |
@@ -285,6 +288,10 @@ Per scenario under `results/{scenario}/`: `network.nc` (git-ignored), `capacitie
 `energy.csv`, `emissions.csv`, `costs.csv`, `duals.csv`, `flows.csv`, `curtailment.csv`,
 `hydrogen.csv`, `dispatch_hourly.parquet`. Across scenarios: `results/summary.csv`. The
 CSVs for the headline scenarios are committed; parquet and netCDF are not.
+
+`capacities.csv` lists both interconnector legs (`ic {name} import` and `ic {name} export`,
+each at the interconnector's capacity, so generator p_nom sums to twice the physical 19.4 GW).
+`costs.csv` carries memo rows flagged by `is_memo` that must not be summed with component rows.
 
 ## 12. Streamlit app
 

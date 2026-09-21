@@ -1,0 +1,12 @@
+{
+  "scenario": "cap20",
+  "git_sha": "f47bd8b",
+  "pypsa_version": "1.3.0",
+  "solve_seconds": 447.2,
+  "snapshots": 2920,
+  "resolution_hours": 3,
+  "solver": "pdlp",
+  "total_cost_gbp_per_yr": 14343212746.15929,
+  "lp_objective_gbp_per_yr": 9720085394.69593,
+  "fixed_asset_cost_gbp_per_yr": 4623127351.46336
+}

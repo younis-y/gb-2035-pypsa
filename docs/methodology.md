@@ -1,0 +1,170 @@
+# gb2035 methodology
+
+## Question
+
+What is the least-cost GB power system in 2035 as the annual CO2 cap tightens from roughly
+today's emissions to near zero? How does the optimised mix compare with NESO's FES 2025
+Holistic Transition? And what does an industrial hydrogen demand at Teesside do to the
+answer? One linear program solves capacity expansion and hourly dispatch together, across a
+sweep of CO2 caps and variants. Results live in `results/summary.csv` and the README; this
+page covers only the method.
+
+## Spatial structure
+
+The network has 20 AC buses, from the PyPSA-GB zonal topology (inherited from
+UK-Calliope): Z1_1 to Z1_4 split Shetland, the Western Isles and the Highlands; Z2 to Z17
+run from North East Scotland to the South West peninsula. A 21st bus, `Teesside H2`, carries
+hydrogen only, coupled to Z7. Offshore lease areas land at Z8 (Dogger Bank, Hornsea) and
+Z12 (East Anglia).
+
+31 inter-zone links join the buses as transport-model `Link`s: fixed MW, no losses, sunk and
+never extendable, about 198 GW of corridor capacity in total. `cap5_tx_expansion` adds a
+parallel `<corridor> new` link per corridor, extendable from zero, priced from HVDC or HVAC
+cost per MW-km and distance; the existing link stays fixed and free of capital cost, so only
+genuinely new MW are charged.
+
+Each interconnector becomes two `Generator`s at its landing bus, an import leg and an export
+leg, and each leg carries that interconnector's full capacity, scaled pro rata so the fleet
+sums to 19.4 GW (FES 2025 Holistic Transition, from the NESO register). A landing bus that
+hosts more than one interconnector therefore carries more than one pair. The legs are priced
+separately at 65 GBP/MWh import and 45 GBP/MWh export, so exports clear below imports as a GB
+surplus usually meets a surplus next door. Both are price-taking up to capacity, and imports
+carry no territorial emissions. Because each leg carries the full capacity, `capacities.csv`
+sums to 38.8 GW of interconnector generator `p_nom` for 19.4 GW of physical capacity. Nothing
+stops a pair running in both directions at once: it simply never pays to, because buying at
+65 to sell at 45 loses 20 GBP/MWh. That is an economic consequence of the price spread, not a
+modelled constraint, and it would need one if the prices were ever set the other way up.
+
+## Technologies and brownfield convention
+
+Renewables, thermal plant and batteries split into a fixed brownfield unit (REPD or DUKES,
+FOM only) and an extendable greenfield unit from zero (annuitised capex plus FOM).
+
+| Technology | Existing (brownfield) | New build (greenfield) |
+|---|---|---|
+| Onshore wind, solar | REPD floor | national total, split by land area |
+| Offshore wind | REPD MW per zone | three lease areas plus six coastal zones, by share |
+| Nuclear, pumped hydro | Hinkley Point C + Sizewell B (4.46 GW); DUKES pumped storage; FOM only | not modelled |
+| Existing gas | DUKES fleet, retirement only | new OCGT everywhere; gas CCS (90 percent capture) only in CCUS-cluster zones |
+| Battery | REPD MW; only the inverter's FOM | 2 hour duration |
+
+Nuclear's 4.46 GW is below FES 2025's 5.04 GW: only the two named stations are fixed.
+
+The greenfield caps in `config/renewable_caps.yaml` are national (60 GW onshore, 150 GW
+solar, 150 GW offshore), but they are applied zonally: onshore and solar are split across the
+twenty land zones by land area and each zone's extendable unit gets that share as its
+`p_nom_max`, while offshore is split by the named lease-area and coastal shares. Existing
+REPD capacity never counts against a cap, because it sits in a separate fixed unit. The
+consequence is that a national total can stay well short of its cap while individual zones
+are exhausted: at `cap2` the model builds 27.7 GW of new onshore against the 60 GW national
+cap, and yet 10 of the 20 onshore zones are at their land-area share to the megawatt. The
+zonal caps, not the national ones, are what push the model into progressively worse sites.
+
+The battery holds 2 hours at rated power, 90 percent round-trip split as the square root
+each way, with a 0.09 GBP/MWh wear cost from the author's PuLP model.
+
+Gas CCS is offered only where a CO2 pipeline could reach it: the six zones listed in
+`config/ccs_zones.yaml` (Z7 Teesside and Z8 Humber for the East Coast Cluster, Z9 Merseyside
+and North Wales for HyNet, Z5 Grangemouth for Acorn, and Z13 South Wales and Z16 Solent as
+Track-2 candidates). Unrestricted, the optimiser smeared sub-100 MW lumps of CCS across all
+twenty zones, Shetland and the Western Isles included, purely to shave transmission.
+
+The Teesside node couples to Z7 via an electrolysis link, a salt-cavern store and a turbine
+link, plus a flat industrial load and an optional blue-hydrogen generator (gas reforming,
+capped at 1.2 GW).
+
+## Time and weather
+
+Snapshots are 2019 timestamps, the weather and demand year, standing for 2035: the model
+carries no 2035 calendar. Wind, solar and the shape of demand all come from 2019, with demand
+rescaled to a FES 2035 pathway total (8,760 snapshots, weight 1). The `test` CI scenario takes one
+high-demand January week (168 snapshots), weighted up to match a full year's magnitude.
+`resolution_hours` can thin a year to every third hour, 2,920 snapshots weighted 3 so annual
+totals stay right: a subsample, not an average.
+
+## Carbon
+
+A single PyPSA `GlobalConstraint` caps annual CO2 from gas, gas CCS and blue hydrogen;
+nothing else emits. Its dual, read off the solved LP, is reported per scenario as the shadow
+carbon price in GBP/tCO2, and it rises as the cap tightens: 0, 33, 33, 52 and 910 GBP/t at
+the 30, 20, 10, 5 and 2 MtCO2 caps (`results/summary.csv`). Zero at 30 Mt means the cap is
+slack, since the unconstrained optimum already emits 28.2 Mt. `uncapped` drops the constraint
+and instead adds a flat 55 GBP/tCO2, the UK ETS level, to every emitting generator's marginal
+cost, so its reported total includes carbon payments that are a transfer rather than a
+resource cost and is not comparable with the capped scenarios.
+
+## Costs and objective
+
+The objective minimises annualised capital cost, fixed and variable O&M, fuel, and, in
+`uncapped` only, carbon price. Capital cost per MW-year is capex times an annuity factor at
+the discount rate (0.07, one rate for every technology) plus fixed O&M. Lifetimes, not the
+rate, are what vary per technology: 38 years for solar, 35 for onshore wind, 30 for offshore,
+40 for nuclear and the grid, 25 for gas. Costs come from technology-data v0.15.0 for 2035,
+EUR to GBP at 0.85, with DESNZ Electricity Generation Costs 2025 overriding solar, onshore
+and offshore wind, CCGT, OCGT, gas CCS and hydrogen-to-power.
+
+PyPSA prices capital cost only on extendable capacity, so the objective misses brownfield
+FOM. The code adds this back after solving as `fixed_asset_cost`, so the reported total
+includes the sunk fleet's cost, nuclear and pumped hydro included. The interconnectors and
+the built grid still carry none, so even that total understates the truth slightly.
+
+## Scenarios
+
+Scenarios are diffs against `config/settings.yaml` in `config/scenarios.yaml`. Thirteen are
+defined; twelve feed the sweep, and `test` is the one-week CI check.
+
+| Scenario | Isolates |
+|---|---|
+| `uncapped` | UK ETS price, no cap |
+| `cap30` to `cap0p5` | CO2 sweep: 30, 20, 10, 5, 2, 0.5 MtCO2/yr (`cap0p5` did not converge; see below) |
+| `cap5_no_h2` | Teesside coupling effect (demand zeroed) |
+| `cap5_ee_demand` | higher demand pathway (Electric Engagement) |
+| `cap5_tx_expansion` | value of extendable links |
+| `cap5_import_100` | import-price sensitivity (100 vs 65 GBP/MWh) |
+| `cap5_steel` | EAF loads, Port Talbot and Scunthorpe; hydrogen-DRI optional |
+| `test` | one week, CI regression |
+
+## Resolution and solver
+
+The full sweep runs at 3-hourly resolution with HiGHS's PDLP (first-order) solver at 1e-5
+feasibility tolerance. The probe that settled this was run during the build and its timings
+live in the build log, not in a committed file. On a four-week slice, simplex took about 20
+minutes to reach optimal; scaled to a full year it did not finish within hours. Interior
+point without crossover was faster on those four weeks, about three minutes, but ended at
+status "unknown" rather than "optimal", since skipping crossover leaves infeasibility above
+HiGHS's threshold. PDLP solved a 3-hourly year at "optimal", in about 9 minutes on the probe
+and 6 to 63 minutes across the published scenarios (`solve_seconds` in each
+`results/<scenario>/run_meta.json`).
+
+One scenario is the exception. `cap0p5`, the 0.5 MtCO2 cap, never converged and was killed
+after 1 hour 50 minutes, so it is not in the results: that cap leaves only about 0.4 Mt for
+unabated gas once blue hydrogen's 0.1 Mt is paid for, which puts the LP on the near-vertical
+part of the abatement curve, exactly where a first-order method crawls. The sweep therefore
+reports 30 down to 2 MtCO2, and `cap2` is the tightest converged cap.
+
+PDLP satisfies constraints only to within tolerance, not at an exact vertex, so its duals
+are less precise than a simplex solution's, including the shadow carbon price, and cost
+differences below about 0.1 m GBP/yr on a 14.8 bn base are inside that tolerance. The
+one-week harness uses simplex instead: PDLP's status was not reproducible across platforms at
+this horizon, optimal on macOS, unknown on Linux CI. An hourly `cap5` run checks what
+3-hourly resolution costs in accuracy: 0.4 percent on total cost, nothing on the shadow
+carbon price, and about 1 GW shifted between new onshore wind and new solar.
+
+## Known simplifications
+
+- No BECCS: keeps carbon accounting free of negative emissions.
+- No unit commitment or reserves: dispatch is a continuous LP, not mixed-integer.
+- Interconnector trade is price-taking, unbounded up to capacity at a fixed price each way.
+- The interconnectors and the built grid carry no fixed cost, a small constant
+  understatement of cost. Every other sunk asset, nuclear and pumped hydro included, pays
+  fixed O&M.
+- East Anglia's offshore profile uses the nearest ERA5 cells the cutout covers, short of the
+  real lease area.
+- ERA5 overstates onshore capacity factors at a few small, coastal or island zones
+  (Shetland, the Western Isles, Argyll).
+- Zonal demand is split by the author's own population estimates, not an official
+  GSP-level breakdown.
+- The headline sweep runs 3-hourly, a subsample rather than an average, not hourly as
+  designed.
+- The tightest cap in the design, 0.5 MtCO2, is not in the results: PDLP did not converge on
+  it within the run budget.
