@@ -1,17 +1,19 @@
 component,carrier,gbp_per_yr,kind,is_memo,note
-Generator,gas,669438682.60,capex,False,
+Generator,gas,669480752.35,capex,False,
+Generator,nuclear,520014880.43,capex,False,
 Generator,offwind,3863627200.00,capex,False,
-Generator,onwind,3390189382.44,capex,False,
-Generator,solar,3555092092.51,capex,False,
-StorageUnit,battery,8994328.75,capex,False,
+Generator,onwind,3373759814.99,capex,False,
+Generator,solar,3556257312.70,capex,False,
+StorageUnit,battery,8994153.95,capex,False,
+StorageUnit,pumped_hydro,113120000.00,capex,False,
 Generator,blue_h2,355500000.00,opex,False,
-Generator,export,-1970910562.36,opex,False,
-Generator,gas,890677606.76,opex,False,
-Generator,import,3891261578.27,opex,False,
-Generator,nuclear,283850986.58,opex,False,
-Generator,offwind,3193498.55,opex,False,
-Generator,onwind,167111387.80,opex,False,
-StorageUnit,battery,874795.09,opex,False,
-memo,all,10485773625.53,memo_lp_objective,True,not additive with component rows
-memo,all,4623127351.46,memo_fixed_asset_fom,True,not additive with component rows
-memo,all,15108900977.00,total,True,not additive with component rows
+Generator,export,-1964258620.99,opex,False,
+Generator,gas,892909471.70,opex,False,
+Generator,import,3897871804.67,opex,False,
+Generator,nuclear,284074831.48,opex,False,
+Generator,offwind,3193444.38,opex,False,
+Generator,onwind,166596434.60,opex,False,
+StorageUnit,battery,875350.12,opex,False,
+memo,all,10485754598.49,memo_lp_objective,True,not additive with component rows
+memo,all,5256262231.90,memo_fixed_asset_fom,True,not additive with component rows
+memo,all,15742016830.39,total,True,not additive with component rows
