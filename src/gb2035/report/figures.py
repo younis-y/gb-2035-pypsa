@@ -6,6 +6,9 @@ separation. Hues are assigned in a fixed order per chart and never re-cycled; `t
 deliberately pairs slot 1 (blue) with slot 6 (green) instead of two adjacent slots, because the
 series are literally "blue hydrogen" and "green hydrogen" - that pair was re-validated directly
 (worst-pair Delta E 26.5 CVD / 29.0 normal-vision, both comfortably clear of the >=8 / >=15 gates).
+
+The colour and chrome constants themselves live in `gb2035.palette`, shared with the Plotly app
+(`gb2035.app.palette`), so the two renderers can never drift apart.
 """
 
 from __future__ import annotations
@@ -19,24 +22,22 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from gb2035.data.fes import fes_value
-
-# Validated categorical palette, fixed order (dataviz skill references/palette.md).
-BLUE = "#2a78d6"
-ORANGE = "#eb6834"
-AQUA = "#1baf7a"
-YELLOW = "#eda100"
-MAGENTA = "#e87ba4"
-GREEN = "#008300"
-VIOLET = "#4a3aa7"
-RED = "#e34948"
-
-# Chart chrome, same source.
-SURFACE = "#fcfcfb"
-INK_PRIMARY = "#0b0b0b"
-INK_SECONDARY = "#52514e"
-INK_MUTED = "#898781"
-GRIDLINE = "#e1e0d9"
-BASELINE = "#c3c2b7"
+from gb2035.palette import (
+    AQUA,
+    BASELINE,
+    BLUE,
+    GREEN,
+    GRIDLINE,
+    INK_MUTED,
+    INK_PRIMARY,
+    INK_SECONDARY,
+    MAGENTA,
+    ORANGE,
+    RED,
+    SURFACE,
+    VIOLET,
+    YELLOW,
+)
 
 plt.rcParams.update(
     {
