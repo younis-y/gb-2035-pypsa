@@ -67,11 +67,11 @@ reuses the Teesside electrolysis-store-turbine node with blue hydrogen off. gb20
 PyPSA carrier called `DRIH2`: the borrowing is in spirit, an electrolytic, green-only route
 feeding steelmaking, rather than in exact naming.
 
-In the committed sweep the two EAF loads add 180 m GBP/yr to the 5 MtCO2 system, 15.0 bn
-against `cap5`'s 14.8 bn (`results/summary.csv`), which over 3.0 TWh is 60 GBP/MWh, close to
+In the committed sweep the two EAF loads add 179 m GBP/yr to the 5 MtCO2 system, 15.6 bn
+against `cap5`'s 15.5 bn (`results/summary.csv`), which over 3.0 TWh is 60 GBP/MWh, close to
 the 61 GBP/MWh zonal electricity price the model already clears at
 (`results/cap5/duals.csv`). Electrifying both plants is, on these numbers, a demand-side
-change the power system absorbs by building 1.1 GW more onshore wind and 0.7 GW more solar,
+change the power system absorbs by building 1.1 GW more onshore wind and 0.5 GW more solar,
 not a structural one.
 
 ## A shared assumptions interface

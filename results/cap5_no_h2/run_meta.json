@@ -1,12 +1,12 @@
 {
   "scenario": "cap5_no_h2",
-  "git_sha": "f47bd8b",
+  "git_sha": "7728e99",
   "pypsa_version": "1.3.0",
-  "solve_seconds": 355.0,
+  "solve_seconds": 324.9,
   "snapshots": 2920,
   "resolution_hours": 3,
   "solver": "pdlp",
-  "total_cost_gbp_per_yr": 14479709418.500597,
-  "lp_objective_gbp_per_yr": 9856582067.037237,
-  "fixed_asset_cost_gbp_per_yr": 4623127351.46336
+  "total_cost_gbp_per_yr": 15112291336.078558,
+  "lp_objective_gbp_per_yr": 9856029104.181198,
+  "fixed_asset_cost_gbp_per_yr": 5256262231.89736
 }

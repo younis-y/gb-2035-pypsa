@@ -188,6 +188,16 @@ def test_solver_options_merge_selects_simplex_for_test_and_pdlp_for_cap5(repo_ro
     assert cap5_options["solver"] == "pdlp"
 
 
+def test_cap5_ee_demand_uses_highs_native_pdlp(repo_root: Path):
+    """cap5_ee_demand pins HiGHS's native PDLP ("hipdlp"): cuPDLP-C ("pdlp") ended with status
+    "unknown" three times on this LP while the other full-year scenarios converged."""
+    settings = load_settings(repo_root / "config" / "settings.yaml")
+    scenario = load_scenario("cap5_ee_demand", repo_root / "config" / "scenarios.yaml")
+    options = deep_merge(dict(settings.solver_options), scenario.solver_options or {})
+    assert options["solver"] == "hipdlp"
+    assert "run_crossover" not in options
+
+
 # `resolution_hours` trades solve time for detail and is set per run rather than sourced; the
 # solver fields are not numbers, and the tolerance inside `solver_options` has its own
 # `solver_tolerance` row.

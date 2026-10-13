@@ -133,10 +133,18 @@ minutes to reach optimal; scaled to a full year it did not finish within hours. 
 point without crossover was faster on those four weeks, about three minutes, but ended at
 status "unknown" rather than "optimal", since skipping crossover leaves infeasibility above
 HiGHS's threshold. PDLP solved a 3-hourly year at "optimal", in about 9 minutes on the probe
-and 6 to 63 minutes across the published scenarios (`solve_seconds` in each
+and 4 to 84 minutes across the published scenarios (`solve_seconds` in each
 `results/<scenario>/run_meta.json`).
 
-One scenario is the exception. `cap0p5`, the 0.5 MtCO2 cap, never converged and was killed
+HiGHS carries two PDLP implementations and the published results use both. Ten scenarios and
+the hourly `cap5` reference were solved with cuPDLP-C (`solver: pdlp`, the default in
+`config/settings.yaml`) on the code at commit `7728e99`. `cap5_ee_demand` was solved at
+`d43f866` with HiGHS's own PDLP (`solver: hipdlp`, a per-scenario override in
+`config/scenarios.yaml`), after cuPDLP-C ended at status "unknown" on it three times; the two
+commits differ in nothing the LP sees but that solver choice. Each run records its commit and
+its solver in `results/<scenario>/run_meta.json`.
+
+One scenario is missing entirely. `cap0p5`, the 0.5 MtCO2 cap, never converged and was killed
 after 1 hour 50 minutes, so it is not in the results: that cap leaves only about 0.4 Mt for
 unabated gas once blue hydrogen's 0.1 Mt is paid for, which puts the LP on the near-vertical
 part of the abatement curve, exactly where a first-order method crawls. The sweep therefore
@@ -144,7 +152,7 @@ reports 30 down to 2 MtCO2, and `cap2` is the tightest converged cap.
 
 PDLP satisfies constraints only to within tolerance, not at an exact vertex, so its duals
 are less precise than a simplex solution's, including the shadow carbon price, and cost
-differences below about 0.1 m GBP/yr on a 14.8 bn base are inside that tolerance. The
+differences below about 0.1 m GBP/yr on a 15.5 bn base are inside that tolerance. The
 one-week harness uses simplex instead: PDLP's status was not reproducible across platforms at
 this horizon, optimal on macOS, unknown on Linux CI. An hourly `cap5` run checks what
 3-hourly resolution costs in accuracy: 0.4 percent on total cost, nothing on the shadow
