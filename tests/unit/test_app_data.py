@@ -180,10 +180,10 @@ def test_headline_values_formats_a_summary_row():
         }
     )
     assert [(label, value) for label, value, _ in headline_values(row)] == [
-        ("System cost", "14.84 bn GBP/yr"),
-        ("Emissions", "5.0 MtCO2/yr"),
-        ("Shadow carbon price", "52 GBP/t"),
-        ("Net imports", "+14.6 TWh"),
+        ("System cost (bn GBP/yr)", "14.84"),
+        ("Emissions (MtCO2/yr)", "5.0"),
+        ("CO2 shadow price (GBP/t)", "52"),
+        ("Net imports (TWh)", "+14.6"),
         ("Wind and solar curtailed", "1.6%"),
     ]
     assert all(note for _, _, note in headline_values(row))

@@ -118,7 +118,6 @@ def capacity_mix_figure(summary: pd.DataFrame) -> go.Figure:
         )
     fig.update_layout(barmode="stack")
     fig.update_yaxes(title_text="Installed capacity (GW)")
-    fig.update_xaxes(title_text="Scenario, loosest cap first")
     return _style(fig, height=460)
 
 

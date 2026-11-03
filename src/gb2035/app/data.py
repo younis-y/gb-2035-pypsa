@@ -74,26 +74,26 @@ class Headline:
 HEADLINES: tuple[Headline, ...] = (
     Headline(
         "total_cost_gbp_bn_per_yr",
-        "System cost",
-        "{:.2f} bn GBP/yr",
+        "System cost (bn GBP/yr)",
+        "{:.2f}",
         "Annualised capital, fixed and variable operating cost, from results/summary.csv.",
     ),
     Headline(
         "emissions_mt",
-        "Emissions",
-        "{:.1f} MtCO2/yr",
+        "Emissions (MtCO2/yr)",
+        "{:.1f}",
         "Territorial power-sector CO2. Imports carry no emissions in this model.",
     ),
     Headline(
         "shadow_carbon_price_gbp_per_t",
-        "Shadow carbon price",
-        "{:.0f} GBP/t",
+        "CO2 shadow price (GBP/t)",
+        "{:.0f}",
         "Dual of the CO2 cap. Zero where the cap is slack or absent.",
     ),
     Headline(
         "net_imports_twh",
-        "Net imports",
-        "{:+.1f} TWh",
+        "Net imports (TWh)",
+        "{:+.1f}",
         "Interconnector imports minus exports over the year.",
     ),
     Headline(

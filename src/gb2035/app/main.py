@@ -88,7 +88,7 @@ def zone_map(root: Path, scenario: str) -> None:
 def capacity_and_energy(root: Path, scenario: str) -> None:
     st.subheader("Capacity across the cap sweep")
     st.plotly_chart(charts.capacity_mix_figure(load_summary(root)))
-    st.caption("Source: results/summary.csv.")
+    st.caption("Source: results/summary.csv, ordered by realised emissions, highest first.")
     st.subheader(f"{scenario}: annual electricity by carrier")
     st.plotly_chart(
         charts.energy_mix_figure(load_scenario_table(root, scenario, "energy"), scenario)
