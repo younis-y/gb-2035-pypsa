@@ -1,0 +1,76 @@
+name: docker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint the Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: warning
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Image tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/younis-y/gb-2035-pypsa
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=short
+
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: gb2035:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke-test the image
+        run: |
+          docker run -d --name gb2035-app -p 8501:8501 gb2035:ci
+          ok=0
+          for _ in $(seq 1 45); do
+            if curl -fsS http://localhost:8501/_stcore/health >/dev/null; then ok=1; break; fi
+            sleep 2
+          done
+          test "$ok" = 1
+          # Spec section 14: the model itself must run inside the image, not just the app.
+          docker exec gb2035-app gb2035 run --scenario test --results-dir /tmp/results
+          docker exec gb2035-app test -f /tmp/results/test/summary_row.csv
+          docker logs gb2035-app
+          docker stop gb2035-app
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha

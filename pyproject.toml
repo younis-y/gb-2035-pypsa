@@ -28,7 +28,7 @@ dependencies = [
 
 [project.optional-dependencies]
 profiles = ["atlite>=0.6"]
-app = ["streamlit>=1.45", "folium>=0.19", "streamlit-folium>=0.23", "plotly>=5.24"]
+app = ["streamlit>=1.45", "plotly>=5.24"]
 workflow = ["snakemake>=9.0"]
 
 [dependency-groups]
@@ -38,6 +38,7 @@ dev = [
     "ruff>=0.12",
     "mypy>=1.16",
     "pandas-stubs",
+    "kaleido>=1.0",
     "types-PyYAML",
     "types-openpyxl",
     "pre-commit>=4.0",

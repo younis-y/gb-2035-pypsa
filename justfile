@@ -23,6 +23,5 @@ typecheck:
 run scenario="test":
     uv run gb2035 run --scenario {{scenario}}
 
-# The Streamlit explorer arrives in the next plan; `app/` does not exist on this branch yet.
 app:
-    @echo "the Streamlit app arrives in phase 3; nothing to run yet"
+    uv run gb2035 app

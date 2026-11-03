@@ -1,5 +1,10 @@
 # gb-2035-pypsa
 
+[![ci](https://github.com/younis-y/gb-2035-pypsa/actions/workflows/ci.yml/badge.svg)](https://github.com/younis-y/gb-2035-pypsa/actions/workflows/ci.yml)
+[![docker](https://github.com/younis-y/gb-2035-pypsa/actions/workflows/docker.yml/badge.svg)](https://github.com/younis-y/gb-2035-pypsa/actions/workflows/docker.yml)
+[![licence MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
+[![python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](.python-version)
+
 Least-cost GB power system in 2035 under tightening carbon caps, with a Teesside industrial
 hydrogen node. PyPSA + HiGHS, 20 transmission zones, full-year 2019 weather, eleven solved
 scenarios.
@@ -252,6 +257,47 @@ Derived inputs are committed, so a fresh clone solves offline. `uv run gb2035 re
 the pinned raw sources (checksums in `data/manifest.json`) if you want to rebuild them with
 `uv run gb2035 build-derived`; regenerating the wind and solar profiles needs the 765 MB ERA5
 cutout and the `profiles` extra.
+
+## Front end
+
+A read-only Streamlit explorer over the committed results: no solving, no downloads, five
+views.
+
+```bash
+uv sync --all-extras --group dev
+uv run gb2035 app        # or: uv run streamlit run src/gb2035/app/main.py
+```
+
+![The Map view: the GB transmission zones shaded by new-build capacity in GW under the 5 MtCO2 cap, with the inter-zone corridors drawn between zone centroids, line width scaled by net annual energy, and the Teesside hydrogen node marked in red.](docs/figures/app_map.png)
+
+Overview (headline numbers and the cost-against-emissions curves), Map (zone choropleth of
+new-build capacity, total capacity or demand-weighted price, with corridor flows), Capacity and
+energy, Teesside hydrogen, and Assumptions. Every number is read from `results/`,
+`config/assumptions.yaml` or `data/derived/` at runtime, so the app cannot disagree with the
+repository. What each view shows, and which file each number comes from, is in
+[`docs/app.md`](docs/app.md).
+
+The map image above is regenerated with `uv run gb2035 app-map`, from the same figure builder
+the app uses.
+
+## Run with Docker
+
+The published image carries the app, the committed results and the `gb2035` CLI.
+
+```bash
+docker run -p 8501:8501 ghcr.io/younis-y/gb-2035-pypsa:latest
+```
+
+Then open <http://localhost:8501>. The model itself runs in the same image:
+
+```bash
+docker run --rm ghcr.io/younis-y/gb-2035-pypsa:latest gb2035 run --scenario test --results-dir /tmp/results
+```
+
+Tags are `latest` and the short commit SHA, pushed from `main` only. The image is built, linted
+with hadolint and smoke-tested in GitHub Actions
+([`.github/workflows/docker.yml`](.github/workflows/docker.yml)); it is never built on a
+developer machine, so CI is the only place its green tick is earned.
 
 ## What this model does not claim
 
