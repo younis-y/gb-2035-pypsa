@@ -242,7 +242,11 @@ def zone_metrics(capacities: pd.DataFrame, duals: pd.DataFrame) -> pd.DataFrame:
 
 
 def corridor_flows(flows: pd.DataFrame, buses: pd.DataFrame) -> pd.DataFrame:
-    """`flows.csv` with each corridor's endpoints and midpoint taken from the bus coordinates."""
+    """`flows.csv` with each corridor's endpoints and midpoint taken from the bus coordinates.
+
+    `net_twh` is positive when the corridor's net annual flow runs bus0 to bus1. Corridors with
+    an endpoint missing from `buses.csv` cannot be drawn and are dropped.
+    """
     coords = buses.set_index("name")
     out = flows.copy()
     out["net_twh"] = out["twh_forward"] - out["twh_reverse"]
