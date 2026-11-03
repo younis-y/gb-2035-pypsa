@@ -1,5 +1,10 @@
 # gb-2035-pypsa
 
+[![ci](https://github.com/younis-y/gb-2035-pypsa/actions/workflows/ci.yml/badge.svg)](https://github.com/younis-y/gb-2035-pypsa/actions/workflows/ci.yml)
+[![docker](https://github.com/younis-y/gb-2035-pypsa/actions/workflows/docker.yml/badge.svg)](https://github.com/younis-y/gb-2035-pypsa/actions/workflows/docker.yml)
+[![licence MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
+[![python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](.python-version)
+
 Least-cost GB power system in 2035 under tightening carbon caps, with a Teesside industrial
 hydrogen node. PyPSA + HiGHS, 20 transmission zones, full-year 2019 weather, eleven solved
 scenarios.
@@ -274,6 +279,25 @@ repository. What each view shows, and which file each number comes from, is in
 
 The map image above is regenerated with `uv run gb2035 app-map`, from the same figure builder
 the app uses.
+
+## Run with Docker
+
+The published image carries the app, the committed results and the `gb2035` CLI.
+
+```bash
+docker run -p 8501:8501 ghcr.io/younis-y/gb-2035-pypsa:latest
+```
+
+Then open <http://localhost:8501>. The model itself runs in the same image:
+
+```bash
+docker run --rm ghcr.io/younis-y/gb-2035-pypsa:latest gb2035 run --scenario test --results-dir /tmp/results
+```
+
+Tags are `latest` and the short commit SHA, pushed from `main` only. The image is built, linted
+with hadolint and smoke-tested in GitHub Actions
+([`.github/workflows/docker.yml`](.github/workflows/docker.yml)); it is never built on a
+developer machine, so CI is the only place its green tick is earned.
 
 ## What this model does not claim
 
