@@ -10,6 +10,7 @@ from gb2035.app.charts import (
     capacity_mix_figure,
     cost_and_shadow_price_figure,
     energy_mix_figure,
+    hydrogen_supply_figure,
 )
 from gb2035.app.data import DEFAULT_SCENARIO, read_scenario_table, read_summary
 from gb2035.report import figures
@@ -70,6 +71,14 @@ def test_energy_mix_handles_a_scenario_with_no_hydrogen_rows():
     )
     fig = energy_mix_figure(energy, "synthetic")
     assert list(fig.data[0].x) == ["onwind", "solar"]
+
+
+def test_hydrogen_supply_stacks_green_under_blue(repo_root: Path):
+    summary = read_summary(repo_root)
+    fig = hydrogen_supply_figure(summary)
+    assert fig.layout.barmode == "stack"
+    assert [t.name for t in fig.data] == ["Green (electrolysis)", "Blue (reforming with CCS)"]
+    assert list(fig.data[1].y) == list(cap_scenarios(summary)["teesside_blue_h2_twh"])
 
 
 def test_gb2035_palette_never_imports_matplotlib_or_streamlit():

@@ -32,22 +32,41 @@ __all__ = [
     "AQUA",
     "BASELINE",
     "BLUE",
+    "BLUE_INK",
+    "CANVAS",
     "CAP_ORDER",
     "CARRIER_COLOURS",
     "FONT_FAMILY",
     "GREEN",
     "GRIDLINE",
+    "INK",
     "INK_MUTED",
     "INK_PRIMARY",
     "INK_SECONDARY",
     "MAGENTA",
+    "MUTED",
     "ORANGE",
+    "PANEL",
+    "RAISED",
     "RED",
+    "RIM",
+    "RULE",
     "SURFACE",
     "TECH_SERIES",
     "VIOLET",
     "YELLOW",
 ]
+
+# The app's own chrome: the Spend Engineer graphite theme. `.streamlit/config.toml` carries the
+# same values for Streamlit's widgets; the README figures keep the light chrome above.
+CANVAS = "#17191E"
+PANEL = "#25282E"
+RAISED = "#2B2F36"
+INK = "#F2F4F7"
+MUTED = "#A3ACB9"
+RULE = "rgba(255,255,255,0.07)"
+RIM = "rgba(255,255,255,0.12)"
+BLUE_INK = "#7FAEFF"
 
 FONT_FAMILY = "system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif"
 

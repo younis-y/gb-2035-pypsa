@@ -26,6 +26,7 @@ WORKDIR /app
 COPY --from=builder --chown=gb2035:gb2035 /app/.venv /app/.venv
 COPY --chown=gb2035:gb2035 src ./src
 COPY --chown=gb2035:gb2035 config ./config
+COPY --chown=gb2035:gb2035 .streamlit ./.streamlit
 COPY --chown=gb2035:gb2035 data/derived ./data/derived
 COPY --chown=gb2035:gb2035 data/manifest.json ./data/manifest.json
 COPY --chown=gb2035:gb2035 results ./results

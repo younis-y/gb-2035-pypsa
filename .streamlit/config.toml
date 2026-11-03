@@ -1,0 +1,29 @@
+# The Spend Engineer graphite theme: flat panels with one hairline, one action blue.
+# `src/gb2035/app/main.py` adds the layout CSS; `src/gb2035/app/palette.py` restates these
+# colours for the Plotly charts.
+[theme]
+base = "dark"
+primaryColor = "#2563EB"
+backgroundColor = "#17191E"
+secondaryBackgroundColor = "#25282E"
+textColor = "#F2F4F7"
+linkColor = "#7FAEFF"
+borderColor = "#33373E"
+dataframeBorderColor = "#2E3238"
+dataframeHeaderBackgroundColor = "#2B2F36"
+showWidgetBorder = true
+baseRadius = "12px"
+buttonRadius = "full"
+baseFontSize = 15
+font = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'Segoe UI', Roboto, Arial, sans-serif"
+
+[theme.sidebar]
+backgroundColor = "#1B1D22"
+secondaryBackgroundColor = "#25282E"
+borderColor = "#2A2D33"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false

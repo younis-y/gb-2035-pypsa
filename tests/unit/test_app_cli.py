@@ -14,9 +14,11 @@ class FakeRun:
     def __init__(self, returncode: int = 0):
         self.returncode = returncode
         self.calls: list[list[str]] = []
+        self.cwds: list[object] = []
 
     def __call__(self, command, **kwargs):
         self.calls.append(list(command))
+        self.cwds.append(kwargs.get("cwd"))
         return subprocess.CompletedProcess(command, self.returncode)
 
 
@@ -30,6 +32,7 @@ def test_app_command_runs_streamlit_on_the_module(repo_root: Path, monkeypatch):
     assert command[4].endswith(str(Path("gb2035") / "app" / "main.py"))
     assert Path(command[4]).exists()
     assert command[-2:] == ["--root", str(repo_root.resolve())]
+    assert fake.cwds[0] == repo_root.resolve(), "the theme in .streamlit/ is read from the cwd"
 
 
 def test_app_command_honours_port_and_address(repo_root: Path, monkeypatch):
@@ -68,7 +71,7 @@ def test_app_map_renders_the_same_figure_the_app_shows(
     )
     assert result.exit_code == 0, result.stdout
     assert captured["file"] == out and out.exists()
-    assert captured["style"] == "white-bg", "the export must not need a tile server"
+    assert captured["style"]["sources"] == {}, "the export must not need a tile server"
     assert int(captured["traces"]) > 30, "one trace per corridor plus the four fixed layers"
 
 
