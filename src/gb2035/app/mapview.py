@@ -72,7 +72,13 @@ def zone_choropleth(
             hovertemplate=ZONE_HOVER,
             colorscale=COLOURSCALE,
             marker={"opacity": 0.82, "line": {"width": 1, "color": SURFACE}},
-            colorbar={"title": {"text": f"{metric_label}<br>({hover_unit})"}, "thickness": 14},
+            colorbar={
+                # The labels already end in "(unit)"; break before it so the bar stays narrow.
+                "title": {
+                    "text": f"{metric_label.removesuffix(f' ({hover_unit})')}<br>({hover_unit})"
+                },
+                "thickness": 14,
+            },
             name="",
         )
     )

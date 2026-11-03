@@ -253,6 +253,28 @@ the pinned raw sources (checksums in `data/manifest.json`) if you want to rebuil
 `uv run gb2035 build-derived`; regenerating the wind and solar profiles needs the 765 MB ERA5
 cutout and the `profiles` extra.
 
+## Front end
+
+A read-only Streamlit explorer over the committed results: no solving, no downloads, five
+views.
+
+```bash
+uv sync --all-extras --group dev
+uv run gb2035 app        # or: uv run streamlit run src/gb2035/app/main.py
+```
+
+![The Map view: the GB transmission zones shaded by new-build capacity in GW under the 5 MtCO2 cap, with the inter-zone corridors drawn between zone centroids, line width scaled by net annual energy, and the Teesside hydrogen node marked in red.](docs/figures/app_map.png)
+
+Overview (headline numbers and the cost-against-emissions curves), Map (zone choropleth of
+new-build capacity, total capacity or demand-weighted price, with corridor flows), Capacity and
+energy, Teesside hydrogen, and Assumptions. Every number is read from `results/`,
+`config/assumptions.yaml` or `data/derived/` at runtime, so the app cannot disagree with the
+repository. What each view shows, and which file each number comes from, is in
+[`docs/app.md`](docs/app.md).
+
+The map image above is regenerated with `uv run gb2035 app-map`, from the same figure builder
+the app uses.
+
 ## What this model does not claim
 
 Out of scope by design: multi-year pathways, unit commitment, AC power flow, reserve and

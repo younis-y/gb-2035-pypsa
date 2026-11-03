@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import time
 from collections.abc import Iterable
 from pathlib import Path
@@ -364,3 +365,78 @@ def report_cmd(
         assumptions_doc = paths.root / "docs" / "assumptions.md"
         assumptions_doc.write_text(assumptions_markdown(paths.config / "assumptions.yaml") + "\n")
         console.print(f"{assumptions_doc} updated")
+
+
+@app.command("app")
+def app_cmd(
+    root: RootOpt = Path(),
+    port: Annotated[int, typer.Option("--port", min=1, max=65535)] = 8501,
+    address: Annotated[str, typer.Option("--address")] = "localhost",
+) -> None:
+    """Launch the Streamlit results explorer over the committed results under --root."""
+    module = Path(__file__).resolve().parent / "app" / "main.py"
+    command = [
+        sys.executable,
+        "-m",
+        "streamlit",
+        "run",
+        str(module),
+        "--server.port",
+        str(port),
+        "--server.address",
+        address,
+        "--",
+        "--root",
+        str(root.resolve()),
+    ]
+    console.print(f"streamlit -> http://{address}:{port} (reading {root.resolve()})")
+    raise typer.Exit(code=subprocess.run(command, check=False).returncode)
+
+
+@app.command("app-map")
+def app_map_cmd(
+    root: RootOpt = Path(),
+    scenario: ScenarioOpt = "cap5",
+    metric: Annotated[
+        str, typer.Option("--metric", help="A zone_metrics column, e.g. new_build_gw.")
+    ] = "new_build_gw",
+    out: Annotated[Path | None, typer.Option("--out")] = None,
+    width: Annotated[int, typer.Option("--width")] = 720,
+    height: Annotated[int, typer.Option("--height")] = 760,
+) -> None:
+    """Render the app's map view to a PNG for the README (needs the dev group's kaleido)."""
+    from gb2035.app.data import (
+        MAP_METRICS,
+        corridor_flows,
+        read_bus_coordinates,
+        read_scenario_table,
+        read_zone_geojson,
+        zone_metrics,
+    )
+    from gb2035.app.mapview import zone_choropleth
+
+    paths = ProjectPaths(root.resolve())
+    label = next((name for name, m in MAP_METRICS.items() if m.column == metric), None)
+    if label is None:
+        known = sorted(m.column for m in MAP_METRICS.values())
+        console.print(f"[red]unknown metric {metric!r}; known: {known}[/red]")
+        raise typer.Exit(code=2)
+    figure = zone_choropleth(
+        read_zone_geojson(paths.root),
+        zone_metrics(
+            read_scenario_table(paths.root, scenario, "capacities"),
+            read_scenario_table(paths.root, scenario, "duals"),
+        ),
+        corridor_flows(
+            read_scenario_table(paths.root, scenario, "flows"), read_bus_coordinates(paths.root)
+        ),
+        metric=metric,
+        metric_label=label,
+        hover_unit=MAP_METRICS[label].unit,
+        # No tiles: the export must not depend on a tile server at render time.
+        map_style="white-bg",
+    )
+    target = out or (paths.root / "docs" / "figures" / "app_map.png")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    figure.write_image(target, format="png", width=width, height=height, scale=2)
+    console.print(f"{target} written ({target.stat().st_size / 1024:.0f} KB)")
