@@ -53,6 +53,7 @@ def test_dockerignore_keeps_what_the_image_needs(repo_root: Path):
     for kept in (
         "src",
         "config",
+        ".streamlit",
         "data/derived",
         "results",
         "uv.lock",

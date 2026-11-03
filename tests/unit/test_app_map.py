@@ -37,7 +37,6 @@ def build(pieces, metric_label: str = "New-build capacity (GW)"):
         flows,
         metric=metric.column,
         metric_label=metric_label,
-        hover_unit=metric.unit,
     )
 
 
@@ -71,11 +70,11 @@ def test_map_outlines_the_offshore_lease_zones(pieces):
     assert fig.data[1].showscale is False
 
 
-def test_map_marks_teesside_and_needs_no_token(pieces):
+def test_map_marks_teesside_and_needs_no_token_or_tiles(pieces):
     fig = build(pieces)
     teesside = fig.data[-1]
     assert (teesside.lat[0], teesside.lon[0]) == TEESSIDE_LATLON
-    assert fig.layout.map.style == "open-street-map"
+    assert fig.layout.map.style["sources"] == {}, "a background layer only, nothing to fetch"
     assert "mapbox" not in fig.to_plotly_json()["layout"]
 
 
@@ -87,7 +86,6 @@ def test_map_accepts_a_tile_free_style_for_static_export(pieces):
         flows,
         metric="new_build_gw",
         metric_label="New-build capacity (GW)",
-        hover_unit="GW",
         map_style="white-bg",
     )
     assert fig.layout.map.style == "white-bg"

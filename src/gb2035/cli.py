@@ -390,7 +390,8 @@ def app_cmd(
         str(root.resolve()),
     ]
     console.print(f"streamlit -> http://{address}:{port} (reading {root.resolve()})")
-    raise typer.Exit(code=subprocess.run(command, check=False).returncode)
+    # Run from the project root so Streamlit finds the theme in .streamlit/config.toml.
+    raise typer.Exit(code=subprocess.run(command, check=False, cwd=root.resolve()).returncode)
 
 
 @app.command("app-map")
@@ -432,9 +433,6 @@ def app_map_cmd(
         ),
         metric=metric,
         metric_label=label,
-        hover_unit=MAP_METRICS[label].unit,
-        # No tiles: the export must not depend on a tile server at render time.
-        map_style="white-bg",
     )
     target = out or (paths.root / "docs" / "figures" / "app_map.png")
     target.parent.mkdir(parents=True, exist_ok=True)

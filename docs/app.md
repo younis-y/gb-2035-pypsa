@@ -10,20 +10,26 @@ docker run -p 8501:8501 ghcr.io/younis-y/gb-2035-pypsa:latest
 ```
 
 The scenario selector in the sidebar lists every directory under `results/` that carries a
-`summary_row.csv`, in the order `results/summary.csv` uses. The description beside it comes from
-`config/scenarios.yaml`.
+`summary_row.csv`, in the order `results/summary.csv` uses. The description beside the scenario
+name comes from `config/scenarios.yaml`. Under the selector, "How we got here" reads
+`results/<scenario>/run_meta.json`: snapshot count, resolution, solver, solve time and the commit
+the scenario was solved at.
+
+The look is the graphite theme in `.streamlit/config.toml` plus the layout CSS at the top of
+`src/gb2035/app/main.py`; `gb2035 app` runs Streamlit from the project root so the theme loads.
 
 ## Overview
 
-Five headline metrics for the selected scenario, read from `results/summary.csv`: system cost
-(bn GBP/yr), emissions (MtCO2/yr), the shadow carbon price (GBP/t, the dual of the CO2 cap),
-net interconnector imports (TWh) and the share of available wind and solar that was curtailed.
+Above the views, five headline tiles for the selected scenario, read from `results/summary.csv`:
+system cost (bn GBP/yr), emissions (MtCO2/yr), the CO2 shadow price (GBP/t, the dual of the CO2
+cap), net interconnector imports (TWh) and the share of available wind and solar that was
+curtailed. Each tile's sparkline is the same column across the cap sweep, highest emissions
+first.
 
-Below them, system cost and the shadow carbon price against realised emissions across the cap
+The Overview view itself: system cost and the shadow carbon price against realised emissions across the cap
 sweep, with the selected scenario ringed. The series is ordered by emissions rather than by cap
 name, because `uncapped` is not a cap and lands mid-sweep; ordering by name makes the line
-double back on itself. The footer line comes from `results/<scenario>/run_meta.json`: PyPSA
-version, commit, snapshot count, resolution, solver and solve time.
+double back on itself.
 
 ## Map
 
@@ -64,8 +70,9 @@ energy, used energy and the curtailed share for onshore wind, offshore wind and 
 
 `results/<scenario>/hydrogen.csv` in full: electrolysis capacity and utilisation, green
 hydrogen, store size, hydrogen turbine capacity, hydrogen to power, blue hydrogen and the
-industrial demand. Underneath it, `docs/figures/teesside_hydrogen.png`, the cross-scenario green
-against blue split that `gb2035 report` writes.
+industrial demand. Underneath it, green against blue hydrogen supply across the cap sweep from
+`results/summary.csv`, the same split `gb2035 report` draws in
+`docs/figures/teesside_hydrogen.png`.
 
 ## Assumptions
 
