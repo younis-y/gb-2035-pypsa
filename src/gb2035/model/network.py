@@ -10,6 +10,7 @@ import pandas as pd
 import pypsa
 
 from gb2035.config import Scenario, Settings
+from gb2035.data.demand import HOURS_PER_YEAR
 from gb2035.model.components import (
     add_buses,
     add_carriers,
@@ -23,8 +24,6 @@ from gb2035.model.components import (
 )
 from gb2035.model.constraints import add_co2_cap, add_fes_capacity_ceiling, add_steel_loads
 from gb2035.model.inputs import ModelInputs
-
-HOURS_PER_YEAR = 8760.0
 
 
 def select_snapshots(

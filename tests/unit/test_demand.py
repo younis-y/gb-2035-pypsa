@@ -72,6 +72,17 @@ def test_build_zonal_demand_scales_and_splits(repo_root: Path):
     assert zonal["Z14"].iloc[0] / zonal.iloc[0].sum() == pytest.approx(w["Z14"])
 
 
+def test_build_zonal_demand_meets_the_target_in_a_leap_year(repo_root: Path):
+    """The model weights every year as 8,760 hours, so a leap weather year's 8,784 hours must
+    still deliver the FES total once weighted; scaling by their sum delivered 8760/8784 of it."""
+    idx = pd.date_range("2012-01-01", periods=8784, freq="h")
+    national = pd.Series(np.full(8784, 30_000.0), index=idx, name="gross_demand_mw")
+    w = load_zone_weights(repo_root / "config" / "demand_weights.csv")
+    zonal = build_zonal_demand(national, w, target_twh=415.5)
+    weighted_twh = zonal.to_numpy().sum() * 8760 / 8784 / 1e6
+    assert weighted_twh == pytest.approx(415.5)
+
+
 def test_demand_target_twh():
     fes = pd.DataFrame(
         {
