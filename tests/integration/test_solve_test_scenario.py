@@ -4,14 +4,17 @@ from pathlib import Path
 import pytest
 
 from gb2035.config import load_scenario, load_settings
+from gb2035.data.costs import annuity
 from gb2035.model.inputs import load_inputs
 from gb2035.model.network import build_network
 from gb2035.model.solve import solve
 from gb2035.paths import ProjectPaths
 from gb2035.results.extract import (
+    breakeven,
     capacities,
     costs,
     dispatch_hourly,
+    duals,
     energy,
     extract_all,
     flows,
@@ -27,7 +30,7 @@ pytestmark = pytest.mark.slow
 def solved(repo_root: Path):
     paths = ProjectPaths(repo_root)
     settings = load_settings(paths.config / "settings.yaml")
-    inputs = load_inputs(paths)
+    inputs = load_inputs(paths, settings.weather_year)
     scenario = load_scenario("test", paths.config / "scenarios.yaml")
     n = build_network(inputs, scenario, settings)
     result = solve(n, settings, scenario)
@@ -147,7 +150,7 @@ def test_expansion_is_never_dearer_than_the_fixed_grid(repo_root: Path):
     """
     paths = ProjectPaths(repo_root)
     settings = load_settings(paths.config / "settings.yaml")
-    inputs = load_inputs(paths)
+    inputs = load_inputs(paths, settings.weather_year)
     test_scenario = load_scenario("test", paths.config / "scenarios.yaml")
     window = {
         "snapshots": test_scenario.snapshots,
@@ -227,3 +230,68 @@ def test_results_written_and_objective_stable(solved, tmp_path: Path, repo_root:
     assert result.total_cost_gbp_per_yr == pytest.approx(expected, rel=0.005), (
         "regression guard; update the JSON deliberately if assumptions change"
     )
+
+
+def test_breakeven_prices_every_extendable_unit(solved):
+    """Each extendable unit's reduced cost: what it is short of paying its way, per MW-yr."""
+    n, _, _ = solved
+    be = breakeven(n).set_index("name")
+    extendable = (
+        n.generators.p_nom_extendable.sum()
+        + n.storage_units.p_nom_extendable.sum()
+        + n.links.p_nom_extendable.sum()
+        + n.stores.e_nom_extendable.sum()
+    )
+    assert len(be) == extendable
+    tol = 1e-6 * be["capital_cost_gbp_per_mw_yr"].max()
+    assert (be["reduced_cost_gbp_per_mw_yr"] >= -tol).all(), "a unit at its floor can only lose"
+    assert (be["cap_rent_gbp_per_mw_yr"] >= -tol).all(), "more room can only help"
+    interior = be[(be["built_mw"] > 1.0) & (be["built_mw"] < be["max_mw"] - 1.0)]
+    assert not interior.empty
+    assert interior["reduced_cost_gbp_per_mw_yr"].abs().max() < tol, "built units pay their way"
+    offshore = be.loc["offwind DOGGER_BANK"]
+    assert offshore["built_mw"] == 0.0 and offshore["reduced_cost_gbp_per_mw_yr"] > 0
+
+
+@pytest.mark.parametrize(("past_breakeven", "builds"), [(1.15, True), (0.85, False)])
+def test_offshore_enters_exactly_past_its_breakeven(
+    repo_root: Path, solved, past_breakeven, builds
+):
+    """The dual is a price, so test it as one: cut offshore capex to 15 percent past the
+    breakeven it implies and Dogger Bank is built; stop 15 percent short and nothing is."""
+    n, _, scenario = solved
+    paths = ProjectPaths(repo_root)
+    settings = load_settings(paths.config / "settings.yaml")
+    inputs = load_inputs(paths, settings.weather_year)
+    reduced = breakeven(n).set_index("name").at["offwind DOGGER_BANK", "reduced_cost_gbp_per_mw_yr"]
+    c = inputs.costs.loc["offwind"]
+    annual_capex = annuity(settings.discount_rate, c["lifetime_yr"]) * c["capex_gbp"]
+    scale = 1.0 - past_breakeven * reduced / annual_capex
+    cheaper = scenario.model_copy(update={"capex_scale": {"offwind": scale}})
+    m = build_network(inputs, cheaper, settings)
+    solve(m, settings, cheaper)
+    built_mw = m.generators.loc["offwind DOGGER_BANK", "p_nom_opt"]
+    assert bool(built_mw > 1.0) is builds, f"capex x {scale:.3f} built {built_mw:.0f} MW"
+
+
+@pytest.fixture(scope="module")
+def solved_ceiling(repo_root: Path):
+    paths = ProjectPaths(repo_root)
+    settings = load_settings(paths.config / "settings.yaml")
+    inputs = load_inputs(paths, settings.weather_year)
+    scenario = load_scenario("test", paths.config / "scenarios.yaml").model_copy(
+        update={"fes_capacity_ceiling": ("onwind", "solar")}
+    )
+    n = build_network(inputs, scenario, settings)
+    solve(n, settings, scenario)
+    return n, inputs, scenario
+
+
+def test_fes_ceiling_holds_after_the_solve_and_reports_its_rent(solved_ceiling):
+    n, inputs, scenario = solved_ceiling
+    fes = inputs.fes[inputs.fes["pathway"] == scenario.demand_pathway].set_index("metric")
+    rows = duals(n).set_index(["metric", "zone"])["value"]
+    for carrier, metric in (("onwind", "onshore_wind_gw"), ("solar", "solar_gw")):
+        total_mw = n.generators.loc[n.generators["carrier"] == carrier, "p_nom_opt"].sum()
+        assert total_mw <= fes.at[metric, "value"] * 1e3 + 1.0
+        assert rows[("fes_ceiling_rent_gbp_per_mw_yr", carrier)] >= 0.0

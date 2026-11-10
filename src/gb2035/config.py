@@ -90,12 +90,18 @@ class Scenario(BaseModel):
     co2_cap_mt: float | None = Field(default=None, ge=0)
     carbon_price_gbp_t: float | None = Field(default=None, ge=0)
     demand_pathway: Pathway = "Holistic Transition"
+    # Overrides Settings.weather_year: wind, solar and the demand shape all come from this year.
+    weather_year: int | None = None
     hydrogen: HydrogenSettings = Field(default_factory=HydrogenSettings)
     # Each overrides the matching Settings price when set; either direction may move alone
     # (the `cap5_import_100` sensitivity lifts imports and leaves exports where they are).
     interconnector_import_price_gbp_mwh: float | None = Field(default=None, ge=0)
     interconnector_export_price_gbp_mwh: float | None = Field(default=None, ge=0)
     transmission_expandable: bool = False
+    # Multiplies a technology's capex in the cost table (fixed O&M unchanged), e.g. {offwind: 0.8}.
+    capex_scale: dict[str, float] = Field(default_factory=dict)
+    # Carriers whose national total capacity may not pass the FES 2035 figure for this pathway.
+    fes_capacity_ceiling: tuple[Literal["onwind", "solar", "offwind"], ...] = ()
     steel: SteelSettings | None = None
     snapshots: SnapshotWindow | None = None
     # Merged over Settings.solver_options when set, for scenarios that need a different solver
@@ -150,6 +156,16 @@ def load_assumptions(path: Path) -> dict[str, Assumption]:
 
 def list_scenarios(path: Path) -> list[str]:
     return list(_read_yaml(path).get("scenarios", {}).keys())
+
+
+def weather_years(path: Path, default: int) -> list[int]:
+    """Every weather year some scenario runs on: `default` plus each scenario's override."""
+    years = {default}
+    for name in list_scenarios(path):
+        year = load_scenario(name, path).weather_year
+        if year is not None:
+            years.add(year)
+    return sorted(years)
 
 
 def load_scenario(name: str, path: Path) -> Scenario:

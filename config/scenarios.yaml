@@ -46,6 +46,14 @@ scenarios:
     description: cap5 with imports priced at 100 GBP/MWh (exports unchanged)
     co2_cap_mt: 5.0
     interconnector_import_price_gbp_mwh: 100.0
+  cap5_fes_ceiling:
+    description: cap5 with onshore wind and solar held to their FES 2035 totals (planning stand-in)
+    co2_cap_mt: 5.0
+    fes_capacity_ceiling: [onwind, solar]
+  cap2_fes_ceiling:
+    description: cap2 with onshore wind and solar held to their FES 2035 totals (planning stand-in)
+    co2_cap_mt: 2.0
+    fes_capacity_ceiling: [onwind, solar]
   cap5_steel:
     description: cap5 plus EAF loads at Port Talbot and Scunthorpe (stretch)
     co2_cap_mt: 5.0

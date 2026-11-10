@@ -223,6 +223,16 @@ def duals(n: pypsa.Network) -> pd.DataFrame:
     rows: list[dict[str, Any]] = [
         {"metric": "shadow_carbon_price_gbp_per_t", "zone": "GB", "value": shadow_carbon_price(n)}
     ]
+    # What one more MW of national room under a FES capacity ceiling would be worth.
+    for name, gc in n.global_constraints.iterrows():
+        if str(name).startswith("fes_ceiling "):
+            rows.append(
+                {
+                    "metric": "fes_ceiling_rent_gbp_per_mw_yr",
+                    "zone": gc["carrier_attribute"],
+                    "value": max(-float(gc["mu"]), 0.0),
+                }
+            )
     for bus in n.buses.index:
         loads_here = [c for c in load.columns if n.loads.at[c, "bus"] == bus]
         if not loads_here:
@@ -416,6 +426,50 @@ def summary_row(n: pypsa.Network, scenario_name: str, solve: SolveResult) -> pd.
         ),
     }
     return pd.DataFrame([row])
+
+
+def breakeven(n: pypsa.Network) -> pd.DataFrame:
+    """Every extendable unit's investment duals, read off the solved LP model.
+
+    `reduced_cost` is the dual of the unit's lower capacity bound: how much its annual capital
+    cost would have to fall, per MW, before the optimiser builds the first megawatt. It is zero
+    for anything built. `cap_rent` is the dual of the upper bound: what one more MW of room is
+    worth where a zonal cap binds. Only the in-memory model carries these, so this runs straight
+    after `solve` and `gb2035 extract` cannot rebuild it from `network.nc`.
+    """
+    frames = []
+    for component, attr in (
+        ("Generator", "p_nom"),
+        ("StorageUnit", "p_nom"),
+        ("Link", "p_nom"),
+        ("Store", "e_nom"),
+    ):
+        lower = f"{component}-ext-{attr}-lower"
+        if lower not in n.model.constraints:
+            continue
+        reduced = n.model.constraints[lower].dual.to_pandas()
+        upper = f"{component}-ext-{attr}-upper"
+        rent = (
+            -n.model.constraints[upper].dual.to_pandas()
+            if upper in n.model.constraints
+            else pd.Series(dtype=float)
+        )
+        static = n.components[component].static.loc[reduced.index]
+        frames.append(
+            pd.DataFrame(
+                {
+                    "component": component,
+                    "name": reduced.index,
+                    "carrier": static["carrier"].to_numpy(),
+                    "capital_cost_gbp_per_mw_yr": static["capital_cost"].to_numpy(),
+                    "built_mw": static[f"{attr}_opt"].to_numpy(),
+                    "max_mw": static[f"{attr}_max"].to_numpy(),
+                    "reduced_cost_gbp_per_mw_yr": reduced.to_numpy(),
+                    "cap_rent_gbp_per_mw_yr": rent.reindex(reduced.index).fillna(0.0).to_numpy(),
+                }
+            )
+        )
+    return pd.concat(frames, ignore_index=True)
 
 
 def extract_all(

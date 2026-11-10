@@ -5,10 +5,11 @@ import pandas as pd
 import pytest
 
 from gb2035.config import load_scenario, load_settings
+from gb2035.data.costs import annuity
 from gb2035.data.demand import build_zonal_demand, demand_target_twh
 from gb2035.data.zones import LAND_ZONES
 from gb2035.model.inputs import load_inputs
-from gb2035.model.network import build_network, select_snapshots
+from gb2035.model.network import build_network, network_fingerprint, select_snapshots
 from gb2035.paths import ProjectPaths
 
 
@@ -16,7 +17,7 @@ from gb2035.paths import ProjectPaths
 def built(repo_root: Path):
     paths = ProjectPaths(repo_root)
     settings = load_settings(paths.config / "settings.yaml")
-    inputs = load_inputs(paths)
+    inputs = load_inputs(paths, settings.weather_year)
     scenario = load_scenario("test", paths.config / "scenarios.yaml")
     return build_network(inputs, scenario, settings), inputs, scenario, settings
 
@@ -280,3 +281,59 @@ def test_tx_expansion_prices_every_link(repo_root: Path, built):
     assert new["carrier"].tolist() == fixed["carrier"].tolist()
     # A non-expandable scenario carries no expansion links at all.
     assert not n_fixed.links.index.str.endswith(" new").any()
+
+
+def test_fes_ceiling_holds_national_capacity_to_the_fes_figure(built):
+    """The planning-limit stand-in: total onshore and solar capacity may not pass FES 2035.
+
+    The REPD floor is already built, so only the greenfield remainder is left to the optimiser;
+    the constraint is national, so where the capacity goes is still the model's choice.
+    """
+    _, inputs, scenario, settings = built
+    ceiling = scenario.model_copy(update={"fes_capacity_ceiling": ("onwind", "solar")})
+    n = build_network(inputs, ceiling, settings)
+    fes = inputs.fes[inputs.fes["pathway"] == scenario.demand_pathway].set_index("metric")
+    for carrier, metric in (("onwind", "onshore_wind_gw"), ("solar", "solar_gw")):
+        gc = n.global_constraints.loc[f"fes_ceiling {carrier}"]
+        assert gc["type"] == "tech_capacity_expansion_limit"
+        assert gc["carrier_attribute"] == carrier and gc["sense"] == "<="
+        gens = n.generators[n.generators["carrier"] == carrier]
+        existing_mw = gens.loc[~gens["p_nom_extendable"], "p_nom"].sum()
+        assert existing_mw > 0
+        assert gc["constant"] == pytest.approx(fes.at[metric, "value"] * 1e3 - existing_mw)
+    assert "fes_ceiling offwind" not in n.global_constraints.index
+
+
+def test_no_fes_ceiling_by_default(built):
+    n, *_ = built
+    assert not n.global_constraints.index.str.startswith("fes_ceiling").any()
+
+
+def test_capex_scale_multiplies_capex_and_leaves_fixed_om(built):
+    n, inputs, scenario, settings = built
+    m = build_network(
+        inputs, scenario.model_copy(update={"capex_scale": {"offwind": 0.8}}), settings
+    )
+    c = inputs.costs.loc["offwind"]
+    annual_capex = annuity(settings.discount_rate, c["lifetime_yr"]) * c["capex_gbp"]
+    before = n.generators.at["offwind DOGGER_BANK", "capital_cost"]
+    after = m.generators.at["offwind DOGGER_BANK", "capital_cost"]
+    assert before - after == pytest.approx(0.2 * annual_capex)
+    assert (
+        m.generators.at["onwind Z7", "capital_cost"] == n.generators.at["onwind Z7", "capital_cost"]
+    )
+
+
+def test_fingerprint_is_stable_and_sees_every_input(built):
+    """The fingerprint ties committed results to the network that produced them."""
+    n, inputs, scenario, settings = built
+    again = build_network(inputs, scenario, settings)
+    assert network_fingerprint(again) == network_fingerprint(n)
+    relabelled = scenario.model_copy(update={"description": "same LP, new words"})
+    assert network_fingerprint(build_network(inputs, relabelled, settings)) == network_fingerprint(
+        n
+    )
+    cheaper = scenario.model_copy(update={"capex_scale": {"offwind": 0.99}})
+    assert network_fingerprint(build_network(inputs, cheaper, settings)) != network_fingerprint(n)
+    tighter = scenario.model_copy(update={"co2_cap_mt": 4.9})
+    assert network_fingerprint(build_network(inputs, tighter, settings)) != network_fingerprint(n)

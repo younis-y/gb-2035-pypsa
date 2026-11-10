@@ -93,8 +93,22 @@ def offshore_units(caps: RenewableCaps) -> list[tuple[str, str, str]]:
     return units
 
 
-def load_inputs(paths: ProjectPaths) -> ModelInputs:
+def load_inputs(paths: ProjectPaths, weather_year: int) -> ModelInputs:
+    """Every derived table, with wind, solar and the demand shape taken from `weather_year`."""
     d = paths.data_derived
+    demand_file = d / f"demand_{weather_year}_hourly.parquet"
+    profiles_file = d / f"cf_{weather_year}_zonal.parquet"
+    missing = [
+        f"{path.name} (`gb2035 {command}`)"
+        for path, command in (
+            (demand_file, "build-derived"),
+            (profiles_file, f"build-profiles --weather-year {weather_year}"),
+        )
+        if not path.exists()
+    ]
+    if missing:
+        msg = f"weather year {weather_year} is not built: missing {', '.join(missing)}"
+        raise FileNotFoundError(msg)
     buses = pd.read_csv(d / "buses.csv").set_index("name")
     links_all = pd.read_csv(d / "links.csv")
     inter_zone = links_all[
@@ -104,7 +118,7 @@ def load_inputs(paths: ProjectPaths) -> ModelInputs:
     # An interconnector crosses the GB boundary: it lands on a zone but starts outside one.
     is_import = future["bus1"].str.startswith("Z") & ~future["bus0"].str.startswith("Z")
     interconnectors = future[is_import][["bus1", "p_nom"]]
-    demand = pd.read_parquet(d / "demand_2019_hourly.parquet")["gross_demand_mw"]
+    demand = pd.read_parquet(demand_file)["gross_demand_mw"]
     caps = RenewableCaps.model_validate(
         yaml.safe_load((paths.config / "renewable_caps.yaml").read_text())
     )
@@ -118,7 +132,7 @@ def load_inputs(paths: ProjectPaths) -> ModelInputs:
         repd=pd.read_csv(d / "repd_by_zone.csv"),
         demand=demand,
         weights=load_zone_weights(paths.config / "demand_weights.csv"),
-        profiles=load_profiles(d / "cf_2019_zonal.parquet"),
+        profiles=load_profiles(profiles_file),
         costs=load_costs(d / "costs_2035_gb.csv"),
         fes=load_fes(d / "fes2025_gb_2035.csv"),
         caps=caps,

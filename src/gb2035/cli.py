@@ -7,6 +7,7 @@ import subprocess
 import sys
 import time
 from collections.abc import Iterable
+from importlib.metadata import version as package_version
 from pathlib import Path
 from typing import Annotated, Any, cast
 
@@ -22,6 +23,7 @@ from gb2035.config import (
     list_scenarios,
     load_scenario,
     load_settings,
+    weather_years,
 )
 from gb2035.data.costs import build_costs
 from gb2035.data.demand import load_neso_demand
@@ -32,10 +34,10 @@ from gb2035.data.repd import build_repd_by_zone
 from gb2035.data.retrieve import RetrieveError, retrieve
 from gb2035.data.zones import load_zones
 from gb2035.model.inputs import load_inputs
-from gb2035.model.network import build_network
+from gb2035.model.network import build_network, network_fingerprint
 from gb2035.model.solve import SolveResult, fixed_asset_cost_gbp_per_yr, solve
 from gb2035.paths import ProjectPaths
-from gb2035.results.extract import extract_all, write_results
+from gb2035.results.extract import breakeven, extract_all, write_results
 from gb2035.results.summary import write_summary
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help="GB 2035 power-system model.")
@@ -159,7 +161,6 @@ COPIED_RAW_FILES: tuple[str, ...] = (
 BUILT_RAW_FILES: tuple[str, ...] = (
     "power_stations_locations.csv",
     "REPD_Publication_Q2_2026.csv",
-    "demanddata_2019.csv",
     "fes2025_data_workbook.xlsx",
     "costs_2035.csv",
 )
@@ -185,7 +186,9 @@ def build_derived(root: RootOpt = Path()) -> None:
     """Rebuild every committed table under data/derived from data/raw."""
     paths, settings, _ = _ctx(root, None)
     raw, derived = paths.data_raw, paths.data_derived
-    _require_raw_files(paths, COPIED_RAW_FILES + BUILT_RAW_FILES)
+    years = weather_years(paths.config / "scenarios.yaml", settings.weather_year)
+    demand_files = tuple(f"demanddata_{year}.csv" for year in years)
+    _require_raw_files(paths, COPIED_RAW_FILES + BUILT_RAW_FILES + demand_files)
     derived.mkdir(parents=True, exist_ok=True)
     for name in COPIED_RAW_FILES:
         (derived / name).write_bytes((raw / name).read_bytes())
@@ -196,9 +199,10 @@ def build_derived(root: RootOpt = Path()) -> None:
     build_repd_by_zone(raw / "REPD_Publication_Q2_2026.csv", zones).to_csv(
         derived / "repd_by_zone.csv", index=False, float_format="%.3f"
     )
-    load_neso_demand(raw / "demanddata_2019.csv", settings.weather_year).to_frame().to_parquet(
-        derived / "demand_2019_hourly.parquet"
-    )
+    for year in years:
+        load_neso_demand(raw / f"demanddata_{year}.csv", year).to_frame().to_parquet(
+            derived / f"demand_{year}_hourly.parquet"
+        )
     extract_fes_2035(raw / "fes2025_data_workbook.xlsx").to_csv(
         derived / "fes2025_gb_2035.csv", index=False, float_format="%.3f"
     )
@@ -210,22 +214,33 @@ def build_derived(root: RootOpt = Path()) -> None:
 
 @app.command("build-profiles")
 def build_profiles_cmd(
-    cutout: Annotated[Path, typer.Option("--cutout")], root: RootOpt = Path()
+    cutout: Annotated[Path, typer.Option("--cutout")],
+    root: RootOpt = Path(),
+    weather_year: Annotated[
+        int | None,
+        typer.Option("--weather-year", help="Year the cutout covers (default: settings)."),
+    ] = None,
 ) -> None:
     """Run atlite over the zone polygons (needs the `profiles` extra and the Zenodo cutout)."""
     from gb2035.data.profiles import build_profiles, flatten_columns, validate_profiles
 
     paths, settings, _ = _ctx(root, None)
+    year = weather_year or settings.weather_year
     zones = load_zones(paths.data_derived / "zones.geojson")
     cf = build_profiles(cutout, zones)
-    validate_profiles(cf, settings.weather_year)
-    out = paths.data_derived / f"cf_{settings.weather_year}_zonal.parquet"
+    validate_profiles(cf, year)
+    out = paths.data_derived / f"cf_{year}_zonal.parquet"
     flatten_columns(cf).to_parquet(out)
     console.print(f"profiles written to {out}")
 
 
+def _weather_year(settings: Settings, scenario: Scenario) -> int:
+    return scenario.weather_year or settings.weather_year
+
+
 def _build(paths: ProjectPaths, settings: Settings, scenario: Scenario) -> pypsa.Network:
-    return build_network(load_inputs(paths), scenario, settings)
+    inputs = load_inputs(paths, _weather_year(settings, scenario))
+    return build_network(inputs, scenario, settings)
 
 
 @app.command("build-network")
@@ -251,19 +266,25 @@ def build_network_cmd(
 
 def _run(paths: ProjectPaths, settings: Settings, sc: Scenario, results: Path) -> None:
     n = _build(paths, settings, sc)
+    fingerprint = network_fingerprint(n)
     t0 = time.perf_counter()
     result = solve(n, settings, sc)
     seconds = time.perf_counter() - t0
     out = results / sc.name
-    write_results(extract_all(n, sc.name, result), out)
+    tables = extract_all(n, sc.name, result)
+    tables["breakeven"] = breakeven(n)
+    write_results(tables, out)
     n.export_to_netcdf(out / "network.nc")
     meta = {
         "scenario": sc.name,
         "git_sha": _git_sha(paths.root),
         "pypsa_version": pypsa.__version__,
+        "highs_version": package_version("highspy"),
+        "input_fingerprint": fingerprint,
         "solve_seconds": round(seconds, 1),
         "snapshots": len(n.snapshots),
         "resolution_hours": settings.resolution_hours,
+        "weather_year": _weather_year(settings, sc),
         "solver": result.solver,
         "total_cost_gbp_per_yr": result.total_cost_gbp_per_yr,
         "lp_objective_gbp_per_yr": result.lp_objective_gbp_per_yr,

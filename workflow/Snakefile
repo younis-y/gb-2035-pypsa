@@ -1,16 +1,33 @@
 # Thin Snakemake wrapper over the gb2035 CLI so the DAG is explicit and reproducible.
 # Usage: uv run snakemake --snakefile workflow/Snakefile --cores 4 results/summary.csv
+# The published results are 3-hourly; `--config resolution_hours=1` runs the hourly model.
 from pathlib import Path
 
-from gb2035.config import list_scenarios
+from gb2035.config import list_scenarios, load_scenario, load_settings, weather_years
 
 ROOT = Path(workflow.basedir).parent
-RESOLUTION = config.get("resolution_hours", 1)
-SCENARIOS = [s for s in list_scenarios(ROOT / "config" / "scenarios.yaml") if s != "test"]
-DERIVED = ["fleet_by_zone.csv", "repd_by_zone.csv", "demand_2019_hourly.parquet", "fes2025_gb_2035.csv", "costs_2035_gb.csv"]
+SCENARIOS_YAML = ROOT / "config" / "scenarios.yaml"
+DEFAULT_YEAR = load_settings(ROOT / "config" / "settings.yaml").weather_year
+RESOLUTION = config.get("resolution_hours", 3)
+ALL = [s for s in list_scenarios(SCENARIOS_YAML) if s != "test"]
+# The weather-year family re-solves cap5 on other years' weather and lives in its own folder.
+WEATHER = [s for s in ALL if s.startswith("cap5_wy")]
+SWEEP = [s for s in ALL if s not in WEATHER]
+YEARS = weather_years(SCENARIOS_YAML, DEFAULT_YEAR)
+DERIVED = ["fleet_by_zone.csv", "repd_by_zone.csv", "fes2025_gb_2035.csv", "costs_2035_gb.csv"]
+DERIVED += [f"demand_{year}_hourly.parquet" for year in YEARS]
+
+wildcard_constraints:
+    scenario="[^/]+",
+
+
+def year_inputs(wildcards):
+    year = load_scenario(wildcards.scenario, SCENARIOS_YAML).weather_year or DEFAULT_YEAR
+    return [f"data/derived/demand_{year}_hourly.parquet", f"data/derived/cf_{year}_zonal.parquet"]
+
 
 rule all:
-    input: "results/summary.csv"
+    input: "results/summary.csv", "results_weather_years/summary.csv"
 
 rule retrieve:
     output: touch("data/raw/.retrieved")
@@ -22,11 +39,17 @@ rule derived:
     shell: "uv run gb2035 build-derived --root {ROOT}"
 
 rule run_scenario:
-    input: expand("data/derived/{name}", name=DERIVED), "data/derived/cf_2019_zonal.parquet"
-    output: "results/{scenario}/summary_row.csv", "results/{scenario}/run_meta.json"
-    shell: "uv run gb2035 run --scenario {wildcards.scenario} --root {ROOT} --resolution-hours {RESOLUTION}"
+    input: expand("data/derived/{name}", name=DERIVED[:4]), year_inputs
+    output: "{folder}/{scenario}/summary_row.csv", "{folder}/{scenario}/run_meta.json"
+    wildcard_constraints: folder="results|results_weather_years"
+    shell: "uv run gb2035 run --scenario {wildcards.scenario} --root {ROOT} --results-dir {ROOT}/{wildcards.folder} --resolution-hours {RESOLUTION}"
 
 rule summary:
-    input: expand("results/{scenario}/summary_row.csv", scenario=SCENARIOS)
+    input: expand("results/{scenario}/summary_row.csv", scenario=SWEEP)
     output: "results/summary.csv"
     shell: "uv run gb2035 report --root {ROOT}"
+
+rule summary_weather:
+    input: expand("results_weather_years/{scenario}/summary_row.csv", scenario=WEATHER)
+    output: "results_weather_years/summary.csv"
+    shell: "uv run gb2035 report --root {ROOT} --results-dir {ROOT}/results_weather_years"
