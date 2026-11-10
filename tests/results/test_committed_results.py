@@ -36,6 +36,7 @@ TABLES = (
     "curtailment",
     "hydrogen",
     "summary_row",
+    "breakeven",
 )
 
 
@@ -98,6 +99,27 @@ def test_cost_breakdown_adds_up_to_the_total(run: Path):
     assert parts == pytest.approx(total, rel=1e-6)
     summary = pd.read_csv(run / "summary_row.csv").iloc[0]
     assert summary["total_cost_gbp_bn_per_yr"] == pytest.approx(total / 1e9, rel=1e-5)
+
+
+def test_every_unit_earns_what_optimality_requires(run: Path):
+    """The LP's optimality conditions in market terms, checked on each committed solution at its
+    own prices: a unit built below its cap earns exactly its annual cost, one held at its cap
+    earns at least that, and an unbuilt one earns no more. A FES ceiling adds its rent to the
+    cost of the carriers it holds. PDLP meets these to well inside 1e-3 of the dearest unit's
+    cost; a solution or price that had drifted would not."""
+    be = pd.read_csv(run / "breakeven.csv")
+    duals = pd.read_csv(run / "duals.csv")
+    rent = duals[duals["metric"] == "fes_ceiling_rent_gbp_per_mw_yr"].set_index("zone")["value"]
+    cost = be["capital_cost_gbp_per_mw_yr"] + be["carrier"].map(rent).fillna(0.0)
+    gap = be["market_value_gbp_per_mw_yr"] - cost
+    tol = 1e-3 * be["capital_cost_gbp_per_mw_yr"].max()
+    interior = (be["built_mw"] > 1.0) & (be["built_mw"] < be["max_mw"] - 1.0)
+    at_cap = be["built_mw"] >= be["max_mw"] - 1.0
+    unbuilt = be["built_mw"] < 1e-3
+    assert interior.any()
+    assert gap[interior].abs().max() < tol
+    assert (gap[at_cap] > -tol).all()
+    assert (gap[unbuilt] < tol).all()
 
 
 @pytest.mark.parametrize("folder", [f for f in FOLDERS if (ROOT / f / "summary.csv").exists()])
