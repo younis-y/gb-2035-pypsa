@@ -429,48 +429,53 @@ def summary_row(n: pypsa.Network, scenario_name: str, solve: SolveResult) -> pd.
 
 
 def breakeven(n: pypsa.Network) -> pd.DataFrame:
-    """Every extendable unit's investment duals, read off the solved LP model.
+    """What a megawatt of each extendable generator or link earns at the solved prices.
 
-    `reduced_cost` is the dual of the unit's lower capacity bound: how much its annual capital
-    cost would have to fall, per MW, before the optimiser builds the first megawatt. It is zero
-    for anything built. `cap_rent` is the dual of the upper bound: what one more MW of room is
-    worth where a zonal cap binds. Stores are sized in MWh, so their rows are per MWh. Only the
-    in-memory model carries these duals, so this runs straight after `solve`, and `gb2035
-    extract` cannot rebuild it from `network.nc`.
+    `market_value` is one MW's annual margin over its own running cost at the LP's nodal prices,
+    with CO2 charged at the cap's shadow price; `capital_cost` is its annuitised capex plus fixed
+    O&M. An unbuilt unit is short of entering by the gap between them; a built one earns its cost
+    exactly unless a cap holds it back, and then the excess is the cap's rent. This reads prices
+    rather than the duals of the capacity bounds because an unbuilt unit's bound dual is
+    degenerate: any value from zero to the true shortfall is optimal, PDLP returns zero, and
+    simplex happens to return the shortfall. Storage is left out, since its value depends on how
+    it would cycle.
     """
-    frames = []
-    for component, attr in (
-        ("Generator", "p_nom"),
-        ("StorageUnit", "p_nom"),
-        ("Link", "p_nom"),
-        ("Store", "e_nom"),
-    ):
-        lower = f"{component}-ext-{attr}-lower"
-        if lower not in n.model.constraints:
-            continue
-        reduced = n.model.constraints[lower].dual.to_pandas()
-        upper = f"{component}-ext-{attr}-upper"
-        rent = (
-            -n.model.constraints[upper].dual.to_pandas()
-            if upper in n.model.constraints
-            else pd.Series(dtype=float)
-        )
-        static = n.components[component].static.loc[reduced.index]
-        frames.append(
-            pd.DataFrame(
-                {
-                    "component": component,
-                    "name": reduced.index,
-                    "carrier": static["carrier"].to_numpy(),
-                    "capital_cost_gbp_per_mw_yr": static["capital_cost"].to_numpy(),
-                    "built_mw": static[f"{attr}_opt"].to_numpy(),
-                    "max_mw": static[f"{attr}_max"].to_numpy(),
-                    "reduced_cost_gbp_per_mw_yr": reduced.to_numpy(),
-                    "cap_rent_gbp_per_mw_yr": rent.reindex(reduced.index).fillna(0.0).to_numpy(),
-                }
-            )
-        )
-    return pd.concat(frames, ignore_index=True)
+    w = _weights(n)
+    price = n.buses_t.marginal_price
+    co2_price = shadow_carbon_price(n)
+    rows: list[dict[str, Any]] = []
+    gens = n.generators[n.generators["p_nom_extendable"]]
+    p_max = pd.DataFrame(n.get_switchable_as_dense("Generator", "p_max_pu"))
+    running = pd.DataFrame(n.get_switchable_as_dense("Generator", "marginal_cost"))
+    for name, g in gens.iterrows():
+        co2_cost = co2_price * float(n.carriers.at[g["carrier"], "co2_emissions"]) / g["efficiency"]
+        margin = (price[g["bus"]] - running[name] - co2_cost).clip(lower=0) * p_max[name]
+        rows.append(_breakeven_row("Generator", name, g, g["bus"], float((margin * w).sum())))
+    links = n.links[n.links["p_nom_extendable"]]
+    l_max = pd.DataFrame(n.get_switchable_as_dense("Link", "p_max_pu"))
+    l_min = pd.DataFrame(n.get_switchable_as_dense("Link", "p_min_pu"))
+    for name, link in links.iterrows():
+        spread = link["efficiency"] * price[link["bus1"]] - price[link["bus0"]]
+        forward = (spread - link["marginal_cost"]).clip(lower=0) * l_max[name]
+        reverse = (link["marginal_cost"] - spread).clip(lower=0) * -l_min[name]
+        value = float(((forward + reverse) * w).sum())
+        rows.append(_breakeven_row("Link", name, link, f"{link['bus0']}->{link['bus1']}", value))
+    return pd.DataFrame(rows)
+
+
+def _breakeven_row(
+    component: str, name: Any, s: pd.Series, bus: str, value: float
+) -> dict[str, Any]:
+    return {
+        "component": component,
+        "name": name,
+        "carrier": s["carrier"],
+        "bus": bus,
+        "built_mw": float(s["p_nom_opt"]),
+        "max_mw": float(s["p_nom_max"]),
+        "capital_cost_gbp_per_mw_yr": float(s["capital_cost"]),
+        "market_value_gbp_per_mw_yr": value,
+    }
 
 
 def extract_all(
@@ -487,6 +492,7 @@ def extract_all(
         "hydrogen": hydrogen(n),
         "dispatch_hourly": dispatch_hourly(n),
         "summary_row": summary_row(n, scenario_name, solve),
+        "breakeven": breakeven(n),
     }
 
 

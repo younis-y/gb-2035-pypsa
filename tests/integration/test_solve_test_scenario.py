@@ -232,38 +232,38 @@ def test_results_written_and_objective_stable(solved, tmp_path: Path, repo_root:
     )
 
 
-def test_breakeven_prices_every_extendable_unit(solved):
-    """Each extendable unit's reduced cost: what it is short of paying its way, per MW-yr."""
+def test_breakeven_holds_the_zero_profit_conditions(solved):
+    """Market value at the solved prices against annual capital cost: the LP's optimality
+    conditions in plain terms. A unit built below its cap earns exactly its cost, one held at
+    its cap earns at least that, and an unbuilt one earns no more."""
     n, _, _ = solved
     be = breakeven(n).set_index("name")
-    extendable = (
-        n.generators.p_nom_extendable.sum()
-        + n.storage_units.p_nom_extendable.sum()
-        + n.links.p_nom_extendable.sum()
-        + n.stores.e_nom_extendable.sum()
-    )
-    assert len(be) == extendable
-    tol = 1e-6 * be["capital_cost_gbp_per_mw_yr"].max()
-    assert (be["reduced_cost_gbp_per_mw_yr"] >= -tol).all(), "a unit at its floor can only lose"
-    assert (be["cap_rent_gbp_per_mw_yr"] >= -tol).all(), "more room can only help"
-    interior = be[(be["built_mw"] > 1.0) & (be["built_mw"] < be["max_mw"] - 1.0)]
-    assert not interior.empty
-    assert interior["reduced_cost_gbp_per_mw_yr"].abs().max() < tol, "built units pay their way"
-    offshore = be.loc["offwind DOGGER_BANK"]
-    assert offshore["built_mw"] == 0.0 and offshore["reduced_cost_gbp_per_mw_yr"] > 0
+    assert len(be) == n.generators["p_nom_extendable"].sum() + n.links["p_nom_extendable"].sum()
+    cost = be["capital_cost_gbp_per_mw_yr"]
+    value = be["market_value_gbp_per_mw_yr"]
+    tol = 1e-4 * cost.max()
+    interior = (be["built_mw"] > 1.0) & (be["built_mw"] < be["max_mw"] - 1.0)
+    at_cap = be["built_mw"] >= be["max_mw"] - 1.0
+    unbuilt = be["built_mw"] < 1e-3
+    assert interior.sum() >= 5 and at_cap.any() and unbuilt.any(), "the checks below must bite"
+    assert (value - cost)[interior].abs().max() < tol, "built units pay their way exactly"
+    assert (value[at_cap] >= cost[at_cap] - tol).all(), "a binding cap leaves a rent"
+    assert (value[unbuilt] <= cost[unbuilt] + tol).all(), "nothing unbuilt was worth building"
+    assert value["offwind DOGGER_BANK"] < cost["offwind DOGGER_BANK"]
 
 
 @pytest.mark.parametrize(("past_breakeven", "builds"), [(1.15, True), (0.85, False)])
 def test_offshore_enters_exactly_past_its_breakeven(
     repo_root: Path, solved, past_breakeven, builds
 ):
-    """The dual is a price, so test it as one: cut offshore capex to 15 percent past the
-    breakeven it implies and Dogger Bank is built; stop 15 percent short and nothing is."""
+    """Test the breakeven as a price: cut offshore capex to 15 percent past the shortfall its
+    market value implies and Dogger Bank is built; stop 15 percent short and nothing is."""
     n, _, scenario = solved
     paths = ProjectPaths(repo_root)
     settings = load_settings(paths.config / "settings.yaml")
     inputs = load_inputs(paths, settings.weather_year)
-    reduced = breakeven(n).set_index("name").at["offwind DOGGER_BANK", "reduced_cost_gbp_per_mw_yr"]
+    dogger = breakeven(n).set_index("name").loc["offwind DOGGER_BANK"]
+    reduced = dogger["capital_cost_gbp_per_mw_yr"] - dogger["market_value_gbp_per_mw_yr"]
     c = inputs.costs.loc["offwind"]
     annual_capex = annuity(settings.discount_rate, c["lifetime_yr"]) * c["capex_gbp"]
     scale = 1.0 - past_breakeven * reduced / annual_capex

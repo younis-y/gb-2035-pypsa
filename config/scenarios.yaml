@@ -60,6 +60,18 @@ scenarios:
     description: cap2 with onshore wind and solar held to their FES 2035 totals (planning stand-in)
     co2_cap_mt: 2.0
     fes_capacity_ceiling: [onwind, solar]
+  # Offshore capex either side of the breakeven that cap5's market value implies: Dogger Bank
+  # earns 74.5 percent of its annual cost at the solved prices, 88,177 GBP/MW-yr short, which a
+  # 42.6 percent capex cut closes (cap5_wy2019/breakeven.csv). 15 percent short of that cut,
+  # and 15 percent past it.
+  cap5_offwind_capex64:
+    description: cap5 with offshore capex x 0.64, 15 percent short of breakeven
+    co2_cap_mt: 5.0
+    capex_scale: {offwind: 0.64}
+  cap5_offwind_capex51:
+    description: cap5 with offshore capex x 0.51, 15 percent past breakeven
+    co2_cap_mt: 5.0
+    capex_scale: {offwind: 0.51}
   cap5_steel:
     description: cap5 plus EAF loads at Port Talbot and Scunthorpe (stretch)
     co2_cap_mt: 5.0

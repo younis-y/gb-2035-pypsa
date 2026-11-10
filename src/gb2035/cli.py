@@ -37,7 +37,7 @@ from gb2035.model.inputs import load_inputs
 from gb2035.model.network import build_network, network_fingerprint
 from gb2035.model.solve import SolveResult, fixed_asset_cost_gbp_per_yr, solve
 from gb2035.paths import ProjectPaths
-from gb2035.results.extract import breakeven, extract_all, write_results
+from gb2035.results.extract import extract_all, write_results
 from gb2035.results.summary import write_summary
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help="GB 2035 power-system model.")
@@ -271,9 +271,7 @@ def _run(paths: ProjectPaths, settings: Settings, sc: Scenario, results: Path) -
     result = solve(n, settings, sc)
     seconds = time.perf_counter() - t0
     out = results / sc.name
-    tables = extract_all(n, sc.name, result)
-    tables["breakeven"] = breakeven(n)
-    write_results(tables, out)
+    write_results(extract_all(n, sc.name, result), out)
     n.export_to_netcdf(out / "network.nc")
     meta = {
         "scenario": sc.name,

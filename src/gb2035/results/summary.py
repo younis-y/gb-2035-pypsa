@@ -21,6 +21,8 @@ ORDER = [
     "cap5_steel",
     "cap5_fes_ceiling",
     "cap2_fes_ceiling",
+    "cap5_offwind_capex64",
+    "cap5_offwind_capex51",
     "test",
 ]
 
