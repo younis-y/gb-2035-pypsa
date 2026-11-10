@@ -5,22 +5,30 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.13"
           enable-cache: true
-      - name: Install
-        run: uv sync --all-extras --group dev
+      - name: Install (fails if uv.lock is stale)
+        run: uv sync --locked --all-extras --group dev
       - name: Lint
         run: uv run ruff check . && uv run ruff format --check .
       - name: Types
         run: uv run mypy
       - name: Tests
-        run: uv run pytest -m "not network" --runslow
+        run: uv run pytest -m "not network" --runslow --ignore=tests/results --durations=5
+      # Separate step so a stale or inconsistent published result shows up by name.
+      - name: Committed results are current and consistent
+        run: uv run pytest tests/results --runslow
       - name: Snakemake dry run
-        run: uv run snakemake --snakefile workflow/Snakefile -n --cores 1 results/summary.csv
+        run: uv run snakemake --snakefile workflow/Snakefile -n --cores 1 all

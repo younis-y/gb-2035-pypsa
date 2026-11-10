@@ -8,5 +8,6 @@
   "solver": "pdlp",
   "total_cost_gbp_per_yr": 17378069584.4776,
   "lp_objective_gbp_per_yr": 12121807352.58024,
-  "fixed_asset_cost_gbp_per_yr": 5256262231.89736
+  "fixed_asset_cost_gbp_per_yr": 5256262231.89736,
+  "input_fingerprint": "dc400b4d52fdfe09"
 }
