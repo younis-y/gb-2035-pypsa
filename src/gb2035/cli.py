@@ -364,7 +364,7 @@ def report_cmd(
     """Write results/summary.csv, README figures under docs/figures, and optionally the README
     table."""
     from gb2035.data.fes import load_fes
-    from gb2035.report.figures import make_figures
+    from gb2035.report.figures import make_figures, weather_years_figure
     from gb2035.report.readme import assumptions_markdown, summary_markdown, update_readme
     from gb2035.results.summary import summarise
 
@@ -380,6 +380,9 @@ def report_cmd(
             paths.root / "docs" / "figures",
         )
         console.print(f"{len(figs)} figures -> docs/figures")
+    if summary["scenario"].str.startswith("cap5_wy").any():
+        path = weather_years_figure(summary, paths.root / "docs" / "figures")
+        console.print(f"weather-year figure -> {path}")
     if update_readme_block:
         update_readme(paths.root / "README.md", summary_markdown(summary))
         console.print("README summary block updated")

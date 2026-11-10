@@ -263,6 +263,68 @@ def teesside_hydrogen(summary: pd.DataFrame, out: Path) -> Path:
     return path
 
 
+WEATHER_NEW_BUILD = [
+    ("onwind_new_gw", "New onshore wind", ORANGE),
+    ("solar_new_gw", "New solar", AQUA),
+    ("offwind_new_gw", "New offshore wind", BLUE),
+    ("battery_new_gw", "New battery", VIOLET),
+]
+
+
+def weather_year_table(summary: pd.DataFrame) -> pd.DataFrame:
+    """The `cap5_wy<year>` rows of a summary, with their year, in calendar order."""
+    df = summary[summary["scenario"].str.startswith("cap5_wy")].copy()
+    df["year"] = df["scenario"].str.removeprefix("cap5_wy").astype(int)
+    return df.sort_values("year").reset_index(drop=True)
+
+
+def weather_years_figure(summary: pd.DataFrame, out: Path) -> Path:
+    """cap5 re-solved on each weather year: what it builds, and what that costs.
+
+    Two panels rather than two y-axes: new build in GW and cost in bn GBP/yr do not share a
+    scale. The cost dots wear ink, not a series hue, because blue already means offshore.
+    """
+    df = weather_year_table(summary)
+    years = df["year"].astype(str)
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(11, 4.2), gridspec_kw={"width_ratios": [3, 2]})
+    bottom = pd.Series(0.0, index=df.index)
+    for col, label, color in WEATHER_NEW_BUILD:
+        # A surface-coloured edge is the 2 px gap between stacked segments.
+        a1.bar(
+            years,
+            df[col],
+            bottom=bottom,
+            width=0.6,
+            label=label,
+            color=color,
+            edgecolor=SURFACE,
+            linewidth=1.0,
+        )
+        bottom = bottom + df[col]
+    a1.set_ylabel("New build under the 5 Mt cap (GW)")
+    a1.legend(frameon=False, ncol=2, loc="upper left")
+    a1.set_ylim(0, float(bottom.max()) * 1.25)
+    a2.plot(
+        years,
+        df["total_cost_gbp_bn_per_yr"],
+        "o",
+        color=INK_PRIMARY,
+        markersize=7,
+        markeredgecolor=SURFACE,
+        markeredgewidth=1.5,
+    )
+    a2.set_ylabel("System cost (bn GBP/yr)")
+    for ax in (a1, a2):
+        ax.tick_params(axis="x", rotation=90)
+        ax.set_xlabel("Weather and demand-shape year")
+        ax.spines[["top", "right"]].set_visible(False)
+    fig.tight_layout()
+    path = out / "weather_years.png"
+    fig.savefig(path, dpi=160)
+    plt.close(fig)
+    return path
+
+
 def make_figures(
     summary: pd.DataFrame, results_root: Path, fes: pd.DataFrame, out_dir: Path
 ) -> list[Path]:
