@@ -87,7 +87,13 @@ scenarios:
   # solar and the demand shape all come from the named year. 2020 and 2021 carry lockdown
   # demand shapes and are kept, flagged, so the set is the whole record and not a selection.
   # cap5_wy2019 is cap5 itself, re-solved: the same network, so it measures solver noise.
-  cap5_wy2010: {description: "cap5 on 2010 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2010}
+  # cuPDLP-C ended at status "unknown" on 2010 after 31 minutes; HiGHS's own PDLP gets it, as
+  # it got cap5_ee_demand.
+  cap5_wy2010:
+    description: "cap5 on 2010 weather and demand shape"
+    co2_cap_mt: 5.0
+    weather_year: 2010
+    solver_options: {solver: hipdlp}
   cap5_wy2011: {description: "cap5 on 2011 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2011}
   cap5_wy2012: {description: "cap5 on 2012 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2012}
   cap5_wy2013: {description: "cap5 on 2013 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2013}
