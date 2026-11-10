@@ -16,8 +16,9 @@ MWH_PER_TWH = 1e6
 def shadow_carbon_price(n: pypsa.Network) -> float:
     if "co2_cap" not in n.global_constraints.index:
         return 0.0
-    mu = float(n.global_constraints.at["co2_cap", "mu"])
-    return max(-mu, 0.0)
+    # max(0.0, ...) and not max(..., 0.0): a slack cap's dual of +0.0 negates to -0.0, and max
+    # keeps its first argument on a tie, which the CSV writer would print as "-0".
+    return max(0.0, -float(n.global_constraints.at["co2_cap", "mu"]))
 
 
 def _weights(n: pypsa.Network) -> pd.Series:
@@ -230,7 +231,7 @@ def duals(n: pypsa.Network) -> pd.DataFrame:
                 {
                     "metric": "fes_ceiling_rent_gbp_per_mw_yr",
                     "zone": gc["carrier_attribute"],
-                    "value": max(-float(gc["mu"]), 0.0),
+                    "value": max(0.0, -float(gc["mu"])),
                 }
             )
     for bus in n.buses.index:

@@ -60,6 +60,13 @@ scenarios:
     description: cap2 with onshore wind and solar held to their FES 2035 totals (planning stand-in)
     co2_cap_mt: 2.0
     fes_capacity_ceiling: [onwind, solar]
+  # The FES ceiling alone left offshore unbuilt at 5 Mt: imports at 65 GBP/MWh filled the gap.
+  # This closes both escape valves at once.
+  cap5_fes_ceiling_import_100:
+    description: cap5_fes_ceiling with imports priced at 100 GBP/MWh
+    co2_cap_mt: 5.0
+    fes_capacity_ceiling: [onwind, solar]
+    interconnector_import_price_gbp_mwh: 100.0
   # Offshore capex either side of the breakeven that cap5's market value implies: Dogger Bank
   # earns 74.5 percent of its annual cost at the solved prices, 88,177 GBP/MW-yr short, which a
   # 42.6 percent capex cut closes (cap5_wy2019/breakeven.csv). 15 percent short of that cut,
