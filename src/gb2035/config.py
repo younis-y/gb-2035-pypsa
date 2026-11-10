@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, model_validator
 
 Pathway = Literal["Holistic Transition", "Electric Engagement", "Hydrogen Evolution"]
 
@@ -99,7 +99,7 @@ class Scenario(BaseModel):
     interconnector_export_price_gbp_mwh: float | None = Field(default=None, ge=0)
     transmission_expandable: bool = False
     # Multiplies a technology's capex in the cost table (fixed O&M unchanged), e.g. {offwind: 0.8}.
-    capex_scale: dict[str, float] = Field(default_factory=dict)
+    capex_scale: dict[str, PositiveFloat] = Field(default_factory=dict)
     # Carriers whose national total capacity may not pass the FES 2035 figure for this pathway.
     fes_capacity_ceiling: tuple[Literal["onwind", "solar", "offwind"], ...] = ()
     steel: SteelSettings | None = None

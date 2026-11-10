@@ -84,14 +84,16 @@ def _scenario(paths: ProjectPaths, name: str) -> Scenario:
 
 
 def _git_sha(root: Path) -> str:
-    try:
+    """HEAD's short sha, with `-dirty` when tracked files have uncommitted changes."""
+
+    def git(*args: str) -> str:
         return subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            cwd=root,
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", *args], cwd=root, capture_output=True, text=True, check=True
         ).stdout.strip()
+
+    try:
+        sha = git("rev-parse", "--short", "HEAD")
+        return f"{sha}-dirty" if git("status", "--porcelain", "--untracked-files=no") else sha
     except (subprocess.CalledProcessError, FileNotFoundError):
         return "unknown"
 
@@ -350,6 +352,13 @@ def extract_cmd(
         ),
         out,
     )
+    # run_meta.json is the run's; this says which code wrote the tables beside it.
+    stamp = {
+        "scenario": sc.name,
+        "git_sha": _git_sha(paths.root),
+        "pypsa_version": pypsa.__version__,
+    }
+    (out / "extract_meta.json").write_text(json.dumps(stamp, indent=2) + "\n")
     console.print(f"re-extracted {sc.name}")
 
 

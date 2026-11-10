@@ -1,6 +1,9 @@
 # Thin Snakemake wrapper over the gb2035 CLI so the DAG is explicit and reproducible.
-# Usage: uv run snakemake --snakefile workflow/Snakefile --cores 4 results/summary.csv
-# The published results are 3-hourly; `--config resolution_hours=1` runs the hourly model.
+# Usage: uv run snakemake --snakefile workflow/Snakefile --cores 4 all
+# `all` rebuilds the published set: every scenario with committed results, at the published
+# 3-hourly resolution. Name any other target explicitly, e.g. results/cap0p5/summary_row.csv;
+# `--config resolution_hours=1 results_hourly/cap5/summary_row.csv` is the hourly reference.
+import json
 from pathlib import Path
 
 from gb2035.config import list_scenarios, load_scenario, load_settings, weather_years
@@ -12,7 +15,9 @@ RESOLUTION = config.get("resolution_hours", 3)
 ALL = [s for s in list_scenarios(SCENARIOS_YAML) if s != "test"]
 # The weather-year family re-solves cap5 on other years' weather and lives in its own folder.
 WEATHER = [s for s in ALL if s.startswith("cap5_wy")]
-SWEEP = [s for s in ALL if s not in WEATHER]
+SWEEP = [s for s in ALL if s not in WEATHER and (ROOT / "results" / s / "run_meta.json").exists()]
+# The cutouts only regenerate the committed profiles (`gb2035 build-profiles`), so skip them.
+RAW = [k for k in json.loads((ROOT / "data" / "manifest.json").read_text()) if "cutout" not in k]
 YEARS = weather_years(SCENARIOS_YAML, DEFAULT_YEAR)
 TABLES = ["fleet_by_zone.csv", "repd_by_zone.csv", "fes2025_gb_2035.csv", "costs_2035_gb.csv"]
 DERIVED = TABLES + [f"demand_{year}_hourly.parquet" for year in YEARS]
@@ -31,7 +36,8 @@ rule all:
 
 rule retrieve:
     output: touch("data/raw/.retrieved")
-    shell: "uv run gb2035 retrieve --root {ROOT}"
+    params: only=" ".join(f"--only {key}" for key in RAW)
+    shell: "uv run gb2035 retrieve --root {ROOT} {params.only}"
 
 rule derived:
     input: "data/raw/.retrieved"
@@ -41,7 +47,7 @@ rule derived:
 rule run_scenario:
     input: expand("data/derived/{name}", name=TABLES), year_inputs
     output: "{folder}/{scenario}/summary_row.csv", "{folder}/{scenario}/run_meta.json"
-    wildcard_constraints: folder="results|results_weather_years"
+    wildcard_constraints: folder="results|results_weather_years|results_hourly"
     shell: "uv run gb2035 run --scenario {wildcards.scenario} --root {ROOT} --results-dir {ROOT}/{wildcards.folder} --resolution-hours {RESOLUTION}"
 
 rule summary:

@@ -455,10 +455,12 @@ def breakeven(n: pypsa.Network) -> pd.DataFrame:
     links = n.links[n.links["p_nom_extendable"]]
     l_max = pd.DataFrame(n.get_switchable_as_dense("Link", "p_max_pu"))
     l_min = pd.DataFrame(n.get_switchable_as_dense("Link", "p_min_pu"))
+    l_eff = pd.DataFrame(n.get_switchable_as_dense("Link", "efficiency"))
+    l_cost = pd.DataFrame(n.get_switchable_as_dense("Link", "marginal_cost"))
     for name, link in links.iterrows():
-        spread = link["efficiency"] * price[link["bus1"]] - price[link["bus0"]]
-        forward = (spread - link["marginal_cost"]).clip(lower=0) * l_max[name]
-        reverse = (link["marginal_cost"] - spread).clip(lower=0) * -l_min[name]
+        spread = l_eff[name] * price[link["bus1"]] - price[link["bus0"]]
+        forward = (spread - l_cost[name]).clip(lower=0) * l_max[name]
+        reverse = (l_cost[name] - spread).clip(lower=0) * -l_min[name]
         value = float(((forward + reverse) * w).sum())
         rows.append(_breakeven_row("Link", name, link, f"{link['bus0']}->{link['bus1']}", value))
     return pd.DataFrame(rows)

@@ -81,6 +81,8 @@ def test_run_test_scenario_end_to_end(repo_root: Path, tmp_path: Path, monkeypat
     assert (out / "run_meta.json").read_text() == meta_before, (
         "extract re-writes tables only; the run's metadata is the run's to own"
     )
+    stamp = json.loads((out / "extract_meta.json").read_text())
+    assert stamp["scenario"] == "test" and stamp["git_sha"], "who wrote the tables, if not the run"
     costs_after = pd.read_csv(out / "costs.csv")
     total_after = float(costs_after.loc[costs_after["kind"] == "total", "gbp_per_yr"].iloc[0])
     summary_after = pd.read_csv(out / "summary_row.csv")

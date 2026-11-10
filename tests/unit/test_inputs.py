@@ -42,6 +42,14 @@ def test_load_inputs_reads_the_requested_weather_year(inputs):
     assert inputs.demand.index[0] == inputs.profiles.index[0] == pd.Timestamp("2019-01-01")
 
 
+def test_load_inputs_reads_another_year_not_2019(repo_root: Path):
+    """The original bug: the model read the 2019 files whatever year was configured."""
+    leap = load_inputs(ProjectPaths(repo_root), 2012)
+    for series in (leap.demand, leap.profiles):
+        assert len(series) == 8784
+        assert series.index[0] == pd.Timestamp("2012-01-01")
+
+
 def test_load_inputs_names_the_build_step_for_a_missing_year(repo_root: Path):
     with pytest.raises(FileNotFoundError, match="build-profiles --weather-year 1999"):
         load_inputs(ProjectPaths(repo_root), 1999)

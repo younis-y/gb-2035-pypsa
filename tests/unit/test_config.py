@@ -61,6 +61,12 @@ def test_scenario_weather_year_defaults_to_the_settings_year():
     assert Scenario(name="dry", weather_year=2010).weather_year == 2010
 
 
+def test_capex_scale_rejects_a_free_or_negative_technology():
+    with pytest.raises(ValidationError):
+        Scenario(name="free_offshore", capex_scale={"offwind": 0.0})
+    assert Scenario(name="cheaper", capex_scale={"offwind": 0.5}).capex_scale == {"offwind": 0.5}
+
+
 def test_weather_years_lists_every_year_a_scenario_needs(tmp_path: Path):
     path = tmp_path / "scenarios.yaml"
     path.write_text(

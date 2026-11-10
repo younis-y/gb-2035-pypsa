@@ -207,3 +207,12 @@ def test_weather_years_figure_draws_every_year_in_order(tmp_path: Path):
     assert path == tmp_path / "weather_years.png"
     assert path.stat().st_size > 0
     assert weather_year_table(summary)["year"].tolist() == [2010, 2011, 2012], "cap5 is left out"
+
+
+def test_weather_year_table_keeps_a_missing_year_as_a_gap():
+    summary = pd.DataFrame(
+        {"scenario": ["cap5_wy2010", "cap5_wy2012"], "total_cost_gbp_bn_per_yr": [15.0, 16.0]}
+    )
+    table = weather_year_table(summary)
+    assert table["year"].tolist() == [2010, 2011, 2012]
+    assert table["total_cost_gbp_bn_per_yr"].isna().tolist() == [False, True, False]

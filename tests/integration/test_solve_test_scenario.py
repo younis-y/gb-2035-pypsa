@@ -288,10 +288,13 @@ def solved_ceiling(repo_root: Path):
 
 
 def test_fes_ceiling_holds_after_the_solve_and_reports_its_rent(solved_ceiling):
+    """On the CI week the onshore ceiling binds and the solar one does not: onshore sits at its
+    FES figure with a positive rent, solar below its own with none."""
     n, inputs, scenario = solved_ceiling
     fes = inputs.fes[inputs.fes["pathway"] == scenario.demand_pathway].set_index("metric")
-    rows = duals(n).set_index(["metric", "zone"])["value"]
-    for carrier, metric in (("onwind", "onshore_wind_gw"), ("solar", "solar_gw")):
-        total_mw = n.generators.loc[n.generators["carrier"] == carrier, "p_nom_opt"].sum()
-        assert total_mw <= fes.at[metric, "value"] * 1e3 + 1.0
-        assert rows[("fes_ceiling_rent_gbp_per_mw_yr", carrier)] >= 0.0
+    rent = duals(n).set_index(["metric", "zone"])["value"]
+    total = n.generators.groupby("carrier")["p_nom_opt"].sum()
+    assert total["onwind"] == pytest.approx(fes.at["onshore_wind_gw", "value"] * 1e3, abs=1.0)
+    assert rent[("fes_ceiling_rent_gbp_per_mw_yr", "onwind")] > 1000.0
+    assert total["solar"] < fes.at["solar_gw", "value"] * 1e3 - 1000.0
+    assert rent[("fes_ceiling_rent_gbp_per_mw_yr", "solar")] == 0.0

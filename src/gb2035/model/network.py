@@ -75,8 +75,10 @@ def network_fingerprint(n: pypsa.Network) -> str:
 
     Each run records it in `run_meta.json`, and a test rebuilds every committed scenario and
     compares, so a change to data, config or model code that would move a result fails CI until
-    that scenario is re-solved. Floats are hashed at ten significant figures so that last-bit
-    differences between platforms do not count; names and descriptions in `n.meta` are left out.
+    that scenario is re-solved. It covers what the network is built from, not how it is solved:
+    solver options and library versions are checked against `run_meta.json` separately. Floats
+    are hashed at ten significant figures so that last-bit differences between platforms rarely
+    count; names and descriptions in `n.meta` are left out.
     """
     digest = hashlib.sha256()
     for c in n.components:

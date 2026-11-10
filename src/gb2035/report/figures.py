@@ -93,7 +93,7 @@ def capacity_mix_by_cap(summary: pd.DataFrame, out: Path) -> Path:
     for col, label, color in TECH_COLS:
         if col in df:
             ax.bar(df.index.astype(str), df[col], bottom=bottom, label=label, color=color)
-            bottom = bottom + df[col].fillna(0.0)
+            bottom = bottom + df[col].fillna(0.0).fillna(0.0)
     ax.set_ylabel("Installed capacity (GW)")
     ax.set_xlabel("Annual CO2 cap")
     ax.legend(frameon=False, ncol=2)
@@ -272,10 +272,15 @@ WEATHER_NEW_BUILD = [
 
 
 def weather_year_table(summary: pd.DataFrame) -> pd.DataFrame:
-    """The `cap5_wy<year>` rows of a summary, with their year, in calendar order."""
+    """The `cap5_wy<year>` rows of a summary, one per calendar year from the first to the last.
+
+    A year with no run stays in as an empty row, so the figure shows a gap rather than closing
+    up around it.
+    """
     df = summary[summary["scenario"].str.startswith("cap5_wy")].copy()
     df["year"] = df["scenario"].str.removeprefix("cap5_wy").astype(int)
-    return df.sort_values("year").reset_index(drop=True)
+    years = range(int(df["year"].min()), int(df["year"].max()) + 1)
+    return df.set_index("year").reindex(years).rename_axis("year").reset_index()
 
 
 def weather_years_figure(summary: pd.DataFrame, out: Path) -> Path:
@@ -300,10 +305,21 @@ def weather_years_figure(summary: pd.DataFrame, out: Path) -> Path:
             edgecolor=SURFACE,
             linewidth=1.0,
         )
-        bottom = bottom + df[col]
+        bottom = bottom + df[col].fillna(0.0)
     a1.set_ylabel("New build under the 5 Mt cap (GW)")
     a1.legend(frameon=False, ncol=2, loc="upper left")
     a1.set_ylim(0, float(bottom.max()) * 1.25)
+    # Zero-height bars draw nothing, so say so when offshore is never built.
+    if float(df["offwind_new_gw"].max()) < 0.05:
+        a1.text(
+            0.99,
+            0.80,
+            "New offshore wind: 0 GW in every year",
+            transform=a1.transAxes,
+            ha="right",
+            va="top",
+            color=INK_SECONDARY,
+        )
     a2.plot(
         years,
         df["total_cost_gbp_bn_per_yr"],
