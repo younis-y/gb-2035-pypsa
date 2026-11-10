@@ -11,8 +11,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from gb2035.config import load_settings
-from gb2035.data.costs import capital_cost_per_yr, load_costs
+from gb2035.config import load_scenario, load_settings
+from gb2035.data.costs import annuity, capital_cost_per_yr, load_costs
 from gb2035.data.profiles import load_profiles
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -57,6 +57,14 @@ def test_no_new_offshore_anywhere_in_the_sweep(summary: pd.DataFrame):
     assert summary.loc[SWEEP, "offwind_new_gw"].max() < 1e-3
 
 
+def test_offshore_enters_only_where_the_readme_says(summary: pd.DataFrame):
+    """Finding 3 names the only two runs that build greenfield offshore; a third would make
+    it false."""
+    builds = set(summary.index[summary["offwind_new_gw"] > 1e-3])
+    assert builds == {"cap5_offwind_capex51", "cap5_fes_ceiling_import_100"}
+    claim("No cap in the sweep builds greenfield offshore")
+
+
 def test_the_fes_comparison(summary: pd.DataFrame, fes: pd.Series):
     claim(f"reaches {fes['offshore_wind_gw']:.1f} GW of offshore by 2035")
 
@@ -92,3 +100,127 @@ def test_the_cost_of_tightening_the_cap(summary: pd.DataFrame):
 def test_electrolysis_is_never_built(summary: pd.DataFrame):
     assert summary["electrolysis_gw"].max() < 1e-6
     assert summary["teesside_green_h2_twh"].max() < 1e-6
+
+
+def _weather_runs() -> pd.DataFrame:
+    rows = [
+        pd.read_csv(p).iloc[0]
+        for p in sorted((ROOT / "results_weather_years").glob("cap5_wy*/summary_row.csv"))
+    ]
+    return pd.DataFrame(rows).set_index("scenario")
+
+
+def _offshore_capex_cut_percent(run: Path) -> float:
+    """The cut to offshore's annualised capex that closes the best offshore unit's gap."""
+    be = pd.read_csv(run / "breakeven.csv")
+    off = be[(be["carrier"] == "offwind") & (be["component"] == "Generator")]
+    gap = (off["capital_cost_gbp_per_mw_yr"] - off["market_value_gbp_per_mw_yr"]).min()
+    costs = load_costs(ROOT / "data" / "derived" / "costs_2035_gb.csv").loc["offwind"]
+    rate = load_settings(ROOT / "config" / "settings.yaml").discount_rate
+    return 100 * gap / (annuity(rate, costs["lifetime_yr"]) * costs["capex_gbp"])
+
+
+def test_every_weather_year_and_no_new_offshore_in_any():
+    runs = _weather_runs()
+    assert len(runs) == 15, "every year 2010 to 2024"
+    assert runs["offwind_new_gw"].max() < 1e-3
+    claim("Re-solved on all 15 weather years from 2010 to 2024")
+    claim("builds no new offshore wind in any of them")
+    cost, solar = runs["total_cost_gbp_bn_per_yr"], runs["solar_new_gw"]
+    claim(f"its cost runs from {cost.min():.1f} to {cost.max():.1f} bn GBP/yr")
+    claim(f"its new solar from {solar.min():.0f} to {solar.max():.0f} GW")
+
+
+def test_the_offshore_capex_cut_across_weather_years():
+    runs = sorted((ROOT / "results_weather_years").glob("cap5_wy*"))
+    cuts = {run.name: _offshore_capex_cut_percent(run) for run in runs}
+    claim(f"fall by {min(cuts.values()):.0f} to {max(cuts.values()):.0f} percent before its")
+    assert min(cuts, key=cuts.__getitem__) == "cap5_wy2010", "least in 2010"
+
+
+def test_the_breakeven_is_confirmed_either_side(summary: pd.DataFrame):
+    short = summary.loc["cap5_offwind_capex64"]
+    past = summary.loc["cap5_offwind_capex51"]
+    assert short["offwind_new_gw"] < 1e-3
+    claim(f"builds none; 49 percent lower builds {past['offwind_new_gw']:.1f} GW")
+    cut = _offshore_capex_cut_percent(ROOT / "results" / "cap5")
+    for name, side, percent in (
+        ("cap5_offwind_capex64", 0.85, 36),
+        ("cap5_offwind_capex51", 1.15, 49),
+    ):
+        factor = load_scenario(name, ROOT / "config" / "scenarios.yaml").capex_scale["offwind"]
+        assert 100 * (1 - factor) == pytest.approx(percent, abs=0.5), "config matches the README"
+        assert side * cut == pytest.approx(percent, abs=0.5), "15 percent either side of the cut"
+
+
+def test_the_planning_ceiling_and_dear_imports(summary: pd.DataFrame):
+    base, ceiling = summary.loc["cap5"], summary.loc["cap5_fes_ceiling"]
+    both = summary.loc["cap5_fes_ceiling_import_100"]
+    extra = ceiling["total_cost_gbp_bn_per_yr"] - base["total_cost_gbp_bn_per_yr"]
+    claim(f"costs {extra:.1f} bn GBP/yr more and still builds no offshore")
+    assert ceiling["offwind_new_gw"] < 1e-3
+    assert ceiling["net_imports_twh"] > 2 * base["net_imports_twh"], "imports more than double"
+    claim(
+        f"brings in only {both['offwind_new_gw']:.1f} GW of offshore, beside "
+        f"{both['gas_ccs_gw']:.1f} GW of gas CCS"
+    )
+
+
+def test_the_resolve_reproduces_cap5_to_the_penny():
+    import json
+
+    def total(path: str) -> float:
+        return json.loads((ROOT / path / "run_meta.json").read_text())["total_cost_gbp_per_yr"]
+
+    assert abs(total("results/cap5") - total("results_weather_years/cap5_wy2019")) < 0.01
+    claim("re-solving `cap5` from scratch reproduces its cost to the penny")
+
+
+FINDINGS = " ".join((ROOT / "docs" / "findings.md").read_text().split())
+
+
+def finding(text: str) -> None:
+    assert text in FINDINGS, f"docs/findings.md does not say: {text!r}"
+
+
+def test_the_findings_weather_table_is_the_results():
+    for run in sorted((ROOT / "results_weather_years").glob("cap5_wy*")):
+        r = pd.read_csv(run / "summary_row.csv").iloc[0]
+        year = int(run.name.removeprefix("cap5_wy"))
+        label = f"{year} (lockdown demand)" if year in (2020, 2021) else str(year)
+        finding(
+            f"| {label} | {r['total_cost_gbp_bn_per_yr']:.1f} | "
+            f"{r['shadow_carbon_price_gbp_per_t']:.0f} | {r['onwind_new_gw']:.1f} | "
+            f"{r['solar_new_gw']:.1f} | {r['battery_new_gw']:.1f} | {r['offwind_new_gw']:.1f} | "
+            f"{_offshore_capex_cut_percent(run):.0f} |"
+        )
+
+
+def test_the_findings_breakeven_and_planning_numbers(summary: pd.DataFrame):
+    be = pd.read_csv(ROOT / "results" / "cap5" / "breakeven.csv").set_index("name")
+    dogger = be.loc["offwind DOGGER_BANK"]
+    share = dogger["market_value_gbp_per_mw_yr"] / dogger["capital_cost_gbp_per_mw_yr"]
+    finding(
+        f"earns {100 * share:.1f} percent of its "
+        f"{dogger['capital_cost_gbp_per_mw_yr']:,.0f} GBP/MW-yr annual cost"
+    )
+    finding("a 42.6 percent capex cut")
+    assert _offshore_capex_cut_percent(ROOT / "results" / "cap5") == pytest.approx(42.6, abs=0.05)
+    ceiling = summary.loc["cap5_fes_ceiling"]
+    finding(
+        f"lifts the shadow carbon price from {summary.at['cap5', 'shadow_carbon_price_gbp_per_t']:.0f}"
+        f" to {ceiling['shadow_carbon_price_gbp_per_t']:.0f} GBP/t"
+    )
+    finding(
+        f"rise from {summary.at['cap5', 'net_imports_twh']:.1f} to "
+        f"{ceiling['net_imports_twh']:.1f} TWh instead"
+    )
+
+
+def test_the_readme_counts_the_committed_runs():
+    runs = [
+        m
+        for f in ("results", "results_hourly", "results_weather_years")
+        for m in (ROOT / f).glob("*/run_meta.json")
+    ]
+    claim(f"eight checks on each of the {len(runs)} committed runs")

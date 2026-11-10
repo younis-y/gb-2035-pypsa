@@ -6,154 +6,45 @@
 [![python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](.python-version)
 
 Least-cost GB power system in 2035 under tightening carbon caps, with a Teesside industrial
-hydrogen node. PyPSA + HiGHS, 20 transmission zones, full-year 2019 weather, eleven solved
-scenarios.
+hydrogen node. PyPSA + HiGHS, 20 transmission zones, a full year at 3-hourly resolution:
+15 solved scenarios on 2019 weather, and the 5 MtCO2 case re-solved on every weather
+year from 2010 to 2024.
 
 **The answer this model gives.** At DESNZ 2035 medium costs, the cheapest GB system that
 meets a 5 MtCO2 cap costs 15.5 bn GBP/yr and is built on onshore wind and solar, not on new
 offshore wind: 36.3 GW of onshore wind and 97.0 GW of solar against 27.9 GW of offshore, and
-not one megawatt of new offshore is built at any cap in the sweep. That is the sharpest
-disagreement with NESO's FES 2025 Holistic Transition, which reaches 86.1 GW of offshore by
-2035. What separates the two is cost ranking rather than available room: the national
-greenfield caps of 60 GW onshore and 150 GW solar are never reached, and although the
-land-area split that shares them out does bind in individual zones, the model climbs into
-onshore zones costing about 52 GBP/MWh before it will buy a megawatt of offshore at 63. The
-planning and land-use limits that make FES's answer the realistic one sit outside this model
-entirely. Tightening the cap from 30 to 2 MtCO2 adds 2.1 bn GBP/yr and lifts the shadow
-carbon price from 0 to 910 GBP/t.
-The Teesside hydrogen node is met entirely by blue hydrogen at 70 GBP/MWh: electrolysis is
-never built at any cap, and the 5 TWh demand costs the system 356 m GBP/yr.
+not one megawatt of new offshore is built at any cap in the sweep. NESO's FES 2025 Holistic
+Transition reaches 86.1 GW of offshore by 2035. The model climbs into onshore zones costing
+about 52 GBP/MWh before it will buy a megawatt of offshore at 63. Tightening the cap from 30
+to 2 MtCO2 adds 2.1 bn GBP/yr and lifts the shadow carbon price from 0 to 910 GBP/t, and the
+Teesside hydrogen demand is met by blue hydrogen at every cap, never by electrolysis.
 
-## Findings
+**How far that holds.**
 
-1. **Cost rises gently to a 5 Mt cap, then steeply.** System cost runs 14.8, 15.0, 15.3,
-   15.5 and 16.8 bn GBP/yr across the 30, 20, 10, 5 and 2 MtCO2 caps, and the shadow carbon
-   price runs 0, 33, 33, 52 and 910 GBP/t
-   ([`results/summary.csv`](results/summary.csv)). The 30 Mt cap is slack, so its dual is
-   zero: the cost-minimising build already emits only 28.2 Mt. (The `uncapped` row's 4.6 Mt
-   is not that unconstrained optimum either: `uncapped` drops the cap but prices carbon at
-   the UK ETS's 55 GBP/t, which buys most of the abatement a cap would have forced, and those
-   payments are a transfer rather than a resource cost, so its 15.7 bn total is not
-   comparable with the capped rows.) The 33 GBP/t plateau across the 20
-   and 10 Mt caps is a structural breakpoint, the price at which an existing CCGT
-   (24 GBP/MWh thermal over 0.5 efficiency plus 5 GBP/MWh variable O&M = 53 GBP/MWh, at
-   0.368 tCO2/MWh) becomes dearer than a 65 GBP/MWh import: (65 - 53) / 0.368 = 32.6 GBP/t.
-   Below 10 Mt that switch is exhausted and the price climbs to what new abatement costs:
-   52 GBP/t at 5 Mt, then 910 GBP/t at 2 Mt, where the model has to build gas CCS and
-   hydrogen storage rather than simply redispatch.
+- **Weather.** Re-solved on all 15 weather years from 2010 to 2024, the 5 MtCO2 system
+  builds no new offshore wind in any of them; its cost runs from 14.4 to 17.4 bn
+  GBP/yr and its new solar from 64 to 95 GW
+  ([`results_weather_years/`](results_weather_years/)).
+- **Offshore's cost.** At each year's solved prices, offshore's capex would have to fall by
+  32 to 55 percent before its first megawatt paid, least in 2010, the least windy
+  year. Re-solving 2019 with offshore capex 36 percent lower builds none; 49 percent lower
+  builds 4.0 GW.
+- **Planning.** Holding onshore wind and solar to their FES totals, the stand-in for the
+  planning limits the model lacks, costs 0.4 bn GBP/yr more and still builds no offshore:
+  imports more than double instead. Pricing imports at 100 GBP/MWh as well brings in only
+  0.6 GW of offshore, beside 3.0 GW of gas CCS.
+- **Resolution and solver.** An hourly re-solve moves cost by 0.4 percent, and re-solving
+  `cap5` from scratch reproduces its cost to the penny.
 
-2. **At the tightest converged cap the build is solar- and onshore-heavy, with less firm
-   low-carbon capacity than FES and more unabated gas.** `cap2` holds 44.0 GW onshore wind,
-   103.4 GW solar, 27.9 GW offshore wind, 20.2 GW battery, 3.6 GW gas CCS and 23.4 GW unabated gas
-   ([`results/cap2/summary_row.csv`](results/cap2/summary_row.csv)). The gas CCS is spread
-   across all six zones a CO2 pipeline could reach, 0.2 to 0.9 GW in each of Z5, Z7, Z8, Z9,
-   Z13 and Z16 ([`config/ccs_zones.yaml`](config/ccs_zones.yaml) and
-   [`results/cap2/capacities.csv`](results/cap2/capacities.csv)). FES 2025 Holistic
-   Transition for 2035 has 38.4 GW onshore, 61.8 GW solar, 86.1 GW offshore, 29.8 GW battery
-   plus 10.5 GW of long-duration storage, 8.1 GW gas CCUS and 14.7 GW unabated gas
-   ([`data/derived/fes2025_gb_2035.csv`](data/derived/fes2025_gb_2035.csv)). The model buys
-   67 percent more solar and 15 percent more onshore wind than FES, and 68 percent less
-   offshore wind.
-
-3. **Offshore wind loses on cost ranking, not on a shortage of room.** No greenfield offshore
-   is built in any of the eleven scenarios; the 27.9 GW reported throughout is the REPD
-   operational-plus-under-construction fleet
-   ([`results/summary.csv`](results/summary.csv), `offwind_new_gw` is zero in every row). At
-   the committed 2035 costs, greenfield offshore annuitises to 345,807 GBP/MW-yr against
-   onshore's 137,259 and solar's 41,392
-   ([`data/derived/costs_2035_gb.csv`](data/derived/costs_2035_gb.csv)); DESNZ folds an
-   86,700 GBP/MW-yr connection charge into offshore's fixed O&M on its own, about two fifths
-   of the 208,500 GBP/MW-yr annuitised gap to onshore.
-
-   On a levelised basis, annuitised cost divided by mean 2019 capacity factor times 8,760,
-   plus variable O&M, from
-   [`data/derived/costs_2035_gb.csv`](data/derived/costs_2035_gb.csv) and
-   [`data/derived/cf_2019_zonal.parquet`](data/derived/cf_2019_zonal.parquet): offshore runs
-   63.3 GBP/MWh at Dogger Bank, 65.5 at Hornsea and 74.7 at East Anglia. Mainland onshore
-   (the fifteen land zones, excluding Z1_1 to Z1_4 and Z4 where ERA5 inflates the capacity
-   factor) runs 41.7 at best (Z17), 47.8 at the median and 63.8 at worst (Z3); solar across
-   all twenty zones runs 34.5 at best (Z15), 41.8 at the median and 49.3 at worst (Z1_4).
-   Those ranges overlap: the worst mainland onshore zone (Z3, 63.8) is dearer than the best
-   offshore site (Dogger Bank, 63.3). What decides it is where the model stops, not where the
-   ranges end. At `cap2` the dearest zone it actually builds onshore in is Z1_4 at 52.3
-   GBP/MWh, and the dearest mainland one is Z13 at 48.9, both still clear of Dogger Bank's
-   63.3, so offshore is never the next megawatt worth buying. Z1_4 is one of the zones where
-   ERA5 inflates the capacity factor, so its true cost is higher than 52.3 and this margin is
-   the optimistic reading of it.
-
-   The caps do bind, but zonally rather than nationally. `config/renewable_caps.yaml` splits
-   each national greenfield cap across the twenty land zones by land area, and the extendable
-   unit in a zone cannot exceed its share. At `cap5` the split is exhausted in 8 of 20 onshore
-   zones and 9 of 20 solar zones; at `cap2`, in 10 and 11 (a zone counts as binding when its
-   greenfield `p_nom_opt` equals its national-cap-times-land-area-share to the megawatt in
-   [`results/cap5/capacities.csv`](results/cap5/capacities.csv) and
-   [`results/cap2/capacities.csv`](results/cap2/capacities.csv)). The national totals stay
-   well short even so: `cap2` builds 27.7 GW of new onshore against the 60 GW greenfield cap
-   and 89.3 GW of new solar against 150 GW
-   ([`results/cap2/summary_row.csv`](results/cap2/summary_row.csv), `onwind_new_gw` and
-   `solar_new_gw`). So the land-area split exhausts the windiest and sunniest zones first and
-   pushes the model into progressively worse ones, and it still prefers those to offshore.
-   FES's 86.1 GW reflects planning consent, land use and public acceptability for onshore and
-   solar, none of which this model represents.
-
-4. **Blue hydrogen wins Teesside outright, and storage only appears at 2 Mt.** Blue hydrogen
-   supplies the whole industrial demand in every scenario that has one, 5.0 TWh in the
-   Holistic Transition scenarios and 1.3 TWh in `cap5_ee_demand`, whose Electric Engagement
-   pathway assumes far less industrial hydrogen. Electrolysis is built at 0.0 GW everywhere,
-   so green hydrogen is 0.0 TWh throughout
-   ([`results/summary.csv`](results/summary.csv)). Across the cap sweep batteries stay at the
-   existing 14.7 GW until the 2 Mt cap adds 5.5 GW of new build (the only other scenario that
-   builds any is `cap5_ee_demand`, at 2.7 GW), and 2 Mt is also the only cap that builds a
-   hydrogen store (92.3 GWh) and a hydrogen turbine (1.1 GW electrical, `h2_turbine_gw_el` in
-   [`results/summary.csv`](results/summary.csv); the 2.17 GW in
-   [`results/cap2/hydrogen.csv`](results/cap2/hydrogen.csv) is its hydrogen input, not its
-   electrical rating) returning 0.8 TWh. Even that store is filled by blue hydrogen, whose
-   output rises to 6.5 TWh, not by electrolysis.
-
-5. **The Teesside node costs the power system 356 m GBP/yr, and the price behind it
-   decomposes exactly.** `cap5` costs 15.5 bn GBP/yr against `cap5_no_h2`'s 15.1 bn, a
-   difference of 356 m GBP/yr ([`results/summary.csv`](results/summary.csv)). The Teesside H2
-   bus clears at 71.0 GBP/MWh ([`results/cap5/duals.csv`](results/cap5/duals.csv)), which is
-   blue hydrogen's 70 GBP/MWh plus its residual 0.02 tCO2/MWh valued at the 52 GBP/t shadow
-   price; 71.0 GBP/MWh over 5 TWh is 355 m GBP/yr, the coupling effect to within a million of
-   the cost difference. The hydrogen demand does not displace generation, it buys carbon
-   budget: unabated gas falls only from 5.0 to 4.9 Mt to make room for blue hydrogen's 0.1 Mt
-   ([`results/cap5/emissions.csv`](results/cap5/emissions.csv)).
-
-6. **Imports at 100 GBP/MWh cost 1.9 bn GBP/yr and flip GB from importer to exporter.**
-   `cap5_import_100` costs 17.4 bn GBP/yr against `cap5`'s 15.5, and its shadow carbon price
-   more than doubles to 128 GBP/t. Net imports go from +15.1 TWh to -4.4 TWh: imports fall
-   from 58.7 to 50.9 TWh while exports rise from 43.7 to 55.2 TWh
-   ([`results/cap5/energy.csv`](results/cap5/energy.csv) and
-   [`results/cap5_import_100/energy.csv`](results/cap5_import_100/energy.csv)). The system
-   replaces the lost imports with 7.7 GW more onshore wind and 2.5 GW more solar
-   ([`results/summary.csv`](results/summary.csv)).
-
-7. **Transmission expansion is worth nothing here, even though Scotland to England binds.**
-   With every corridor extendable, `cap5_tx_expansion` builds 0 MW of new link and costs
-   0.1 m GBP/yr more than `cap5` on a 15.5 bn base, which is inside the solver tolerance
-   ([`results/cap5_tx_expansion/flows.csv`](results/cap5_tx_expansion/flows.csv), every
-   `p_nom_new_mw` is zero). That is not because the grid is slack: the two modelled
-   Scotland-to-England corridors, Z7-Z2 at 6 GW and Z7-Z6 at 8 GW, total 14.0 GW against
-   ETYS 2035's 19.3 GW B6 capability (`etys_2035_b6_capability_gw` in
-   [`config/assumptions.yaml`](config/assumptions.yaml)), and Z7-Z2 runs at 100 percent of
-   rating in 3.5 percent of hours at `cap5` and 4.7 percent at `cap2`
-   ([`results/cap5/flows.csv`](results/cap5/flows.csv),
-   [`results/cap2/flows.csv`](results/cap2/flows.csv)). Congesting a corridor for a few
-   hundred hours a year is simply cheaper than annuitising more of it.
+The working for each is in [`docs/findings.md`](docs/findings.md#robustness).
 
 ## Results
 
-The table below is generated by `gb2035 report --update-readme` from
-[`results/summary.csv`](results/summary.csv). Eleven scenarios, all solved at 3-hourly
-resolution: ten on the code at commit `7728e99` with HiGHS's cuPDLP-C, and `cap5_ee_demand`
-at `d43f866`, which gives that one scenario HiGHS's own PDLP instead after cuPDLP-C returned
-status "unknown" on it three times and changes nothing else the LP sees (`git_sha` and
-`solver` in each [`run_meta.json`](results/cap5/run_meta.json)). `cap0p5` is missing because
-it did not converge (see [Resolution and solver](#resolution-and-solver)). Two columns need
-care: `uncapped`'s total includes carbon payments at 55 GBP/t, which are a transfer rather
-than a resource cost, so it is not comparable with the capped rows; and blue hydrogen has no
-capex, so its capacity is always its 1.2 GW cap and only its TWh are meaningful.
+The table is generated by `gb2035 report --update-readme` from
+[`results/summary.csv`](results/summary.csv); each run's commit, solver, versions and input
+fingerprint are in its `run_meta.json`. `uncapped`'s total includes carbon payments at
+55 GBP/t, a transfer rather than a resource cost, so it is not comparable with the capped
+rows; blue hydrogen has no capex, so only its TWh are meaningful.
 
 <!-- summary:start -->
 | Scenario | CO2 (Mt) | System cost (bn GBP/yr) | Shadow carbon price (GBP/t) | Onshore (GW) | Offshore (GW) | Solar (GW) | Battery (GW) | Electrolysis (GW) | Green H2 (TWh) | Blue H2 (TWh) |
@@ -169,190 +60,184 @@ capex, so its capacity is always its 1.2 GW cap and only its TWh are meaningful.
 | cap5_tx_expansion | 5.0 | 15.5 | 52 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
 | cap5_import_100 | 5.0 | 17.4 | 128 | 44 | 28 | 99 | 15 | 0.0 | 0.0 | 5.0 |
 | cap5_steel | 5.0 | 15.6 | 52 | 37 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
+| cap5_fes_ceiling | 5.0 | 15.9 | 293 | 38 | 28 | 62 | 15 | 0.0 | 0.0 | 5.0 |
+| cap5_fes_ceiling_import_100 | 5.0 | 18.2 | 128 | 38 | 28 | 62 | 15 | 0.0 | 0.0 | 5.0 |
+| cap5_offwind_capex64 | 5.0 | 15.5 | 52 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
+| cap5_offwind_capex51 | 5.0 | 15.4 | 33 | 32 | 32 | 93 | 15 | 0.0 | 0.0 | 5.0 |
 <!-- summary:end -->
 
 ![Installed capacity by technology at each CO2 cap: offshore wind flat at 27.9 GW throughout while solar and onshore wind grow as the cap tightens.](docs/figures/capacity_mix_by_cap.png)
 
-![System cost and shadow carbon price against realised emissions. Cost rises from 14.8 to 16.8 bn GBP/yr as emissions fall from 28.2 to 2 Mt; the shadow price plateaus at 33 GBP/t then jumps to 910 GBP/t at 2 Mt. The dip to zero at 4.6 Mt is the uncapped scenario, which has no constraint and therefore no dual.](docs/figures/cost_and_shadow_price.png)
+![New build under the 5 MtCO2 cap for each weather year from 2010 to 2024, beside its system cost. Every year builds onshore wind and solar, new offshore wind is zero in every year, and system cost runs from 14.4 to 17.4 bn GBP/yr, highest in 2010.](docs/figures/weather_years.png)
 
-![The cap2 build against FES 2025 Holistic Transition by technology. The model has more solar and onshore wind than FES and far less offshore wind, battery and gas CCS.](docs/figures/optimised_vs_fes.png)
+More figures (cost and shadow price, the cap2 build against FES, storage, Teesside
+hydrogen) are in [`docs/figures/`](docs/figures/).
 
-![Battery, hydrogen turbine and hydrogen store capacity at each cap. All three stay flat until the 2 MtCO2 cap.](docs/figures/storage_by_cap.png)
+## Findings
 
-![Teesside hydrogen supply split blue and green at each cap. Blue hydrogen supplies the whole demand at every cap; green hydrogen is zero throughout.](docs/figures/teesside_hydrogen.png)
+Each line below is argued in full, with the file behind every number, in
+[`docs/findings.md`](docs/findings.md).
 
-## Method
+1. **Cost rises gently to a 5 Mt cap, then steeply:** 14.8 to 15.5 bn GBP/yr from 30 to
+   5 MtCO2, then 16.8 at 2 Mt, where the shadow price jumps from 52 to 910 GBP/t.
+2. **The tightest converged build is solar- and onshore-heavy:** at 2 Mt, 103.4 GW of solar
+   and 44.0 GW of onshore wind against FES's 61.8 and 38.4, and 68 percent less offshore.
+3. **Offshore loses on cost ranking, not on room.** No cap in the sweep builds greenfield
+   offshore; it enters only with its capex cut by about half (4.0 GW) or with onshore, solar
+   and imports all held back (0.6 GW). Zonal land-area caps bind, but the model prefers worse
+   onshore zones to the best offshore site.
+4. **Blue hydrogen wins Teesside outright:** electrolysis is 0.0 GW everywhere, and storage
+   only appears at 2 Mt.
+5. **The Teesside node costs 356 m GBP/yr,** which its hydrogen price decomposes exactly.
+6. **Imports at 100 GBP/MWh cost 1.9 bn GBP/yr** and turn GB from net importer to exporter.
+7. **Transmission expansion is worth nothing here,** although Scotland to England binds in
+   3.5 percent of hours.
 
-One linear program sizes capacity and dispatches it together, across 20 GB transmission zones
-(PyPSA-GB's zonal topology, inherited from UK-Calliope) plus a 21st hydrogen bus at Teesside,
-joined by 31 fixed transport-model links. Every technology splits in two: a brownfield unit
-fixed at the REPD or DUKES capacity already built or under construction and charged fixed O&M
-only, and a greenfield unit extendable from zero at annuitised capex plus fixed O&M. Nuclear
-is the two committed stations (4.46 GW); it and pumped hydro are fixed and pay fixed O&M,
-while the interconnectors and the built grid carry no fixed cost at all. Snapshots are 2019
-timestamps, the weather and demand year, standing for 2035, with demand rescaled to a FES
-2035 pathway total. A single PyPSA `GlobalConstraint`
-caps annual CO2 from gas, gas CCS and blue hydrogen, and its dual is the shadow carbon price;
-`uncapped` drops the constraint and prices carbon at the UK ETS level instead. Costs are
-PyPSA technology-data v0.15.0 for 2035 at 0.85 GBP/EUR, with DESNZ Electricity Generation
-Costs 2025 overriding the eight technologies it covers. The solver is HiGHS.
+## How it is tested
 
-Full detail, including the components table and the scenario definitions:
-[`docs/methodology.md`](docs/methodology.md). Every sourced number:
-[`docs/assumptions.md`](docs/assumptions.md).
+A model repository has two things to test: the code, and the results it has committed. Both
+run on every pull request.
 
-## Resolution and solver
+| Tier | Tests | What it pins |
+|---|---|---|
+| `tests/unit` | 183 | data builders, config validation, network construction (component counts, costs, caps, CCS siting, the FES ceiling, weather-year inputs, fingerprints), the report, the app's data layer, the CI and Docker workflow files, docs links |
+| `tests/integration` | 21 | real HiGHS solves of the one-week CI scenario: optimal status, AC energy balance, a binding CO2 cap with a positive dual, additive costs, and the objective against a stored value to 0.5 percent. The breakeven is tested as a price: cutting offshore capex 15 percent past the shortfall its market value implies builds Dogger Bank, and 15 percent short builds nothing |
+| `tests/e2e` | 7 | the CLI end to end: `run`, `report`, `extract` and their failure messages |
+| `tests/architecture` | 5 | the app never imports the solver stack or the model package, even transitively; core modules take config as arguments, never from globals or the environment; every assumption has a source |
+| `tests/results` | 266 | eight checks on each of the 31 committed runs (tables present; AC energy equal to the demand the model was given; CO2 under the cap, with a priced cap binding; cost rows adding up; every unit earning what optimality requires at the run's own prices; the solver and libraries now configured; a clean commit on any re-extraction; the input fingerprint equal to what the current code builds), then each `summary.csv` against its runs, the README table against the results, and the headline numbers in the README and `docs/findings.md` recomputed from committed files |
 
-The published sweep runs at 3-hourly resolution: every third hour of 2019, 2,920 snapshots
-carrying an objective weight of 3 so annual totals stay right. It is a subsample, not an
-average. The solver is HiGHS's PDLP first-order method at 1e-5 primal and dual feasibility
-tolerances, because simplex does not finish a full-year solve in a usable time. Observed
-during the build, on a four-week slice: simplex needed about 20 minutes to reach optimal, and
-interior point without crossover took about three minutes but terminated at status
-"unknown". These probe timings come from the build log, not from a committed file. HiGHS
-ships two PDLP implementations and the sweep uses both: ten scenarios and the hourly
-reference ran on cuPDLP-C (`solver: pdlp`, the default in `config/settings.yaml`), while
-`cap5_ee_demand` needed HiGHS's own PDLP (`solver: hipdlp`, a per-scenario override in
-`config/scenarios.yaml`) because cuPDLP-C ended at status "unknown" on it three times. PDLP
-solves a 3-hourly year in 4 to 84 minutes per scenario, the longest being `cap2`, the
-tightest converged cap (`solve_seconds` in each `results/<scenario>/run_meta.json`).
+The last check is the one that keeps a modelling repo honest. Every run records a hash of the
+unsolved network in `run_meta.json`, and the test rebuilds every committed scenario and
+compares. Change a cost, a profile, a config value or the network-building code so that any
+scenario builds a different LP, and CI fails until that scenario is re-solved (raising the gas
+price by 1 GBP/MWh fails all of them). How each run was solved sits outside that hash, so the
+solver it records is checked against config and its PyPSA and HiGHS against `uv.lock`. The 12
+runs solved before fingerprints existed were fingerprinted afterwards by rebuilding each
+network at its own solve commit; every one matched the current code. The same checks found a
+real bug while this was built: leap weather years served 0.27 percent less than the FES demand
+total, so the four leap years failed the energy balance and were fixed and re-solved.
 
-An hourly `cap5` reference in [`results_hourly/cap5/`](results_hourly/cap5/) says what the
-3-hourly subsample costs in accuracy. Against
-[`results/cap5/summary_row.csv`](results/cap5/summary_row.csv), the hourly run
-([`results_hourly/cap5/summary_row.csv`](results_hourly/cap5/summary_row.csv)) puts total
-system cost at 15.5 bn GBP/yr against 15.5, 58 m GBP/yr or 0.4 percent higher; the shadow
-carbon price is 52 GBP/t in both (52.4787 hourly against 52.4784); new onshore wind is 21.0
-GW against 20.0 and new solar 82.0 GW against 82.9; new offshore wind, electrolysis, hydrogen
-store and hydrogen turbine are zero in both. Net imports are 13.5 TWh hourly against 15.1.
-The hourly solve took 1,722 seconds against the 3-hourly 291. Three-hourly therefore
-understates cost slightly and shifts about 1 GW between onshore wind and solar, and leaves
-every qualitative finding intact.
+Two workflows run them. [`ci.yml`](.github/workflows/ci.yml) installs from the lockfile
+(`uv sync --locked`), then runs ruff, mypy in strict mode, every test tier, the committed
+results as their own named step, and a Snakemake dry run of the whole pipeline.
+[`docker.yml`](.github/workflows/docker.yml) lints the Dockerfile with hadolint, builds the
+image, checks the app's health endpoint and solves the CI week inside the container, and pushes
+to GHCR from `main` only.
 
-The 0.5 MtCO2 scenario (`cap0p5`) is defined in `config/scenarios.yaml` but is **not** in the
-results: PDLP never converged on it and the run was killed after 1 hour 50 minutes, against
-at most 84 minutes for every scenario that did finish. That cap leaves only about 0.4 Mt for
-unabated gas once blue hydrogen's 0.1 Mt is paid for, which drives the LP into the near-vertical part of the
-abatement curve, exactly where a first-order method crawls. The sweep therefore reports 30
-down to 2 MtCO2, and `cap2` is the tightest converged cap throughout this README.
-
-PDLP satisfies constraints to within tolerance rather than at an exact vertex, so its duals
-are less precise than a simplex solution's, the shadow carbon price included. Differences
-below about 0.1 m GBP/yr on a 15.5 bn base, such as the `cap5_tx_expansion` cost delta, are
-inside that tolerance and should not be read as signal. The one-week `test` regression
-harness used by CI pins simplex instead (`config/scenarios.yaml`), because PDLP's termination
-status was not reproducible across platforms at that horizon: optimal on macOS ARM64,
-"unknown" on Linux x86_64.
+The CI week is solved with simplex, not the PDLP used for the published sweep, because PDLP's
+termination status at that horizon differed by platform (optimal on macOS ARM64, "unknown" on
+Linux x86_64 for the same inputs). Simplex is deterministic, so the stored objective can be
+checked to 0.5 percent.
 
 ## Run it
 
 ```bash
 uv sync --all-extras --group dev
-uv run gb2035 run --scenario test      # one week, solves in under a minute, no downloads needed
-uv run gb2035 run --scenario cap5      # full year, 5 MtCO2 cap
-uv run gb2035 report                   # results/summary.csv
+uv run pytest --runslow                                    # every tier, about 5 minutes
+uv run gb2035 run --scenario test                          # the CI week, about 30 seconds
+uv run gb2035 run --scenario cap5 --resolution-hours 3     # one published scenario, minutes
+uv run gb2035 report                                       # results/summary.csv and figures
 ```
 
-Derived inputs are committed, so a fresh clone solves offline. `uv run gb2035 retrieve` fetches
-the pinned raw sources (checksums in `data/manifest.json`) if you want to rebuild them with
-`uv run gb2035 build-derived`; regenerating the wind and solar profiles needs the 765 MB ERA5
-cutout and the `profiles` extra.
+Derived inputs are committed, so a fresh clone solves offline. `uv run snakemake --snakefile
+workflow/Snakefile --cores 4 all` rebuilds the published set from the raw sources: it fetches
+and checks every pinned input but the ERA5 cutouts (`data/manifest.json`), rebuilds the derived
+tables but the wind and solar profiles, and re-solves every scenario with committed results at
+3-hourly resolution, which takes many hours. Regenerating a year's profiles needs its 765 MB
+cutout and the `profiles` extra (`gb2035 build-profiles --weather-year <year>`).
 
-## Front end
+## Method
 
-A read-only Streamlit explorer over the committed results: no solving, no downloads, five
-views.
+One linear program sizes capacity and dispatches it together, across 20 GB transmission zones
+(PyPSA-GB's zonal topology, inherited from UK-Calliope) plus a hydrogen bus at Teesside,
+joined by 31 fixed transport-model links. Every technology splits in two: a brownfield unit
+fixed at the REPD or DUKES capacity already built or under construction and charged fixed O&M
+only, and a greenfield unit extendable from zero at annuitised capex plus fixed O&M. A single
+PyPSA `GlobalConstraint` caps annual CO2 from gas, gas CCS and blue hydrogen, and its dual is
+the shadow carbon price. Costs are PyPSA technology-data v0.15.0 for 2035 at 0.85 GBP/EUR,
+with DESNZ Electricity Generation Costs 2025 overriding the eight technologies it covers.
+Snapshots are the weather year's own timestamps standing for 2035, with demand rescaled to
+a FES 2035 pathway total.
 
-```bash
-uv sync --all-extras --group dev
-uv run gb2035 app        # or: uv run streamlit run src/gb2035/app/main.py
-```
+Full detail, including the weather years, the planning ceiling, the breakeven and the
+provenance checks: [`docs/methodology.md`](docs/methodology.md). Every sourced number:
+[`docs/assumptions.md`](docs/assumptions.md).
 
-![The Map view: the GB transmission zones shaded by new-build capacity in GW under the 5 MtCO2 cap, with the inter-zone corridors drawn between zone centroids, line width scaled by net annual energy, and the Teesside hydrogen node marked in red.](docs/figures/app_map.png)
+## Resolution and solver
 
-Overview (headline numbers and the cost-against-emissions curves), Map (zone choropleth of
-new-build capacity, total capacity or demand-weighted price, with corridor flows), Capacity and
-energy, Teesside hydrogen, and Assumptions. Every number is read from `results/`,
-`config/assumptions.yaml` or `data/derived/` at runtime, so the app cannot disagree with the
-repository. What each view shows, and which file each number comes from, is in
-[`docs/app.md`](docs/app.md).
+The published runs take every third hour of the year, 2,920 snapshots each weighted 3 (2,928
+weighted 2.99 in leap years). An
+hourly re-solve of `cap5` ([`results_hourly/cap5/`](results_hourly/cap5/)) puts total cost
+0.4 percent higher, leaves the shadow carbon price at 52 GBP/t and shifts about 1 GW between
+new onshore wind and new solar; new offshore, electrolysis and hydrogen storage stay at zero.
 
-The map image above is regenerated with `uv run gb2035 app-map`, from the same figure builder
-the app uses.
+The solver is HiGHS's first-order PDLP at 1e-5 feasibility tolerances, because simplex does
+not finish a full year in usable time. HiGHS ships two PDLP implementations: most runs use
+cuPDLP-C (`pdlp`), and `cap5_ee_demand` and `cap5_wy2010` use HiGHS's own (`hipdlp`), each
+after cuPDLP-C ended at status "unknown" on it. Each run records its solver in
+`run_meta.json`, and a test checks it against `config/scenarios.yaml`. PDLP meets constraints
+to within tolerance rather than at a vertex, so its duals are less precise than simplex's, and
+cost differences below about 0.1 m GBP/yr on a 15.5 bn base are inside that tolerance.
 
-## Run with Docker
-
-The published image carries the app, the committed results and the `gb2035` CLI.
-
-```bash
-docker run -p 8501:8501 ghcr.io/younis-y/gb-2035-pypsa:latest
-```
-
-Then open <http://localhost:8501>. The model itself runs in the same image:
-
-```bash
-docker run --rm ghcr.io/younis-y/gb-2035-pypsa:latest gb2035 run --scenario test --results-dir /tmp/results
-```
-
-Tags are `latest` and the short commit SHA, pushed from `main` only. The image is built, linted
-with hadolint and smoke-tested in GitHub Actions
-([`.github/workflows/docker.yml`](.github/workflows/docker.yml)); it is never built on a
-developer machine, so CI is the only place its green tick is earned.
+The 0.5 MtCO2 cap (`cap0p5`) is not in the results: cuPDLP-C crawled for 1 hour 50 minutes
+without converging, and HiGHS's own PDLP stopped at a four-hour limit. That cap leaves about
+0.4 Mt for unabated gas once blue hydrogen's 0.1 Mt is paid for, the near-vertical part of
+the abatement curve, where first-order methods crawl. `config/scenarios.yaml` gives it
+interior point with crossover for the next attempt, and `cap2` remains the tightest converged
+cap.
 
 ## What this model does not claim
 
 Out of scope by design: multi-year pathways, unit commitment, AC power flow, reserve and
 inertia products, distribution networks, demand-side response beyond electrolysis and
-storage, biomass and BECCS (excluded to keep the carbon accounting free of negative
-emissions), Northern Ireland, and endogenous interconnector expansion.
+storage, biomass and BECCS, Northern Ireland, and endogenous interconnector expansion.
 
-Limitations recorded while building it:
+The limitations that bear on the headline:
 
-- Interconnectors are price-takers: imports at 65 GBP/MWh and exports at 45 GBP/MWh, with
-  unbounded volume up to 19.4 GW each way. There is no foreign market to clear against, so
-  trade volumes are an upper bound on what a coupled market would deliver.
-- Dispatch is a continuous LP. No start costs, minimum stable generation, minimum up or down
-  times, or reserve and inertia requirements.
-- Brownfield capacity is sunk and charged fixed O&M only. The interconnectors and the built
-  grid are the exception: they carry no fixed cost at all, so absolute system cost is still
-  understated by roughly their fixed O&M. That understatement is the same in every scenario,
-  so cost *differences* between scenarios are unaffected.
-- Nuclear is 4.46 GW, Hinkley Point C plus Sizewell B only, against FES 2025 Holistic
-  Transition's 5.04 GW for 2035.
-- The East Anglia offshore profile comes from the nearest ERA5 cells the cutout covers, so
-  that zone's capacity factor is drawn from water further west than the real site. The
-  cutout's eastern limit of longitude 1.75, against the lease area's reach to about 3.15, was
-  observed during the build; the 765 MB cutout itself is not committed.
-- ERA5's roughly 25 km cells inflate onshore capacity factors for the small, coastal and
-  island zones (Shetland 0.615, the Western Isles 0.518, Argyll 0.537).
-- 17 MW of REPD multi-site portfolio rows (refs 1613 and 1616) have no coordinates and are
-  dropped from `repd_by_zone.csv`. The 17 MW was observed during the build, in the row counts
-  `build-derived` reports; only the surviving rows are committed.
-- The 2019 demand shape stamps clock-change days naively, duplicating two half-hours in
-  October and fabricating one hour in March. The effect was measured during the build at
-  about 0.0003 percent of annual energy, and it does not propagate because the series is
-  rescaled to a FES demand total.
-- Blue hydrogen has no capex in the cost table, so its reported capacity always equals its
-  1.2 GW cap whether or not it runs. Read its output from `hydrogen.csv`, not its capacity.
-- `capacities.csv` lists both interconnector legs at full capacity each, so interconnector
-  generator `p_nom` sums to 38.8 GW for 19.4 GW of physical capacity.
-- `costs.csv` carries memo rows flagged by `is_memo`; they must be read as memos, not summed
-  with the component rows.
-- Zonal demand is split by the author's own ONS-based population weights
-  (`config/demand_weights.csv`), not an official GSP-level breakdown.
+- **Planning and land use are absent** except as the FES-ceiling sensitivity above; the
+  greenfield caps split national limits by land area, not by consentable sites.
+- **Interconnectors are price-takers:** 65 GBP/MWh in, 45 out, up to 19.4 GW, with no
+  foreign market to clear against.
+- **Each weather year is solved alone,** with perfect foresight: no year has to survive on
+  another year's build, and there is no adequacy margin or reserve.
+- **The demand shape is the weather year's own, rescaled.** Electrified heat and transport
+  would make 2035 more winter-peaking: the rescaled 2019 shape peaks at about 71 GW against
+  FES Holistic Transition's 74.3 GW. That favours wind over solar, so the solar build is if
+  anything flattered.
+- **Offshore profiles carry no wake losses,** which flatters offshore (Dogger Bank's 2019
+  capacity factor is 0.62). Separately, the GB cutout stops at 1.75 degrees east, so Dogger
+  Bank and Hornsea are represented by their covered western parts and East Anglia by the
+  cells west of it; which way that biases offshore is not measured.
+
+The full list, with how each was measured, is in
+[`docs/methodology.md`](docs/methodology.md#known-simplifications).
+
+## Front end
+
+A read-only Streamlit explorer over the committed results, five views, no solving
+(`uv run gb2035 app`; what each view reads is in [`docs/app.md`](docs/app.md)).
+
+## Run with Docker
+
+The published image carries the app, the committed results and the `gb2035` CLI; CI builds,
+lints and smoke-tests it, including a solve inside the container, and pushes from `main`
+only.
+
+```bash
+docker run -p 8501:8501 ghcr.io/younis-y/gb-2035-pypsa:latest
+docker run --rm ghcr.io/younis-y/gb-2035-pypsa:latest gb2035 run --scenario test --results-dir /tmp/results
+```
 
 ## Data and licences
 
 Every external input is pinned in [`data/manifest.json`](data/manifest.json) with its URL,
-SHA-256 checksum and licence; `gb2035 retrieve` downloads and verifies each one. What each
-source is, what is derived from it and how, is in
-[`docs/data_sources.md`](docs/data_sources.md).
-
-Inputs are MIT (PyPSA-GB), Open Government Licence v3 (DESNZ REPD and Electricity Generation
-Costs 2025), the NESO Open Data Licence (2019 demand history, FES 2025 Data Workbook) and
-CC-BY-4.0 (the Zenodo ERA5 cutout, and technology-data's data; its code is GPL-3.0).
-Renewables.ninja was not used because its GB files are CC BY-NC. This repository's own code
-is MIT ([`LICENSE`](LICENSE)).
+SHA-256 checksum and licence; `gb2035 retrieve` downloads and verifies each one, and what is
+derived from each is in [`docs/data_sources.md`](docs/data_sources.md). Inputs are MIT
+(PyPSA-GB), Open Government Licence v3 (DESNZ REPD and Electricity Generation Costs 2025),
+the NESO Open Data Licence (historic demand, FES 2025 Data Workbook) and CC-BY-4.0 (the
+Zenodo ERA5 cutouts, and technology-data's data; its code is GPL-3.0). Renewables.ninja was
+not used because its GB files are CC BY-NC. This repository's own code is MIT
+([`LICENSE`](LICENSE)).
 
 ## Built on
 
@@ -363,9 +248,9 @@ is MIT ([`LICENSE`](LICENSE)).
   [UK-Calliope](https://github.com/calliope-project/uk-calliope).
 - [PyPSA technology-data](https://github.com/PyPSA/technology-data) v0.15.0 for 2035 costs.
 - NESO's [Future Energy Scenarios 2025](https://www.neso.energy/publications/future-energy-scenarios-fes)
-  for the 2035 comparison pathways and ETYS 2025 for boundary capabilities.
+  and historic demand data, and ETYS 2025 for boundary capabilities.
 - DESNZ for the Renewable Energy Planning Database and Electricity Generation Costs 2025.
-- The [Zenodo ERA5 cutout for GB](https://zenodo.org/records/18325225) (CC-BY-4.0), run
+- The [Zenodo ERA5 cutouts for GB](https://zenodo.org/records/18325225) (CC-BY-4.0), run
   through [atlite](https://github.com/PyPSA/atlite) for the wind and solar profiles.
 - The author's earlier repositories: `gb-weather-to-price-forecasting` (the battery
   arbitrage LP, its round-trip efficiency and wear cost, and the REPD capacity weighting),
@@ -373,3 +258,6 @@ is MIT ([`LICENSE`](LICENSE)).
 - Systemiq's Steel-IQ for the engineering conventions (frozen configuration, the manifest
   with checksums, the test tiering and architecture test) and for the steel scenario's route
   vocabulary: [`docs/steel_iq_link.md`](docs/steel_iq_link.md).
+
+Built with AI assistance (Claude Code): most commits carry its co-author trailer, and the
+plans and specs it worked from are kept in [`docs/superpowers/`](docs/superpowers/).

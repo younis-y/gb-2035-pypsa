@@ -8,12 +8,13 @@ scenario is re-solved.
 """
 
 import json
+import tomllib
 from pathlib import Path
 
 import pandas as pd
 import pytest
 
-from gb2035.config import load_scenario, load_settings
+from gb2035.config import deep_merge, load_scenario, load_settings
 from gb2035.data.demand import demand_target_twh
 from gb2035.data.fes import load_fes
 from gb2035.model.inputs import load_inputs
@@ -49,14 +50,44 @@ def _meta(run: Path) -> dict:
     return json.loads((run / "run_meta.json").read_text())
 
 
+def _locked_version(package: str) -> str:
+    lock = tomllib.loads((ROOT / "uv.lock").read_text())
+    return next(p["version"] for p in lock["package"] if p["name"] == package)
+
+
 def test_every_run_has_its_tables_and_metadata(run: Path):
     for table in TABLES:
         assert (run / f"{table}.csv").exists(), table
     meta = _meta(run)
     assert meta["scenario"] == run.name
-    assert meta["solver"] in {"pdlp", "hipdlp", "simplex"}
     assert meta["resolution_hours"] == (1 if run.parent.name == "results_hourly" else 3)
     assert meta["snapshots"] * meta["resolution_hours"] in {8760, 8784}, "a full year"
+
+
+def test_a_re_extracted_run_names_the_clean_commit_that_wrote_its_tables(run: Path):
+    """run_meta.json names the solve commit; when `gb2035 extract` later rewrote the tables from
+    the saved network, extract_meta.json must name that commit, and a clean one."""
+    stamp_path = run / "extract_meta.json"
+    if not stamp_path.exists():
+        return
+    stamp = json.loads(stamp_path.read_text())
+    assert stamp["scenario"] == run.name
+    assert stamp["git_sha"] not in ("", "unknown") and not stamp["git_sha"].endswith("-dirty")
+
+
+def test_every_run_used_the_solver_and_libraries_now_configured(run: Path):
+    """The fingerprint covers what the network is built from, not how it is solved: so the
+    solver each run records must be the one config now names for it, and the PyPSA and HiGHS
+    it ran on must be the ones uv.lock pins. Switch a solver or bump a library without
+    re-solving and this fails."""
+    meta = _meta(run)
+    settings = load_settings(ROOT / "config" / "settings.yaml")
+    scenario = load_scenario(run.name, SCENARIOS)
+    options = deep_merge(dict(settings.solver_options), scenario.solver_options or {})
+    assert meta["solver"] == options["solver"]
+    assert meta["pypsa_version"] == _locked_version("pypsa")
+    if "highs_version" in meta:  # recorded since the weather years; absent from the 12 before
+        assert meta["highs_version"] == _locked_version("highspy")
 
 
 def test_ac_energy_balances_against_the_demand_the_model_saw(run: Path):
@@ -70,13 +101,13 @@ def test_ac_energy_balances_against_the_demand_the_model_saw(run: Path):
     national = national["gross_demand_mw"]
     fes = load_fes(ROOT / "data" / "derived" / "fes2025_gb_2035.csv")
     target = demand_target_twh(fes, scenario.demand_pathway, settings.losses_uplift)
-    sampled = national.iloc[:: meta["resolution_hours"]]
-    expected = target * sampled.sum() / national.sum() * len(national) / len(sampled)
+    # Snapshot weights always sum to 8,760 hours, so the sampled mean hour carries the target.
+    expected = target * national.iloc[:: meta["resolution_hours"]].mean() / national.mean()
     if scenario.steel is not None:
         expected += scenario.steel.port_talbot_eaf_twh + scenario.steel.scunthorpe_eaf_twh
     energy = pd.read_csv(run / "energy.csv")
     ac_twh = energy.loc[energy["bus_carrier"] == "AC", "twh"].sum()
-    assert ac_twh == pytest.approx(expected, rel=2e-4)
+    assert ac_twh == pytest.approx(expected, rel=2e-5)
 
 
 def test_emissions_respect_the_cap_and_a_priced_cap_binds(run: Path):
@@ -115,15 +146,16 @@ def test_every_unit_earns_what_optimality_requires(run: Path):
     tol = 1e-3 * be["capital_cost_gbp_per_mw_yr"].max()
     interior = (be["built_mw"] > 1.0) & (be["built_mw"] < be["max_mw"] - 1.0)
     at_cap = be["built_mw"] >= be["max_mw"] - 1.0
-    unbuilt = be["built_mw"] < 1e-3
+    unbuilt = be["built_mw"] <= 1.0  # sub-MW builds are PDLP residue, not investments
     assert interior.any()
     assert gap[interior].abs().max() < tol
     assert (gap[at_cap] > -tol).all()
     assert (gap[unbuilt] < tol).all()
 
 
-@pytest.mark.parametrize("folder", [f for f in FOLDERS if (ROOT / f / "summary.csv").exists()])
+@pytest.mark.parametrize("folder", ["results", "results_weather_years"])
 def test_each_summary_is_its_runs(folder: str):
+    assert (ROOT / folder / "summary.csv").exists()
     committed = pd.read_csv(ROOT / folder / "summary.csv")
     fresh = summarise(ROOT / folder)
     pd.testing.assert_frame_equal(committed, fresh, check_exact=False, rtol=1e-5)

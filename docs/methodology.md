@@ -77,10 +77,62 @@ capped at 1.2 GW).
 
 Snapshots are 2019 timestamps, the weather and demand year, standing for 2035: the model
 carries no 2035 calendar. Wind, solar and the shape of demand all come from 2019, with demand
-rescaled to a FES 2035 pathway total (8,760 snapshots, weight 1). The `test` CI scenario takes one
+rescaled to a FES 2035 pathway total (8,760 snapshots, weight 1).
+
+A scenario can name another `weather_year`, and then wind, solar and the demand shape all
+come from that year instead, with demand rescaled to the same FES total. The `cap5_wy<year>`
+family re-solves `cap5` on every year the Zenodo cutout record holds, 2010 to 2024, into
+`results_weather_years/`. Each year's profiles come from the same `gb2035 build-profiles`
+run over that year's cutout, and each year's demand from that year's NESO file. Regenerating
+2019 the same way reproduced the committed `cf_2019_zonal.parquet` bit for bit when this was
+built (the cutouts are not committed, so that check is a build-time observation). The
+2020 and 2021 demand shapes carry lockdown, which the rescaling to a FES total does not
+remove; they are kept, and flagged, rather than dropped, so the set of years is the whole
+record and not a selection. Each year is solved on its own: there is no multi-year
+optimisation, so no year has to be survivable on another year's build. Snapshot weights
+always sum to an 8,760-hour year, so a leap year's 8,784 hours are weighted down to it, and
+demand is scaled by its mean hour so that every year meets the same FES total (scaling by the
+year's sum, as the first version did, left leap years 0.27 percent short; the committed-results
+energy-balance test caught it). The `test` CI scenario takes one
 high-demand January week (168 snapshots), weighted up to match a full year's magnitude.
 `resolution_hours` can thin a year to every third hour, 2,920 snapshots weighted 3 so annual
 totals stay right: a subsample, not an average.
+
+## Planning limits, as a sensitivity
+
+The model has no planning consent, land use or public acceptability, which is the stated
+reason its answer differs from FES. `fes_capacity_ceiling` stands in for them: it holds a
+carrier's national capacity, brownfield plus greenfield, to its FES 2035 figure for the
+scenario's pathway, as a PyPSA `tech_capacity_expansion_limit` over the greenfield units with
+the REPD floor netted off. The ceiling is national, so where the capacity goes is still the
+model's choice. `cap5_fes_ceiling` and `cap2_fes_ceiling` hold onshore wind to 38.4 GW and
+solar to 61.8 GW (FES 2025 Holistic Transition), and `duals.csv` reports what one more MW
+under each ceiling would be worth (`fes_ceiling_rent_gbp_per_mw_yr`).
+
+## Breakeven: how far an unbuilt technology is from entering
+
+Every run writes `breakeven.csv`: for each extendable generator and link, one megawatt's
+`market_value_gbp_per_mw_yr`, its annual margin over its own running cost at the solved nodal
+prices with CO2 charged at the cap's shadow price, beside its `capital_cost_gbp_per_mw_yr`,
+annuitised capex plus fixed O&M. An unbuilt unit is short of entering by the gap between the
+two; a built unit earns its cost exactly unless a cap holds it back, and the excess is then
+that cap's rent. Storage is left out, since its value depends on how it would cycle.
+
+The first version read the duals of the capacity bounds instead, and the first full-year solve
+showed why that fails: for every unbuilt offshore unit PDLP returned a bound dual of zero. An
+unbuilt unit's dispatch is pinned at zero from both sides, so its bound dual is degenerate,
+and any value from zero to the true shortfall is optimal; simplex happened to return the
+shortfall, which is why a test on the simplex-solved CI week had passed. Nodal prices are far
+better determined than those duals, and `network.nc` stores them, so `gb2035 extract` can
+rebuild the table from a saved solve (`network.nc` is not committed, so only where the solve
+was run).
+
+A price-based breakeven is a first-order statement, so it is tested by re-solving. On the CI
+week, cutting offshore capex 15 percent past the shortfall builds Dogger Bank and stopping 15
+percent short builds nothing; on the full 2019 year, `cap5_offwind_capex64` and
+`cap5_offwind_capex51` do the same. `tests/results/` also checks the zero-profit conditions
+on every committed run (built units earn their cost, capped units at least that, unbuilt
+units no more), which PDLP's solutions meet to within 6e-4 of the dearest unit's cost.
 
 ## Carbon
 
@@ -110,8 +162,9 @@ the built grid still carry none, so even that total understates the truth slight
 
 ## Scenarios
 
-Scenarios are diffs against `config/settings.yaml` in `config/scenarios.yaml`. Thirteen are
-defined; twelve feed the sweep, and `test` is the one-week CI check.
+Scenarios are diffs against `config/settings.yaml` in `config/scenarios.yaml`. `test` is the
+one-week CI check; the `cap5_wy<year>` family writes to `results_weather_years/`; everything
+else feeds the main sweep in `results/`.
 
 | Scenario | Isolates |
 |---|---|
@@ -122,6 +175,10 @@ defined; twelve feed the sweep, and `test` is the one-week CI check.
 | `cap5_tx_expansion` | value of extendable links |
 | `cap5_import_100` | import-price sensitivity (100 vs 65 GBP/MWh) |
 | `cap5_steel` | EAF loads, Port Talbot and Scunthorpe; hydrogen-DRI optional |
+| `cap5_fes_ceiling`, `cap2_fes_ceiling` | onshore wind and solar held to FES 2035 (planning stand-in) |
+| `cap5_fes_ceiling_import_100` | the ceiling with imports at 100 GBP/MWh as well |
+| `cap5_offwind_capex64`, `cap5_offwind_capex51` | offshore capex 15 percent short of and past its cap5 breakeven |
+| `cap5_wy2010` to `cap5_wy2024` | `cap5` on each weather year, 2010 to 2024 |
 | `test` | one week, CI regression |
 
 ## Resolution and solver
@@ -136,19 +193,23 @@ HiGHS's threshold. PDLP solved a 3-hourly year at "optimal", in about 9 minutes 
 and 4 to 84 minutes across the published scenarios (`solve_seconds` in each
 `results/<scenario>/run_meta.json`).
 
-HiGHS carries two PDLP implementations and the published results use both. Ten scenarios and
-the hourly `cap5` reference were solved with cuPDLP-C (`solver: pdlp`, the default in
-`config/settings.yaml`) on the code at commit `7728e99`. `cap5_ee_demand` was solved at
-`d43f866` with HiGHS's own PDLP (`solver: hipdlp`, a per-scenario override in
-`config/scenarios.yaml`), after cuPDLP-C ended at status "unknown" on it three times; the two
-commits differ in nothing the LP sees but that solver choice. Each run records its commit and
-its solver in `results/<scenario>/run_meta.json`.
+HiGHS carries two PDLP implementations and the results use both. The published sweep was
+solved with cuPDLP-C (`solver: pdlp`, the default in `config/settings.yaml`) at commit
+`7728e99`, except `cap5_ee_demand`, solved at `d43f866` with HiGHS's own PDLP (`solver:
+hipdlp`, a per-scenario override in `config/scenarios.yaml`) after cuPDLP-C ended at status
+"unknown" on it three times; the two commits differ in nothing the LP sees but that solver
+choice. The robustness runs came later, each at the commit its `run_meta.json` records. Of
+their full-year solves one ended at "unknown" on cuPDLP-C, `cap5_wy2010` after 31 minutes, and
+was re-solved with `hipdlp`; the slowest that converged, `cap5_wy2015`, took 102 minutes.
+`tests/results/` checks every run's recorded solver against config.
 
-One scenario is missing entirely. `cap0p5`, the 0.5 MtCO2 cap, never converged and was killed
-after 1 hour 50 minutes, so it is not in the results: that cap leaves only about 0.4 Mt for
-unabated gas once blue hydrogen's 0.1 Mt is paid for, which puts the LP on the near-vertical
-part of the abatement curve, exactly where a first-order method crawls. The sweep therefore
-reports 30 down to 2 MtCO2, and `cap2` is the tightest converged cap.
+One scenario is still missing. `cap0p5`, the 0.5 MtCO2 cap, has not converged on either PDLP:
+cuPDLP-C crawled for 1 hour 50 minutes and was killed, and HiGHS's own PDLP stopped at a
+four-hour limit (status `time_limit`). That cap leaves only about 0.4 Mt for unabated gas once
+blue hydrogen's 0.1 Mt is paid for, which puts the LP on the near-vertical part of the
+abatement curve, exactly where a first-order method crawls. Interior point with crossover,
+which ends at an exact vertex, is configured for the next attempt. The sweep therefore reports
+30 down to 2 MtCO2, and `cap2` is the tightest converged cap.
 
 PDLP satisfies constraints only to within tolerance, not at an exact vertex, so its duals
 are less precise than a simplex solution's, including the shadow carbon price, and cost
@@ -158,6 +219,33 @@ this horizon, optimal on macOS, unknown on Linux CI. An hourly `cap5` run checks
 3-hourly resolution costs in accuracy: 0.4 percent on total cost, nothing on the shadow
 carbon price, and about 1 GW shifted between new onshore wind and new solar.
 
+## Provenance
+
+Every run writes `run_meta.json`: the commit, the PyPSA and HiGHS versions, the solver, the
+resolution, the weather year, the solve time and `input_fingerprint`, a hash of the unsolved
+network (every component table and time series at ten significant figures, names and
+descriptions left out). `tests/results/` rebuilds each committed scenario and compares
+fingerprints, so a change to data, config or model code that would move a published number
+fails CI until that scenario is re-solved. The same suite checks each run's energy balance
+against the demand it was given, its CO2 against its cap, that its cost rows add up, and
+that the README's generated table is the one the results produce;
+`tests/results/test_readme_claims.py` recomputes the README's headline numbers from the
+committed files and finds each one in the text.
+
+The fingerprint covers what each network is built from, not how it was solved, so
+`tests/results/` also checks the solver every run records against the one config now names
+for it, and its PyPSA and HiGHS against `uv.lock`. Two kinds of provenance are recorded after
+the fact, and say so: the 12 runs solved before fingerprints existed had theirs added by
+rebuilding each network at its own solve commit (all 12 matched the current code), and where
+`gb2035 extract` has rewritten a run's tables from its saved network, `extract_meta.json` names
+the commit that did it. Re-extraction reproduced every pre-existing table byte for byte and
+added `breakeven.csv`.
+
+When the fingerprint test fails, the change has moved what that scenario builds: re-solve it
+(`gb2035 run --scenario <name> --resolution-hours 3`, adding `--results-dir
+results_weather_years` for the `cap5_wy` family), run `gb2035 report --update-readme`, and
+commit the new tables with the change that caused them.
+
 ## Known simplifications
 
 - No BECCS: keeps carbon accounting free of negative emissions.
@@ -166,8 +254,17 @@ carbon price, and about 1 GW shifted between new onshore wind and new solar.
 - The interconnectors and the built grid carry no fixed cost, a small constant
   understatement of cost. Every other sunk asset, nuclear and pumped hydro included, pays
   fixed O&M.
-- East Anglia's offshore profile uses the nearest ERA5 cells the cutout covers, short of the
-  real lease area.
+- The GB cutout stops at longitude 1.75 east, so all three offshore lease areas are clipped
+  to the part it covers: 80.5 percent of Dogger Bank's polygon area, 32.8 percent of
+  Hornsea's and 87.2 percent of East Anglia's fall outside it (the warnings `gb2035
+  build-profiles` prints). Their profiles come from the covered western cells.
+- Offshore profiles carry no wake losses: atlite applies the 15 MW reference turbine's power
+  curve to ERA5 wind with no array effects, which gives Dogger Bank a 2019 mean capacity
+  factor of 0.62. PyPSA-Eur's default configuration scales offshore profiles by 0.8855 as a
+  wake proxy; applying one here would make offshore dearer, not cheaper.
+- The 2035 demand shape is the weather year's own, rescaled. Electrified heat and transport
+  would make 2035 demand more winter-peaking than any historic year, which favours wind over
+  solar; the model does not reshape for it, so its solar build is if anything flattered.
 - ERA5 overstates onshore capacity factors at a few small, coastal or island zones
   (Shetland, the Western Isles, Argyll).
 - Zonal demand is split by the author's own population estimates, not an official
