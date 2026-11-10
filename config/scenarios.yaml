@@ -24,7 +24,13 @@ scenarios:
   cap10: {description: "10 MtCO2 cap", co2_cap_mt: 10.0}
   cap5: {description: "5 MtCO2 cap", co2_cap_mt: 5.0}
   cap2: {description: "2 MtCO2 cap", co2_cap_mt: 2.0}
-  cap0p5: {description: "0.5 MtCO2 cap", co2_cap_mt: 0.5}
+  cap0p5:
+    description: "0.5 MtCO2 cap"
+    co2_cap_mt: 0.5
+    # cuPDLP-C ran 1 h 50 min on this cap without converging and was killed. HiGHS's native
+    # PDLP converged where cuPDLP-C would not on cap5_ee_demand, so it gets the retry, with a
+    # four-hour limit so a stall ends as a failed run rather than an open-ended one.
+    solver_options: {solver: hipdlp, time_limit: 14400}
   cap5_no_h2:
     description: cap5 without the Teesside hydrogen demand
     co2_cap_mt: 5.0
