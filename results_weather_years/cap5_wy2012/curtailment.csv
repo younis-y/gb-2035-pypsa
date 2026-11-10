@@ -1,0 +1,4 @@
+carrier,available_twh,used_twh,curtailed_share
+onwind,128.367,122.283,0.0473921
+offwind,135.811,135.47,0.00251152
+solar,99.9426,99.9426,3.49782e-09

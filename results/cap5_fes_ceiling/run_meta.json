@@ -1,0 +1,15 @@
+{
+  "scenario": "cap5_fes_ceiling",
+  "git_sha": "298137a",
+  "pypsa_version": "1.3.0",
+  "highs_version": "1.15.1",
+  "input_fingerprint": "9c897730186bfa6e",
+  "solve_seconds": 468.1,
+  "snapshots": 2920,
+  "resolution_hours": 3,
+  "weather_year": 2019,
+  "solver": "pdlp",
+  "total_cost_gbp_per_yr": 15850137044.634783,
+  "lp_objective_gbp_per_yr": 10593874812.737423,
+  "fixed_asset_cost_gbp_per_yr": 5256262231.89736
+}

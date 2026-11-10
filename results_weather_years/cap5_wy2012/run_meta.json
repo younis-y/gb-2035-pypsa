@@ -1,0 +1,15 @@
+{
+  "scenario": "cap5_wy2012",
+  "git_sha": "e60d65f",
+  "pypsa_version": "1.3.0",
+  "highs_version": "1.15.1",
+  "input_fingerprint": "e902745d9cd2205f",
+  "solve_seconds": 1458.3,
+  "snapshots": 2928,
+  "resolution_hours": 3,
+  "weather_year": 2012,
+  "solver": "pdlp",
+  "total_cost_gbp_per_yr": 16073004167.249237,
+  "lp_objective_gbp_per_yr": 10816741935.351877,
+  "fixed_asset_cost_gbp_per_yr": 5256262231.89736
+}
