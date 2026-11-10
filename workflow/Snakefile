@@ -14,8 +14,8 @@ ALL = [s for s in list_scenarios(SCENARIOS_YAML) if s != "test"]
 WEATHER = [s for s in ALL if s.startswith("cap5_wy")]
 SWEEP = [s for s in ALL if s not in WEATHER]
 YEARS = weather_years(SCENARIOS_YAML, DEFAULT_YEAR)
-DERIVED = ["fleet_by_zone.csv", "repd_by_zone.csv", "fes2025_gb_2035.csv", "costs_2035_gb.csv"]
-DERIVED += [f"demand_{year}_hourly.parquet" for year in YEARS]
+TABLES = ["fleet_by_zone.csv", "repd_by_zone.csv", "fes2025_gb_2035.csv", "costs_2035_gb.csv"]
+DERIVED = TABLES + [f"demand_{year}_hourly.parquet" for year in YEARS]
 
 wildcard_constraints:
     scenario="[^/]+",
@@ -39,7 +39,7 @@ rule derived:
     shell: "uv run gb2035 build-derived --root {ROOT}"
 
 rule run_scenario:
-    input: expand("data/derived/{name}", name=DERIVED[:4]), year_inputs
+    input: expand("data/derived/{name}", name=TABLES), year_inputs
     output: "{folder}/{scenario}/summary_row.csv", "{folder}/{scenario}/run_meta.json"
     wildcard_constraints: folder="results|results_weather_years"
     shell: "uv run gb2035 run --scenario {wildcards.scenario} --root {ROOT} --results-dir {ROOT}/{wildcards.folder} --resolution-hours {RESOLUTION}"

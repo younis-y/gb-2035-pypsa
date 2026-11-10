@@ -434,8 +434,9 @@ def breakeven(n: pypsa.Network) -> pd.DataFrame:
     `reduced_cost` is the dual of the unit's lower capacity bound: how much its annual capital
     cost would have to fall, per MW, before the optimiser builds the first megawatt. It is zero
     for anything built. `cap_rent` is the dual of the upper bound: what one more MW of room is
-    worth where a zonal cap binds. Only the in-memory model carries these, so this runs straight
-    after `solve` and `gb2035 extract` cannot rebuild it from `network.nc`.
+    worth where a zonal cap binds. Stores are sized in MWh, so their rows are per MWh. Only the
+    in-memory model carries these duals, so this runs straight after `solve`, and `gb2035
+    extract` cannot rebuild it from `network.nc`.
     """
     frames = []
     for component, attr in (
