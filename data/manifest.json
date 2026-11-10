@@ -80,6 +80,132 @@
     "md5": null,
     "size_bytes": 1554786
   },
+  "neso_demand_2010": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/b3eae4a5-8c3c-4df1-b9de-7db243ac3a09/download/demanddata_2010.csv",
+    "filename": "demanddata_2010.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "weather-year family: demand shape for cap5_wy2010",
+    "sha256": "acff58f64806972a955b8db18f8f9cb8fb5818a6d1522f53ae84d0b5bbe2d675",
+    "md5": null,
+    "size_bytes": 1237038
+  },
+  "neso_demand_2011": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/01522076-2691-4140-bfb8-c62284752efd/download/demanddata_2011.csv",
+    "filename": "demanddata_2011.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "weather-year family: demand shape for cap5_wy2011",
+    "sha256": "102be4a6a8db596141bc3af62605c016fc05209ab1376d5be821375933db12de",
+    "md5": null,
+    "size_bytes": 1269447
+  },
+  "neso_demand_2012": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/4bf713a2-ea0c-44d3-a09a-63fc6a634b00/download/demanddata_2012.csv",
+    "filename": "demanddata_2012.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "weather-year family: demand shape for cap5_wy2012",
+    "sha256": "551a7a749483b011f7019f524f215f722c3329c136afd02b93888eeaf1bc3e4d",
+    "md5": null,
+    "size_bytes": 1323744
+  },
+  "neso_demand_2013": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/2ff7aaff-8b42-4c1b-b234-9446573a1e27/download/demanddata_2013.csv",
+    "filename": "demanddata_2013.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "weather-year family: demand shape for cap5_wy2013",
+    "sha256": "f9ed1ed7d56d72bd48f633d8b50ca8a1ced981f76e9fa3c3958bb70517303cdb",
+    "md5": null,
+    "size_bytes": 1372112
+  },
+  "neso_demand_2014": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/b9005225-49d3-40d1-921c-03ee2d83a2ff/download/demanddata_2014.csv",
+    "filename": "demanddata_2014.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "weather-year family: demand shape for cap5_wy2014",
+    "sha256": "58fec6fe4cb12866032cc4b128de7d1999c4382796c51289a33a1170d3d934ba",
+    "md5": null,
+    "size_bytes": 1379848
+  },
+  "neso_demand_2015": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/cc505e45-65ae-4819-9b90-1fbb06880293/download/demanddata_2015.csv",
+    "filename": "demanddata_2015.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "weather-year family: demand shape for cap5_wy2015",
+    "sha256": "da73a3a41b06f9005654cd4230ef9d906f68478463b1caa1773bdf53c97817be",
+    "md5": null,
+    "size_bytes": 1380366
+  },
+  "neso_demand_2016": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/3bb75a28-ab44-4a0b-9b1c-9be9715d3c44/download/demanddata_2016.csv",
+    "filename": "demanddata_2016.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "weather-year family: demand shape for cap5_wy2016",
+    "sha256": "ec031cca6e7a819de73abd48dc8283dcb2949fabeaa1c06e840b6cea3e8bf3dc",
+    "md5": null,
+    "size_bytes": 1367182
+  },
+  "neso_demand_2017": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/2f0f75b8-39c5-46ff-a914-ae38088ed022/download/demanddata_2017.csv",
+    "filename": "demanddata_2017.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "weather-year family: demand shape for cap5_wy2017",
+    "sha256": "ad6c47de0264aa1183336c7ca438631f90056c41f438c86f34da147a51351de4",
+    "md5": null,
+    "size_bytes": 1385795
+  },
+  "neso_demand_2018": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/fcb12133-0db0-4f27-a4a5-1669fd9f6d33/download/demanddata_2018.csv",
+    "filename": "demanddata_2018.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "weather-year family: demand shape for cap5_wy2018",
+    "sha256": "a2e19b4eb4157a190d1e7f2c946ee92c4be2ae196f72d55545c870399d3efb2f",
+    "md5": null,
+    "size_bytes": 1389142
+  },
+  "neso_demand_2020": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/33ba6857-2a55-479f-9308-e5c4c53d4381/download/demanddata_2020.csv",
+    "filename": "demanddata_2020.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "weather-year family: demand shape for cap5_wy2020",
+    "sha256": "7121b6fbf317862febe364f6b702184836b174327bf503ac143de1191f61f141",
+    "md5": null,
+    "size_bytes": 1560521
+  },
+  "neso_demand_2021": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/18c69c42-f20d-46f0-84e9-e279045befc6/download/demanddata_2021.csv",
+    "filename": "demanddata_2021.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "weather-year family: demand shape for cap5_wy2021",
+    "sha256": "b9f7285fecec48b05244c5bd3206c14d2409ab6da9cfc5c3b976104d5d5734ef",
+    "md5": null,
+    "size_bytes": 1589451
+  },
+  "neso_demand_2022": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/bb44a1b5-75b1-4db2-8491-257f23385006/download/demanddata_2022.csv",
+    "filename": "demanddata_2022.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "weather-year family: demand shape for cap5_wy2022",
+    "sha256": "fc6bd5d5a8e8b9094ae748ae6f62d688797577ca3be8e66acbffdda771a5b6c4",
+    "md5": null,
+    "size_bytes": 1682356
+  },
+  "neso_demand_2023": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/bf5ab335-9b40-4ea4-b93a-ab4af7bce003/download/demanddata_2023.csv",
+    "filename": "demanddata_2023.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "weather-year family: demand shape for cap5_wy2023",
+    "sha256": "cb6f7b91dd6a5defbdd918e3db440b8e6cec5855ef18a8715bb8e294b50cfa23",
+    "md5": null,
+    "size_bytes": 1732679
+  },
+  "neso_demand_2024": {
+    "url": "https://api.neso.energy/dataset/8f2fe0af-871c-488d-8bad-960426f24601/resource/f6d02c0f-957b-48cb-82ee-09003f2ba759/download/demanddata_2024.csv",
+    "filename": "demanddata_2024.csv",
+    "licence": "NESO Open Data Licence",
+    "source_note": "weather-year family: demand shape for cap5_wy2024",
+    "sha256": "fa7895b6e9ab5eb1b450949d969cb18ffeb6005359fc71c79c87e1c47e59cac6",
+    "md5": null,
+    "size_bytes": 1809707
+  },
   "fes2025_workbook": {
     "url": "https://www.neso.energy/document/364551/download",
     "filename": "fes2025_data_workbook.xlsx",
@@ -115,5 +241,131 @@
     "sha256": "bdc0e5713caa78e7c16133532bf4a3454cf54312d52ba0b523b31e6bdddd188b",
     "md5": "07853e0850eb1f5bbd818ac756f22b30",
     "size_bytes": 764817815
+  },
+  "zenodo_cutout_uk_2010": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2010.nc/content",
+    "filename": "uk-2010.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2010_zonal.parquet",
+    "sha256": "e69baa9d1d2979a653553ae9ffa2db7bb4be4a5af90ddc9e1cf955b5929015db",
+    "md5": "3989174c06d8740763d1c26adde6ad86",
+    "size_bytes": 764817778
+  },
+  "zenodo_cutout_uk_2011": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2011.nc/content",
+    "filename": "uk-2011.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2011_zonal.parquet",
+    "sha256": "70ba5c439994c1c579c70dad7f70bf1c7c950651c18ce5cdd1c543c99efe064e",
+    "md5": "037cc3af69320f24215ace60003ce968",
+    "size_bytes": 764817815
+  },
+  "zenodo_cutout_uk_2012": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2012.nc/content",
+    "filename": "uk-2012.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2012_zonal.parquet",
+    "sha256": "a499d4d74453101ad98962a858c8efd970312befafe9e6b443e235d12c1701ac",
+    "md5": "9a8cbf90f822559529bbeef3e27e0e55",
+    "size_bytes": 766913111
+  },
+  "zenodo_cutout_uk_2013": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2013.nc/content",
+    "filename": "uk-2013.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2013_zonal.parquet",
+    "sha256": "b13a185dcf17a37983142771c292909e45829ed6ca4fe8da01f5cf506dbcc5e9",
+    "md5": "0bb5945d20390214dcab0f69a104066b",
+    "size_bytes": 764817815
+  },
+  "zenodo_cutout_uk_2014": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2014.nc/content",
+    "filename": "uk-2014.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2014_zonal.parquet",
+    "sha256": "041c38a5a85fc6860b6d49108654de14f51d5d60b0dc90fa7d2da784678c74fa",
+    "md5": "a19bf441cba3966cdc8880676e504903",
+    "size_bytes": 764817815
+  },
+  "zenodo_cutout_uk_2015": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2015.nc/content",
+    "filename": "uk-2015.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2015_zonal.parquet",
+    "sha256": "88484631f092499ee6f559ecf7aaae5d80526968fa9d640d20cb0cd9782aa12b",
+    "md5": "85baacbc55195c293350fe61f13232e5",
+    "size_bytes": 764817778
+  },
+  "zenodo_cutout_uk_2016": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2016.nc/content",
+    "filename": "uk-2016.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2016_zonal.parquet",
+    "sha256": "93f689a2c7473d53c2d2134b01d531ef4d2e026207306e9bedffcf763b4ea140",
+    "md5": "f80c3f7ce221983cd029a577ff234d20",
+    "size_bytes": 766913074
+  },
+  "zenodo_cutout_uk_2017": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2017.nc/content",
+    "filename": "uk-2017.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2017_zonal.parquet",
+    "sha256": "23e74c69ea8c5b8986ac3eba02becd554f0eda30f62a51e3bab6232c0aab7d09",
+    "md5": "bf2d07cd34cbfbf246cabcf86b9c586d",
+    "size_bytes": 764817815
+  },
+  "zenodo_cutout_uk_2018": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2018.nc/content",
+    "filename": "uk-2018.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2018_zonal.parquet",
+    "sha256": "4b395099826e47ca871bd2027c86fc0de83d73361d214732c21c8d579c3f0732",
+    "md5": "40c03a68b73a5f9ce365c92885185d9e",
+    "size_bytes": 764817815
+  },
+  "zenodo_cutout_uk_2020": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2020.nc/content",
+    "filename": "uk-2020.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2020_zonal.parquet",
+    "sha256": "eed4a96c8a0871d245b9e21f3f7f0f50b88c456ded9f9493b36b906fb5e5eee4",
+    "md5": "9d08ab99530454944a8efffcd547b720",
+    "size_bytes": 766913074
+  },
+  "zenodo_cutout_uk_2021": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2021.nc/content",
+    "filename": "uk-2021.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2021_zonal.parquet",
+    "sha256": "520a4eaa40acb0893a8957628672866eeeebd0911285cf90fdd7cfa0910960c3",
+    "md5": "207ab54d807596b6f51970b1d1007ffa",
+    "size_bytes": 768710497
+  },
+  "zenodo_cutout_uk_2022": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2022.nc/content",
+    "filename": "uk-2022.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2022_zonal.parquet",
+    "sha256": "13ae329ba042f5a875363e2ddba20006d1f2be5671d86f2e6b521d37b1caa298",
+    "md5": "45d78b30a2ea7a26f9a9600a04fb997f",
+    "size_bytes": 768787908
+  },
+  "zenodo_cutout_uk_2023": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2023.nc/content",
+    "filename": "uk-2023.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2023_zonal.parquet",
+    "sha256": "1b9f4af00ca5cb3ef91b1ded8b28e023bb479f6caeacd64c3c5856a6349eb830",
+    "md5": "8e5bc5f4d4dc01a87d923f357ef94242",
+    "size_bytes": 768385547
+  },
+  "zenodo_cutout_uk_2024": {
+    "url": "https://zenodo.org/api/records/18325225/files/uk-2024.nc/content",
+    "filename": "uk-2024.nc",
+    "licence": "CC-BY-4.0 (Atlite Cutouts for GB, Zenodo record 18325225)",
+    "source_note": "765 MB ERA5 cutout; only needed to regenerate data/derived/cf_2024_zonal.parquet",
+    "sha256": "8ad29cfa1ffbeb14f9a8fd92fcb2fdf753224db938afa635f960d6b552e1f0a0",
+    "md5": "4e0fe4991d8173e5775b0ab22d5a5536",
+    "size_bytes": 770079241
   }
 }

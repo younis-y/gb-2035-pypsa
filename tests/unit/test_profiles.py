@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 from shapely.geometry import Polygon
 
+from gb2035.config import weather_years
 from gb2035.data.profiles import (
     clip_to_cutout,
     flatten_columns,
@@ -86,15 +87,27 @@ def test_clip_to_cutout_raises_when_far_outside():
         clip_to_cutout(far, bounds)
 
 
+WEATHER_YEARS = weather_years(
+    Path(__file__).resolve().parents[2] / "config" / "scenarios.yaml", 2019
+)
+
+
 @pytest.mark.slow
-def test_committed_profiles_are_plausible(repo_root: Path):
-    path = repo_root / "data" / "derived" / "cf_2019_zonal.parquet"
-    if not path.exists():
-        pytest.skip("profiles not built yet")
-    cf = load_profiles(path)
-    validate_profiles(cf, 2019)
+@pytest.mark.parametrize("year", WEATHER_YEARS)
+def test_committed_profiles_are_plausible(repo_root: Path, year: int):
+    cf = load_profiles(repo_root / "data" / "derived" / f"cf_{year}_zonal.parquet")
+    validate_profiles(cf, year)
     means = cf.mean()
-    # 0.65 upper bound: Shetland/Western Isles/Argyll exceed 0.50 due to ERA5 coastal wind blending.
-    assert means.xs("onwind", level="carrier").between(0.15, 0.65).all()
-    assert means.xs("offwind", level="carrier").between(0.35, 0.65).all()
-    assert means.xs("solar", level="carrier").between(0.08, 0.14).all()
+    onwind = means.xs("onwind", level="carrier")
+    offwind = means.xs("offwind", level="carrier")
+    solar = means.xs("solar", level="carrier")
+    # Zonal annual means. The onshore ceiling is set by Shetland, Western Isles and Argyll,
+    # where ERA5's ~25 km cells blend marine wind into small island zones: the windiest zone
+    # reaches 0.615 in 2019 and 0.705 in 2022 (windy years run higher everywhere).
+    assert onwind.between(0.15, 0.75).all()
+    assert offwind.between(0.45, 0.70).all()
+    assert solar.between(0.08, 0.15).all()
+    # National means move with the weather year, but a units or regeneration bug would move
+    # them far further: over 2010 to 2024 onshore runs 0.325 to 0.428 and solar 0.106 to 0.116.
+    assert 0.30 < onwind.mean() < 0.45
+    assert 0.10 < solar.mean() < 0.12

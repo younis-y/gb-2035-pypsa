@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from gb2035.config import weather_years
 from gb2035.data.manifest import ManifestEntry, load_manifest, save_manifest, sha256_of
 
 
@@ -45,3 +46,16 @@ def test_repo_manifest_is_complete(repo_root: Path):
     for e in entries.values():
         assert e.licence, e.name
         assert e.sha256 or e.md5, f"{e.name} needs a checksum"
+
+
+def test_every_weather_year_is_pinned(repo_root: Path):
+    """A weather year needs its NESO demand file and its ERA5 cutout, both checksummed."""
+    entries = load_manifest(repo_root / "data" / "manifest.json")
+    years = weather_years(repo_root / "config" / "scenarios.yaml", 2019)
+    missing = [
+        key
+        for year in years
+        for key in (f"neso_demand_{year}", f"zenodo_cutout_uk_{year}")
+        if key not in entries or not entries[key].sha256
+    ]
+    assert missing == []
