@@ -27,7 +27,12 @@ def load_neso_demand(csv: Path, year: int) -> pd.Series:
             "EMBEDDED_SOLAR_GENERATION",
         ],
     )
-    date = pd.to_datetime(df["SETTLEMENT_DATE"].str.title(), format="%d-%b-%Y")
+    # Every year writes `01-JAN-2019` except 2023, which writes `01-Jan-23`.
+    raw = df["SETTLEMENT_DATE"].str.title()
+    four_digit = raw.str.len() == len("01-Jan-2019")
+    date = pd.to_datetime(raw.where(four_digit), format="%d-%b-%Y").fillna(
+        pd.to_datetime(raw.where(~four_digit), format="%d-%b-%y")
+    )
     stamp = date + pd.to_timedelta((df["SETTLEMENT_PERIOD"] - 1) * 30, unit="min")
     gross = df["ND"] + df["EMBEDDED_WIND_GENERATION"] + df["EMBEDDED_SOLAR_GENERATION"]
     half_hourly = pd.Series(gross.to_numpy(dtype=float), index=stamp).sort_index()
