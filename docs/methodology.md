@@ -169,7 +169,7 @@ else feeds the main sweep in `results/`.
 | Scenario | Isolates |
 |---|---|
 | `uncapped` | UK ETS price, no cap |
-| `cap30` to `cap0p5` | CO2 sweep: 30, 20, 10, 5, 2, 0.5 MtCO2/yr (`cap0p5` did not converge; see below) |
+| `cap30` to `cap0p5` | CO2 sweep: 30, 20, 10, 5, 2, 0.5 MtCO2/yr (`cap0p5` needed interior point; see below) |
 | `cap5_no_h2` | Teesside coupling effect (demand zeroed) |
 | `cap5_ee_demand` | higher demand pathway (Electric Engagement) |
 | `cap5_tx_expansion` | value of extendable links |
@@ -190,7 +190,7 @@ minutes to reach optimal; scaled to a full year it did not finish within hours. 
 point without crossover was faster on those four weeks, about three minutes, but ended at
 status "unknown" rather than "optimal", since skipping crossover leaves infeasibility above
 HiGHS's threshold. PDLP solved a 3-hourly year at "optimal", in about 9 minutes on the probe
-and 4 to 84 minutes across the published scenarios (`solve_seconds` in each
+and 4 to 84 minutes across the published scenarios it solved (`solve_seconds` in each
 `results/<scenario>/run_meta.json`).
 
 HiGHS carries two PDLP implementations and the results use both. The published sweep was
@@ -203,13 +203,13 @@ their full-year solves one ended at "unknown" on cuPDLP-C, `cap5_wy2010` after 3
 was re-solved with `hipdlp`; the slowest that converged, `cap5_wy2015`, took 102 minutes.
 `tests/results/` checks every run's recorded solver against config.
 
-One scenario is still missing. `cap0p5`, the 0.5 MtCO2 cap, has not converged on either PDLP:
-cuPDLP-C crawled for 1 hour 50 minutes and was killed, and HiGHS's own PDLP stopped at a
-four-hour limit (status `time_limit`). That cap leaves only about 0.4 Mt for unabated gas once
-blue hydrogen's 0.1 Mt is paid for, which puts the LP on the near-vertical part of the
-abatement curve, exactly where a first-order method crawls. Interior point with crossover,
-which ends at an exact vertex, is configured for the next attempt. The sweep therefore reports
-30 down to 2 MtCO2, and `cap2` is the tightest converged cap.
+`cap0p5`, the 0.5 MtCO2 cap, converged on neither PDLP: cuPDLP-C crawled for 1 hour 50
+minutes and was killed, and HiGHS's own PDLP stopped at a four-hour limit (status
+`time_limit`). That cap puts the LP on the near-vertical part of the abatement curve, where a
+first-order method crawls. Interior point with crossover (`solver: ipm`, `run_crossover: on`
+in `config/scenarios.yaml`) solved it to optimal in 2 hours 53 minutes at commit `8821822`,
+the only run solved that way; crossover ends at an exact vertex, so its duals are as precise
+as a simplex solution's.
 
 PDLP satisfies constraints only to within tolerance, not at an exact vertex, so its duals
 are less precise than a simplex solution's, including the shadow carbon price, and cost
@@ -271,5 +271,3 @@ commit the new tables with the change that caused them.
   GSP-level breakdown.
 - The headline sweep runs 3-hourly, a subsample rather than an average, not hourly as
   designed.
-- The tightest cap in the design, 0.5 MtCO2, is not in the results: PDLP did not converge on
-  it within the run budget.

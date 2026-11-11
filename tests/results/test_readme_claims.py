@@ -2,10 +2,11 @@
 
 Each claim is rendered from `results/`, `data/derived/` and `config/` exactly as the README
 words it, so a re-solve that moves a number, or an edit that rewords one, fails here until the
-two agree again. Qualitative claims ("not one megawatt", "never by electrolysis") are asserted
-on the data as well as found in the text.
+two agree again. Qualitative claims ("not one megawatt", "only at 0.5 Mt") are asserted on the
+data as well as found in the text.
 """
 
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -17,7 +18,7 @@ from gb2035.data.profiles import load_profiles
 
 ROOT = Path(__file__).resolve().parents[2]
 README = " ".join((ROOT / "README.md").read_text().split())
-SWEEP = ["uncapped", "cap30", "cap20", "cap10", "cap5", "cap2"]
+SWEEP = ["uncapped", "cap30", "cap20", "cap10", "cap5", "cap2", "cap0p5"]
 
 
 @pytest.fixture(scope="module")
@@ -70,11 +71,17 @@ def test_the_fes_comparison(summary: pd.DataFrame, fes: pd.Series):
 
 
 def test_the_levelised_costs_where_the_model_stops():
-    """The dearest onshore zone `cap2` builds in, against the cheapest offshore site."""
+    """The dearest onshore zone the two tightest caps build in, against the cheapest offshore
+    site."""
     cf = load_profiles(ROOT / "data" / "derived" / "cf_2019_zonal.parquet").mean()
-    caps = pd.read_csv(ROOT / "results" / "cap2" / "capacities.csv")
-    built = caps[(caps["carrier"] == "onwind") & ~caps["existing"] & (caps["p_nom_opt"] > 1.0)]
-    onshore = max(levelised_gbp_mwh("onwind", cf[("onwind", z)]) for z in built["zone"])
+
+    def dearest_onshore(run: str) -> float:
+        caps = pd.read_csv(ROOT / "results" / run / "capacities.csv")
+        new = caps[(caps["carrier"] == "onwind") & ~caps["existing"] & (caps["p_nom_opt"] > 1.0)]
+        return max(levelised_gbp_mwh("onwind", cf[("onwind", z)]) for z in new["zone"])
+
+    onshore = dearest_onshore("cap2")
+    assert dearest_onshore("cap0p5") == pytest.approx(onshore), "and again at cap0p5"
     offshore = min(
         levelised_gbp_mwh("offwind", cf[("offwind", site)])
         for site in ("DOGGER_BANK", "HORNSEA", "EAST_ANGLIA")
@@ -95,11 +102,79 @@ def test_the_cost_of_tightening_the_cap(summary: pd.DataFrame):
     claim(
         f"adds {rise:.1f} bn GBP/yr and lifts the shadow carbon price from {low:.0f} to {high:.0f} GBP/t"
     )
+    last = (
+        summary.at["cap0p5", "total_cost_gbp_bn_per_yr"]
+        - summary.at["cap2", "total_cost_gbp_bn_per_yr"]
+    )
+    step = summary.at["cap2", "emissions_mt"] - summary.at["cap0p5", "emissions_mt"]
+    top = summary.at["cap0p5", "shadow_carbon_price_gbp_per_t"]
+    claim(
+        f"the last {step:.1f} Mt, down to 0.5, adds another {last:.1f} bn GBP/yr and takes it to "
+        f"{top:,.0f} GBP/t"
+    )
+    assert round(last, 1) == round(rise, 1), "as much as the whole way from 30 to 2"
+    finding(f"from 2 to 0.5 Mt, costs {last:.1f} bn GBP/yr, as much as the whole way from 30 to 2")
 
 
-def test_electrolysis_is_never_built(summary: pd.DataFrame):
-    assert summary["electrolysis_gw"].max() < 1e-6
-    assert summary["teesside_green_h2_twh"].max() < 1e-6
+def test_the_tightest_cap(summary: pd.DataFrame, fes: pd.Series):
+    loose, two, tight = summary.loc["cap5"], summary.loc["cap2"], summary.loc["cap0p5"]
+    claim(
+        f"then {two['total_cost_gbp_bn_per_yr']:.1f} at 2 Mt and "
+        f"{tight['total_cost_gbp_bn_per_yr']:.1f} at 0.5 Mt, as the shadow price jumps from "
+        f"{loose['shadow_carbon_price_gbp_per_t']:.0f} to {two['shadow_carbon_price_gbp_per_t']:.0f}"
+        f" and then {tight['shadow_carbon_price_gbp_per_t']:,.0f} GBP/t"
+    )
+    less = 100 * (1 - tight["offwind_gw"] / fes["offshore_wind_gw"])
+    claim(
+        f"at 0.5 Mt, {tight['solar_gw']:.1f} GW of solar and {tight['onwind_gw']:.1f} GW of onshore "
+        f"wind against FES's {fes['solar_gw']:.1f} and {fes['onshore_wind_gw']:.1f}, and "
+        f"{less:.0f} percent less offshore"
+    )
+    finding(
+        f"{100 * (tight['solar_gw'] / fes['solar_gw'] - 1):.0f} percent more solar and "
+        f"{100 * (tight['onwind_gw'] / fes['onshore_wind_gw'] - 1):.0f} percent more onshore wind "
+        f"than FES, and {less:.0f} percent less offshore wind"
+    )
+    ccs = pd.read_csv(ROOT / "results" / "cap0p5" / "capacities.csv").query("carrier == 'gas_ccs'")
+    gw = ccs.set_index("zone")["p_nom_opt"] / 1e3
+    finding(
+        f"{gw.min():.1f} to {gw.max():.1f} GW in each of {', '.join(gw.index[:-1])} and "
+        f"{gw.index[-1]}"
+    )
+
+
+def test_electrolysis_appears_only_at_the_tightest_cap(summary: pd.DataFrame):
+    assert set(summary.index[summary["electrolysis_gw"] > 1e-3]) == {"cap0p5"}
+    assert set(summary.index[summary["teesside_green_h2_twh"] > 1e-3]) == {"cap0p5"}
+    claim("hydrogen is blue at every cap down to 2 MtCO2, and only at 0.5 Mt does electrolysis")
+    r = summary.loc["cap0p5"]
+    claim(
+        f"electrolysis appears only at 0.5 Mt, where {r['electrolysis_gw']:.1f} GW makes "
+        f"{r['teesside_green_h2_twh']:.1f} TWh and {r['h2_turbine_gw_el']:.1f} GW of hydrogen "
+        f"turbines run off a {r['h2_store_gwh'] / 1e3:.1f} TWh store"
+    )
+    h2 = pd.read_csv(ROOT / "results" / "cap0p5" / "hydrogen.csv").set_index("metric")["value"]
+    finding(
+        f"{h2['electrolysis_mw'] / 1e3:.1f} GW running at "
+        f"{100 * h2['electrolysis_utilisation']:.0f} percent utilisation makes "
+        f"{h2['green_h2_twh']:.1f} TWh of green hydrogen and blue falls to "
+        f"{h2['blue_h2_twh']:.1f} TWh"
+    )
+    finding(f"the 0.5 Mt cap {r['battery_new_gw']:.1f} GW")
+    finding(
+        f"At 0.5 Mt the store grows to {h2['h2_store_mwh'] / 1e3:,.0f} GWh behind "
+        f"{r['h2_turbine_gw_el']:.1f} GW of turbines returning {h2['h2_to_power_twh_el']:.1f} TWh"
+    )
+
+
+def test_the_tightest_cap_needed_interior_point():
+    meta = json.loads((ROOT / "results" / "cap0p5" / "run_meta.json").read_text())
+    assert meta["solver"] == "ipm"
+    hours, minutes = divmod(round(meta["solve_seconds"] / 60), 60)
+    claim(
+        f"`cap0p5` was solved by interior point with crossover, in {hours} hours {minutes} minutes"
+    )
+    finding(f"crossover solved it to optimal in {hours} hours {minutes} minutes")
 
 
 def _weather_runs() -> pd.DataFrame:
@@ -167,8 +242,6 @@ def test_the_planning_ceiling_and_dear_imports(summary: pd.DataFrame):
 
 
 def test_the_resolve_reproduces_cap5_to_the_penny():
-    import json
-
     def total(path: str) -> float:
         return json.loads((ROOT / path / "run_meta.json").read_text())["total_cost_gbp_per_yr"]
 
@@ -217,7 +290,8 @@ def test_the_findings_breakeven_and_planning_numbers(summary: pd.DataFrame):
     )
 
 
-def test_the_readme_counts_the_committed_runs():
+def test_the_readme_counts_the_committed_runs(summary: pd.DataFrame):
+    claim(f"{len(summary)} solved scenarios on 2019 weather")
     runs = [
         m
         for f in ("results", "results_hourly", "results_weather_years")

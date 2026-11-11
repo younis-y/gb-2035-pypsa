@@ -29,7 +29,7 @@ scenarios:
     co2_cap_mt: 0.5
     # Neither PDLP converges here: cuPDLP-C ran 1 h 50 min and was killed, and HiGHS's own PDLP
     # stopped at a four-hour limit. Interior point with crossover, which ends at an exact
-    # vertex, gets an eight-hour limit instead.
+    # vertex, solved it to optimal in 2 h 53 min within an eight-hour limit.
     solver_options: {solver: ipm, run_crossover: "on", threads: 8, time_limit: 28800}
   cap5_no_h2:
     description: cap5 without the Teesside hydrogen demand

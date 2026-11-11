@@ -7,7 +7,7 @@
 
 Least-cost GB power system in 2035 under tightening carbon caps, with a Teesside industrial
 hydrogen node. PyPSA + HiGHS, 20 transmission zones, a full year at 3-hourly resolution:
-15 solved scenarios on 2019 weather, and the 5 MtCO2 case re-solved on every weather
+16 solved scenarios on 2019 weather, and the 5 MtCO2 case re-solved on every weather
 year from 2010 to 2024.
 
 **The answer this model gives.** At DESNZ 2035 medium costs, the cheapest GB system that
@@ -16,8 +16,9 @@ offshore wind: 36.3 GW of onshore wind and 97.0 GW of solar against 27.9 GW of o
 not one megawatt of new offshore is built at any cap in the sweep. NESO's FES 2025 Holistic
 Transition reaches 86.1 GW of offshore by 2035. The model climbs into onshore zones costing
 about 52 GBP/MWh before it will buy a megawatt of offshore at 63. Tightening the cap from 30
-to 2 MtCO2 adds 2.1 bn GBP/yr and lifts the shadow carbon price from 0 to 910 GBP/t, and the
-Teesside hydrogen demand is met by blue hydrogen at every cap, never by electrolysis.
+to 2 MtCO2 adds 2.1 bn GBP/yr and lifts the shadow carbon price from 0 to 910 GBP/t; the last
+1.5 Mt, down to 0.5, adds another 2.1 bn GBP/yr and takes it to 2,332 GBP/t. Teesside's
+hydrogen is blue at every cap down to 2 MtCO2, and only at 0.5 Mt does electrolysis take over.
 
 **How far that holds.**
 
@@ -55,6 +56,7 @@ rows; blue hydrogen has no capex, so only its TWh are meaningful.
 | cap10 | 10.0 | 15.3 | 33 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
 | cap5 | 5.0 | 15.5 | 52 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
 | cap2 | 2.0 | 16.8 | 910 | 44 | 28 | 103 | 20 | 0.0 | 0.0 | 6.5 |
+| cap0p5 | 0.5 | 18.9 | 2332 | 48 | 28 | 112 | 28 | 2.5 | 9.6 | 1.5 |
 | cap5_no_h2 | 5.0 | 15.1 | 52 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 0.0 |
 | cap5_ee_demand | 5.0 | 16.6 | 226 | 42 | 28 | 105 | 17 | 0.0 | 0.0 | 1.3 |
 | cap5_tx_expansion | 5.0 | 15.5 | 52 | 36 | 28 | 97 | 15 | 0.0 | 0.0 | 5.0 |
@@ -70,7 +72,7 @@ rows; blue hydrogen has no capex, so only its TWh are meaningful.
 
 ![New build under the 5 MtCO2 cap for each weather year from 2010 to 2024, beside its system cost. Every year builds onshore wind and solar, new offshore wind is zero in every year, and system cost runs from 14.4 to 17.4 bn GBP/yr, highest in 2010.](docs/figures/weather_years.png)
 
-More figures (cost and shadow price, the cap2 build against FES, storage, Teesside
+More figures (cost and shadow price, the 0.5 Mt build against FES, storage, Teesside
 hydrogen) are in [`docs/figures/`](docs/figures/).
 
 ## Findings
@@ -79,15 +81,16 @@ Each line below is argued in full, with the file behind every number, in
 [`docs/findings.md`](docs/findings.md).
 
 1. **Cost rises gently to a 5 Mt cap, then steeply:** 14.8 to 15.5 bn GBP/yr from 30 to
-   5 MtCO2, then 16.8 at 2 Mt, where the shadow price jumps from 52 to 910 GBP/t.
-2. **The tightest converged build is solar- and onshore-heavy:** at 2 Mt, 103.4 GW of solar
-   and 44.0 GW of onshore wind against FES's 61.8 and 38.4, and 68 percent less offshore.
+   5 MtCO2, then 16.8 at 2 Mt and 18.9 at 0.5 Mt, as the shadow price jumps from 52 to 910
+   and then 2,332 GBP/t.
+2. **The tightest cap's build is solar- and onshore-heavy:** at 0.5 Mt, 112.1 GW of solar
+   and 48.5 GW of onshore wind against FES's 61.8 and 38.4, and 68 percent less offshore.
 3. **Offshore loses on cost ranking, not on room.** No cap in the sweep builds greenfield
    offshore; it enters only with its capex cut by about half (4.0 GW) or with onshore, solar
    and imports all held back (0.6 GW). Zonal land-area caps bind, but the model prefers worse
    onshore zones to the best offshore site.
-4. **Blue hydrogen wins Teesside outright:** electrolysis is 0.0 GW everywhere, and storage
-   only appears at 2 Mt.
+4. **Blue hydrogen wins Teesside down to 2 Mt:** electrolysis appears only at 0.5 Mt, where
+   2.5 GW makes 9.6 TWh and 7.9 GW of hydrogen turbines run off a 1.8 TWh store.
 5. **The Teesside node costs 356 m GBP/yr,** which its hydrogen price decomposes exactly.
 6. **Imports at 100 GBP/MWh cost 1.9 bn GBP/yr** and turn GB from net importer to exporter.
 7. **Transmission expansion is worth nothing here,** although Scotland to England binds in
@@ -100,11 +103,11 @@ run on every pull request.
 
 | Tier | Tests | What it pins |
 |---|---|---|
-| `tests/unit` | 183 | data builders, config validation, network construction (component counts, costs, caps, CCS siting, the FES ceiling, weather-year inputs, fingerprints), the report, the app's data layer, the CI and Docker workflow files, docs links |
+| `tests/unit` | 184 | data builders, config validation, network construction (component counts, costs, caps, CCS siting, the FES ceiling, weather-year inputs, fingerprints), the report, the app's data layer, the CI and Docker workflow files, docs links |
 | `tests/integration` | 21 | real HiGHS solves of the one-week CI scenario: optimal status, AC energy balance, a binding CO2 cap with a positive dual, additive costs, and the objective against a stored value to 0.5 percent. The breakeven is tested as a price: cutting offshore capex 15 percent past the shortfall its market value implies builds Dogger Bank, and 15 percent short builds nothing |
 | `tests/e2e` | 7 | the CLI end to end: `run`, `report`, `extract` and their failure messages |
 | `tests/architecture` | 5 | the app never imports the solver stack or the model package, even transitively; core modules take config as arguments, never from globals or the environment; every assumption has a source |
-| `tests/results` | 266 | eight checks on each of the 31 committed runs (tables present; AC energy equal to the demand the model was given; CO2 under the cap, with a priced cap binding; cost rows adding up; every unit earning what optimality requires at the run's own prices; the solver and libraries now configured; a clean commit on any re-extraction; the input fingerprint equal to what the current code builds), then each `summary.csv` against its runs, the README table against the results, and the headline numbers in the README and `docs/findings.md` recomputed from committed files |
+| `tests/results` | 276 | eight checks on each of the 32 committed runs (tables present; AC energy equal to the demand the model was given; CO2 under the cap, with a priced cap binding; cost rows adding up; every unit earning what optimality requires at the run's own prices; the solver and libraries now configured; a clean commit on any re-extraction; the input fingerprint equal to what the current code builds), then each `summary.csv` against its runs, the README table against the results, and the headline numbers in the README and `docs/findings.md` recomputed from committed files |
 
 The last check is the one that keeps a modelling repo honest. Every run records a hash of the
 unsolved network in `run_meta.json`, and the test rebuilds every committed scenario and
@@ -166,25 +169,21 @@ provenance checks: [`docs/methodology.md`](docs/methodology.md). Every sourced n
 ## Resolution and solver
 
 The published runs take every third hour of the year, 2,920 snapshots each weighted 3 (2,928
-weighted 2.99 in leap years). An
-hourly re-solve of `cap5` ([`results_hourly/cap5/`](results_hourly/cap5/)) puts total cost
-0.4 percent higher, leaves the shadow carbon price at 52 GBP/t and shifts about 1 GW between
-new onshore wind and new solar; new offshore, electrolysis and hydrogen storage stay at zero.
+weighted 2.99 in leap years). An hourly re-solve of `cap5`
+([`results_hourly/cap5/`](results_hourly/cap5/)) puts total cost 0.4 percent higher, leaves
+the shadow carbon price at 52 GBP/t and shifts about 1 GW between new onshore wind and new
+solar; new offshore, electrolysis and hydrogen storage stay at zero.
 
 The solver is HiGHS's first-order PDLP at 1e-5 feasibility tolerances, because simplex does
 not finish a full year in usable time. HiGHS ships two PDLP implementations: most runs use
 cuPDLP-C (`pdlp`), and `cap5_ee_demand` and `cap5_wy2010` use HiGHS's own (`hipdlp`), each
-after cuPDLP-C ended at status "unknown" on it. Each run records its solver in
-`run_meta.json`, and a test checks it against `config/scenarios.yaml`. PDLP meets constraints
-to within tolerance rather than at a vertex, so its duals are less precise than simplex's, and
-cost differences below about 0.1 m GBP/yr on a 15.5 bn base are inside that tolerance.
-
-The 0.5 MtCO2 cap (`cap0p5`) is not in the results: cuPDLP-C crawled for 1 hour 50 minutes
-without converging, and HiGHS's own PDLP stopped at a four-hour limit. That cap leaves about
-0.4 Mt for unabated gas once blue hydrogen's 0.1 Mt is paid for, the near-vertical part of
-the abatement curve, where first-order methods crawl. `config/scenarios.yaml` gives it
-interior point with crossover for the next attempt, and `cap2` remains the tightest converged
-cap.
+after cuPDLP-C ended at status "unknown" on it. The 0.5 MtCO2 cap defeated both: cuPDLP-C
+crawled for 1 hour 50 minutes and HiGHS's own PDLP stopped at a four-hour limit, so `cap0p5`
+was solved by interior point with crossover, in 2 hours 53 minutes. Each run records its
+solver in `run_meta.json`, and a test checks it against `config/scenarios.yaml`. PDLP meets
+constraints to within tolerance rather than at a vertex, so its duals are less precise than
+simplex's or crossover's, and cost differences below about 0.1 m GBP/yr on a 15.5 bn base
+are inside that tolerance.
 
 ## What this model does not claim
 

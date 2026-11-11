@@ -6,8 +6,8 @@ weather; how far it holds on other weather years and under planning limits is in
 [Robustness](#robustness).
 
 1. **Cost rises gently to a 5 Mt cap, then steeply.** System cost runs 14.8, 15.0, 15.3,
-   15.5 and 16.8 bn GBP/yr across the 30, 20, 10, 5 and 2 MtCO2 caps, and the shadow carbon
-   price runs 0, 33, 33, 52 and 910 GBP/t
+   15.5, 16.8 and 18.9 bn GBP/yr across the 30, 20, 10, 5, 2 and 0.5 MtCO2 caps, and the shadow
+   carbon price runs 0, 33, 33, 52, 910 and 2,332 GBP/t
    ([`results/summary.csv`](../results/summary.csv)). The 30 Mt cap is slack, so its dual is
    zero: the cost-minimising build already emits only 28.2 Mt. (The `uncapped` row's 4.6 Mt
    is not that unconstrained optimum either: `uncapped` drops the cap but prices carbon at
@@ -19,19 +19,24 @@ weather; how far it holds on other weather years and under planning limits is in
    0.368 tCO2/MWh) becomes dearer than a 65 GBP/MWh import: (65 - 53) / 0.368 = 32.6 GBP/t.
    Below 10 Mt that switch is exhausted and the price climbs to what new abatement costs:
    52 GBP/t at 5 Mt, then 910 GBP/t at 2 Mt, where the model has to build gas CCS and
-   hydrogen storage rather than simply redispatch.
+   hydrogen storage rather than simply redispatch, and 2,332 GBP/t at 0.5 Mt, where it turns to
+   electrolysis. The last step, from 2 to 0.5 Mt, costs 2.1 bn GBP/yr, as much as the whole way
+   from 30 to 2.
 
-2. **At the tightest converged cap the build is solar- and onshore-heavy, with less firm
-   low-carbon capacity than FES and more unabated gas.** `cap2` holds 44.0 GW onshore wind,
-   103.4 GW solar, 27.9 GW offshore wind, 20.2 GW battery, 3.6 GW gas CCS and 23.4 GW unabated gas
-   ([`results/cap2/summary_row.csv`](../results/cap2/summary_row.csv)). The gas CCS is spread
-   across all six zones a CO2 pipeline could reach, 0.2 to 0.9 GW in each of Z5, Z7, Z8, Z9,
-   Z13 and Z16 ([`config/ccs_zones.yaml`](../config/ccs_zones.yaml) and
-   [`results/cap2/capacities.csv`](../results/cap2/capacities.csv)). FES 2025 Holistic
+2. **At the tightest cap the build is solar- and onshore-heavy, with three times FES's
+   hydrogen generation and about half its gas CCS.** `cap0p5` holds 48.5 GW onshore wind,
+   112.1 GW solar, 27.9 GW offshore wind, 27.6 GW battery, 7.9 GW of hydrogen turbines, 4.4 GW
+   gas CCS and 14.1 GW unabated gas, which runs for only 0.9 TWh
+   ([`results/cap0p5/summary_row.csv`](../results/cap0p5/summary_row.csv) and
+   [`results/cap0p5/energy.csv`](../results/cap0p5/energy.csv)). The gas CCS is spread across
+   all six zones a CO2 pipeline could reach, 0.2 to 1.1 GW in each of Z5, Z7, Z8, Z9, Z13 and
+   Z16 ([`config/ccs_zones.yaml`](../config/ccs_zones.yaml) and
+   [`results/cap0p5/capacities.csv`](../results/cap0p5/capacities.csv)). FES 2025 Holistic
    Transition for 2035 has 38.4 GW onshore, 61.8 GW solar, 86.1 GW offshore, 29.8 GW battery
-   plus 10.5 GW of long-duration storage, 8.1 GW gas CCUS and 14.7 GW unabated gas
+   plus 10.5 GW of long-duration storage, 2.6 GW of hydrogen generation, 8.1 GW gas CCUS and
+   14.7 GW unabated gas
    ([`data/derived/fes2025_gb_2035.csv`](../data/derived/fes2025_gb_2035.csv)). The model buys
-   67 percent more solar and 15 percent more onshore wind than FES, and 68 percent less
+   81 percent more solar and 26 percent more onshore wind than FES, and 68 percent less
    offshore wind.
 
 3. **Offshore wind loses on cost ranking, not on a shortage of room.** No greenfield offshore
@@ -56,40 +61,42 @@ weather; how far it holds on other weather years and under planning limits is in
    all twenty zones runs 34.5 at best (Z15), 41.8 at the median and 49.3 at worst (Z1_4).
    Those ranges overlap: the worst mainland onshore zone (Z3, 63.8) is dearer than the best
    offshore site (Dogger Bank, 63.3). What decides it is where the model stops, not where the
-   ranges end. At `cap2` the dearest zone it actually builds onshore in is Z1_4 at 52.3
-   GBP/MWh, and the dearest mainland one is Z13 at 48.9, both still clear of Dogger Bank's
-   63.3, so offshore is never the next megawatt worth buying. Z1_4 is one of the zones where
-   ERA5 inflates the capacity factor, so its true cost is higher than 52.3 and this margin is
-   the optimistic reading of it.
+   ranges end. At `cap2`, and again at `cap0p5`, the dearest zone it actually builds onshore
+   in is Z1_4 at 52.3 GBP/MWh, and the dearest mainland one is Z13 at 48.9, both still clear of
+   Dogger Bank's 63.3, so offshore is never the next megawatt worth buying. Z1_4 is one of the
+   zones where ERA5 inflates the capacity factor, so its true cost is higher than 52.3 and this
+   margin is the optimistic reading of it.
 
    The caps do bind, but zonally rather than nationally. `config/renewable_caps.yaml` splits
    each national greenfield cap across the twenty land zones by land area, and the extendable
    unit in a zone cannot exceed its share. At `cap5` the split is exhausted in 8 of 20 onshore
-   zones and 9 of 20 solar zones; at `cap2`, in 10 and 11 (a zone counts as binding when its
-   greenfield `p_nom_opt` equals its national-cap-times-land-area-share to the megawatt in
-   [`results/cap5/capacities.csv`](../results/cap5/capacities.csv) and
-   [`results/cap2/capacities.csv`](../results/cap2/capacities.csv)). The national totals stay
-   well short even so: `cap2` builds 27.7 GW of new onshore against the 60 GW greenfield cap
-   and 89.3 GW of new solar against 150 GW
-   ([`results/cap2/summary_row.csv`](../results/cap2/summary_row.csv), `onwind_new_gw` and
+   zones and 9 of 20 solar zones; at `cap2`, in 10 and 11; at `cap0p5`, in 11 and 13 (a zone
+   counts as binding when its greenfield `p_nom_opt` equals its
+   national-cap-times-land-area-share to the megawatt in each run's `capacities.csv`). The
+   national totals stay well short even so: `cap0p5` builds 32.2 GW of new onshore against
+   the 60 GW greenfield cap and 97.9 GW of new solar against 150 GW
+   ([`results/cap0p5/summary_row.csv`](../results/cap0p5/summary_row.csv), `onwind_new_gw` and
    `solar_new_gw`). So the land-area split exhausts the windiest and sunniest zones first and
    pushes the model into progressively worse ones, and it still prefers those to offshore.
    FES's 86.1 GW reflects planning consent, land use and public acceptability for onshore and
    solar, none of which this model represents.
 
-4. **Blue hydrogen wins Teesside outright, and storage only appears at 2 Mt.** Blue hydrogen
-   supplies the whole industrial demand in every scenario that has one, 5.0 TWh in the
-   Holistic Transition scenarios and 1.3 TWh in `cap5_ee_demand`, whose Electric Engagement
-   pathway assumes far less industrial hydrogen. Electrolysis is built at 0.0 GW everywhere,
-   so green hydrogen is 0.0 TWh throughout
-   ([`results/summary.csv`](../results/summary.csv)). Across the cap sweep batteries stay at the
-   existing 14.7 GW until the 2 Mt cap adds 5.5 GW of new build (the only other scenario that
-   builds any is `cap5_ee_demand`, at 2.7 GW), and 2 Mt is also the only cap that builds a
-   hydrogen store (92.3 GWh) and a hydrogen turbine (1.1 GW electrical, `h2_turbine_gw_el` in
+4. **Blue hydrogen wins Teesside down to 2 Mt; at 0.5 Mt electrolysis takes over.** Blue
+   hydrogen supplies the whole industrial demand in every scenario that has one but `cap0p5`,
+   5.0 TWh in the Holistic Transition scenarios and 1.3 TWh in `cap5_ee_demand`, whose Electric
+   Engagement pathway assumes far less industrial hydrogen. Electrolysis is built only at
+   0.5 Mt, where 2.5 GW running at 65 percent utilisation makes 9.6 TWh of green hydrogen and
+   blue falls to 1.5 TWh ([`results/cap0p5/hydrogen.csv`](../results/cap0p5/hydrogen.csv)): at
+   a 2,332 GBP/t shadow price, blue's residual 0.02 tCO2/MWh adds about 47 GBP/MWh to its 70.
+   Across the cap sweep batteries stay at the existing 14.7 GW until the 2 Mt cap adds 5.5 GW
+   of new build and the 0.5 Mt cap 12.9 GW (the only other scenario that builds any is
+   `cap5_ee_demand`, at 2.7 GW). Hydrogen storage first appears at 2 Mt, a 92.3 GWh store and a
+   1.1 GW hydrogen turbine (electrical, `h2_turbine_gw_el` in
    [`results/summary.csv`](../results/summary.csv); the 2.17 GW in
    [`results/cap2/hydrogen.csv`](../results/cap2/hydrogen.csv) is its hydrogen input, not its
-   electrical rating) returning 0.8 TWh. Even that store is filled by blue hydrogen, whose
-   output rises to 6.5 TWh, not by electrolysis.
+   electrical rating) returning 0.8 TWh, filled by blue hydrogen, whose output rises to
+   6.5 TWh. At 0.5 Mt the store grows to 1,816 GWh behind 7.9 GW of turbines returning
+   3.0 TWh.
 
 5. **The Teesside node costs the power system 356 m GBP/yr, and the price behind it
    decomposes exactly.** `cap5` costs 15.5 bn GBP/yr against `cap5_no_h2`'s 15.1 bn, a
@@ -200,5 +207,6 @@ commit, returns the same total cost to the penny, 15,468,016,753.09 GBP/yr in bo
 from the same input fingerprint: PDLP is deterministic on one machine. One of the new
 full-year solves, `cap5_wy2010`, ended at HiGHS's status "unknown" on cuPDLP-C after 31
 minutes and was re-solved with HiGHS's own PDLP, which `config/scenarios.yaml` records for it.
-The 0.5 MtCO2 cap still does not converge on either PDLP, cuPDLP-C after 1 hour 50 minutes
-and HiGHS's own after a four-hour limit, so `cap2` remains the tightest cap with a result.
+The 0.5 MtCO2 cap converged on neither PDLP, cuPDLP-C after 1 hour 50 minutes and HiGHS's
+own after a four-hour limit; interior point with crossover solved it to optimal in 2 hours
+53 minutes, and it passes the same eight checks as every other run.
