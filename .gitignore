@@ -11,6 +11,8 @@ results/**/network.nc
 results/**/dispatch_hourly.parquet
 results_hourly/**/network.nc
 results_hourly/**/dispatch_hourly.parquet
+results_weather_years/**/network.nc
+results_weather_years/**/dispatch_hourly.parquet
 *.egg-info/
 dist/
 .DS_Store

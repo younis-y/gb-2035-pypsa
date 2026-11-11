@@ -1,0 +1,15 @@
+{
+  "scenario": "cap5_offwind_capex51",
+  "git_sha": "112b9b3",
+  "pypsa_version": "1.3.0",
+  "highs_version": "1.15.1",
+  "input_fingerprint": "00fd45f8c78003b5",
+  "solve_seconds": 1972.9,
+  "snapshots": 2920,
+  "resolution_hours": 3,
+  "weather_year": 2019,
+  "solver": "pdlp",
+  "total_cost_gbp_per_yr": 15441708482.158411,
+  "lp_objective_gbp_per_yr": 10185446250.261051,
+  "fixed_asset_cost_gbp_per_yr": 5256262231.89736
+}

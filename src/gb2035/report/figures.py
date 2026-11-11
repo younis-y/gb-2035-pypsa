@@ -72,11 +72,14 @@ TECH_COLS = [
 ]
 # Task 11 only splits these carriers' capacity into existing/new (`results/extract.py`
 # `summary_row`); controller decision 1 overlays that split where it exists.
+# Gas CCS and hydrogen turbines have no existing plant in the model, so their totals are new build.
 NEW_BUILD_COLS: dict[str, str] = {
     "offwind_gw": "offwind_new_gw",
     "onwind_gw": "onwind_new_gw",
     "solar_gw": "solar_new_gw",
     "battery_gw": "battery_new_gw",
+    "gas_ccs_gw": "gas_ccs_gw",
+    "h2_turbine_gw_el": "h2_turbine_gw_el",
 }
 
 
@@ -93,10 +96,11 @@ def capacity_mix_by_cap(summary: pd.DataFrame, out: Path) -> Path:
     for col, label, color in TECH_COLS:
         if col in df:
             ax.bar(df.index.astype(str), df[col], bottom=bottom, label=label, color=color)
-            bottom = bottom + df[col].fillna(0.0)
+            bottom = bottom + df[col].fillna(0.0).fillna(0.0)
     ax.set_ylabel("Installed capacity (GW)")
     ax.set_xlabel("Annual CO2 cap")
-    ax.legend(frameon=False, ncol=2)
+    # Above the axes: inside them the legend sat on the bars and hid the solar swatch.
+    ax.legend(frameon=False, ncol=4, loc="lower center", bbox_to_anchor=(0.5, 1.0))
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
     path = out / "capacity_mix_by_cap.png"
@@ -140,9 +144,9 @@ def _new_build_gw(row: pd.Series, total_col: str) -> float:
 
 
 def optimised_vs_fes(
-    summary: pd.DataFrame, fes: pd.DataFrame, out: Path, scenario: str = "cap2"
+    summary: pd.DataFrame, fes: pd.DataFrame, out: Path, scenario: str = "cap0p5"
 ) -> Path | None:
-    """The model's cap2 (by default) build against FES, or the tightest cap actually solved.
+    """The model's cap0p5 (by default) build against FES, or the tightest cap actually solved.
 
     Mid-sweep, `scenario` may not have a row yet: fall back to the tightest `CAP_ORDER` scenario
     present in `summary` instead of raising, and return `None` (skip the figure) only when no cap
@@ -160,6 +164,11 @@ def optimised_vs_fes(
         ("Onshore wind", "onwind_gw", fes_value(fes, "onshore_wind_gw", "Holistic Transition")),
         ("Solar", "solar_gw", fes_value(fes, "solar_gw", "Holistic Transition")),
         ("Battery", "battery_gw", fes_value(fes, "battery_gw", "Holistic Transition")),
+        (
+            "H2 turbines",
+            "h2_turbine_gw_el",
+            fes_value(fes, "hydrogen_generation_gw", "Holistic Transition"),
+        ),
         ("Gas CCS", "gas_ccs_gw", fes_value(fes, "gas_ccus_gw", "Holistic Transition")),
         ("Unabated gas", "gas_gw", fes_value(fes, "unabated_gas_gw", "Holistic Transition")),
     ]
@@ -258,6 +267,84 @@ def teesside_hydrogen(summary: pd.DataFrame, out: Path) -> Path:
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
     path = out / "teesside_hydrogen.png"
+    fig.savefig(path, dpi=160)
+    plt.close(fig)
+    return path
+
+
+WEATHER_NEW_BUILD = [
+    ("onwind_new_gw", "New onshore wind", ORANGE),
+    ("solar_new_gw", "New solar", AQUA),
+    ("offwind_new_gw", "New offshore wind", BLUE),
+    ("battery_new_gw", "New battery", VIOLET),
+]
+
+
+def weather_year_table(summary: pd.DataFrame) -> pd.DataFrame:
+    """The `cap5_wy<year>` rows of a summary, one per calendar year from the first to the last.
+
+    A year with no run stays in as an empty row, so the figure shows a gap rather than closing
+    up around it.
+    """
+    df = summary[summary["scenario"].str.startswith("cap5_wy")].copy()
+    df["year"] = df["scenario"].str.removeprefix("cap5_wy").astype(int)
+    years = range(int(df["year"].min()), int(df["year"].max()) + 1)
+    return df.set_index("year").reindex(years).rename_axis("year").reset_index()
+
+
+def weather_years_figure(summary: pd.DataFrame, out: Path) -> Path:
+    """cap5 re-solved on each weather year: what it builds, and what that costs.
+
+    Two panels rather than two y-axes: new build in GW and cost in bn GBP/yr do not share a
+    scale. The cost dots wear ink, not a series hue, because blue already means offshore.
+    """
+    df = weather_year_table(summary)
+    years = df["year"].astype(str)
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(11, 4.2), gridspec_kw={"width_ratios": [3, 2]})
+    bottom = pd.Series(0.0, index=df.index)
+    for col, label, color in WEATHER_NEW_BUILD:
+        # A surface-coloured edge is the 2 px gap between stacked segments.
+        a1.bar(
+            years,
+            df[col],
+            bottom=bottom,
+            width=0.6,
+            label=label,
+            color=color,
+            edgecolor=SURFACE,
+            linewidth=1.0,
+        )
+        bottom = bottom + df[col].fillna(0.0)
+    a1.set_ylabel("New build under the 5 Mt cap (GW)")
+    a1.legend(frameon=False, ncol=2, loc="upper left")
+    a1.set_ylim(0, float(bottom.max()) * 1.25)
+    # Zero-height bars draw nothing, so say so when offshore is never built.
+    if float(df["offwind_new_gw"].max()) < 0.05:
+        a1.text(
+            0.99,
+            0.80,
+            "New offshore wind: 0 GW in every year",
+            transform=a1.transAxes,
+            ha="right",
+            va="top",
+            color=INK_SECONDARY,
+        )
+    a2.plot(
+        years,
+        df["total_cost_gbp_bn_per_yr"],
+        "o",
+        color=INK_PRIMARY,
+        markersize=7,
+        markeredgecolor=SURFACE,
+        markeredgewidth=1.5,
+    )
+    a2.set_ylabel("System cost (bn GBP/yr)")
+    for ax in (a1, a2):
+        ax.tick_params(axis="x", rotation=90)
+        ax.set_xlabel("Weather and demand-shape year")
+        ax.spines[["top", "right"]].set_visible(False)
+    fig.tight_layout()
+    path = out / "weather_years.png"
     fig.savefig(path, dpi=160)
     plt.close(fig)
     return path

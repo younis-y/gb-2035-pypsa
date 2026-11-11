@@ -4,14 +4,17 @@ from pathlib import Path
 import pytest
 
 from gb2035.config import load_scenario, load_settings
+from gb2035.data.costs import annuity
 from gb2035.model.inputs import load_inputs
 from gb2035.model.network import build_network
 from gb2035.model.solve import solve
 from gb2035.paths import ProjectPaths
 from gb2035.results.extract import (
+    breakeven,
     capacities,
     costs,
     dispatch_hourly,
+    duals,
     energy,
     extract_all,
     flows,
@@ -27,7 +30,7 @@ pytestmark = pytest.mark.slow
 def solved(repo_root: Path):
     paths = ProjectPaths(repo_root)
     settings = load_settings(paths.config / "settings.yaml")
-    inputs = load_inputs(paths)
+    inputs = load_inputs(paths, settings.weather_year)
     scenario = load_scenario("test", paths.config / "scenarios.yaml")
     n = build_network(inputs, scenario, settings)
     result = solve(n, settings, scenario)
@@ -147,7 +150,7 @@ def test_expansion_is_never_dearer_than_the_fixed_grid(repo_root: Path):
     """
     paths = ProjectPaths(repo_root)
     settings = load_settings(paths.config / "settings.yaml")
-    inputs = load_inputs(paths)
+    inputs = load_inputs(paths, settings.weather_year)
     test_scenario = load_scenario("test", paths.config / "scenarios.yaml")
     window = {
         "snapshots": test_scenario.snapshots,
@@ -227,3 +230,71 @@ def test_results_written_and_objective_stable(solved, tmp_path: Path, repo_root:
     assert result.total_cost_gbp_per_yr == pytest.approx(expected, rel=0.005), (
         "regression guard; update the JSON deliberately if assumptions change"
     )
+
+
+def test_breakeven_holds_the_zero_profit_conditions(solved):
+    """Market value at the solved prices against annual capital cost: the LP's optimality
+    conditions in plain terms. A unit built below its cap earns exactly its cost, one held at
+    its cap earns at least that, and an unbuilt one earns no more."""
+    n, _, _ = solved
+    be = breakeven(n).set_index("name")
+    assert len(be) == n.generators["p_nom_extendable"].sum() + n.links["p_nom_extendable"].sum()
+    cost = be["capital_cost_gbp_per_mw_yr"]
+    value = be["market_value_gbp_per_mw_yr"]
+    tol = 1e-4 * cost.max()
+    interior = (be["built_mw"] > 1.0) & (be["built_mw"] < be["max_mw"] - 1.0)
+    at_cap = be["built_mw"] >= be["max_mw"] - 1.0
+    unbuilt = be["built_mw"] < 1e-3
+    assert interior.sum() >= 5 and at_cap.any() and unbuilt.any(), "the checks below must bite"
+    assert (value - cost)[interior].abs().max() < tol, "built units pay their way exactly"
+    assert (value[at_cap] >= cost[at_cap] - tol).all(), "a binding cap leaves a rent"
+    assert (value[unbuilt] <= cost[unbuilt] + tol).all(), "nothing unbuilt was worth building"
+    assert value["offwind DOGGER_BANK"] < cost["offwind DOGGER_BANK"]
+
+
+@pytest.mark.parametrize(("past_breakeven", "builds"), [(1.15, True), (0.85, False)])
+def test_offshore_enters_exactly_past_its_breakeven(
+    repo_root: Path, solved, past_breakeven, builds
+):
+    """Test the breakeven as a price: cut offshore capex to 15 percent past the shortfall its
+    market value implies and Dogger Bank is built; stop 15 percent short and nothing is."""
+    n, _, scenario = solved
+    paths = ProjectPaths(repo_root)
+    settings = load_settings(paths.config / "settings.yaml")
+    inputs = load_inputs(paths, settings.weather_year)
+    dogger = breakeven(n).set_index("name").loc["offwind DOGGER_BANK"]
+    reduced = dogger["capital_cost_gbp_per_mw_yr"] - dogger["market_value_gbp_per_mw_yr"]
+    c = inputs.costs.loc["offwind"]
+    annual_capex = annuity(settings.discount_rate, c["lifetime_yr"]) * c["capex_gbp"]
+    scale = 1.0 - past_breakeven * reduced / annual_capex
+    cheaper = scenario.model_copy(update={"capex_scale": {"offwind": scale}})
+    m = build_network(inputs, cheaper, settings)
+    solve(m, settings, cheaper)
+    built_mw = m.generators.loc["offwind DOGGER_BANK", "p_nom_opt"]
+    assert bool(built_mw > 1.0) is builds, f"capex x {scale:.3f} built {built_mw:.0f} MW"
+
+
+@pytest.fixture(scope="module")
+def solved_ceiling(repo_root: Path):
+    paths = ProjectPaths(repo_root)
+    settings = load_settings(paths.config / "settings.yaml")
+    inputs = load_inputs(paths, settings.weather_year)
+    scenario = load_scenario("test", paths.config / "scenarios.yaml").model_copy(
+        update={"fes_capacity_ceiling": ("onwind", "solar")}
+    )
+    n = build_network(inputs, scenario, settings)
+    solve(n, settings, scenario)
+    return n, inputs, scenario
+
+
+def test_fes_ceiling_holds_after_the_solve_and_reports_its_rent(solved_ceiling):
+    """On the CI week the onshore ceiling binds and the solar one does not: onshore sits at its
+    FES figure with a positive rent, solar below its own with none."""
+    n, inputs, scenario = solved_ceiling
+    fes = inputs.fes[inputs.fes["pathway"] == scenario.demand_pathway].set_index("metric")
+    rent = duals(n).set_index(["metric", "zone"])["value"]
+    total = n.generators.groupby("carrier")["p_nom_opt"].sum()
+    assert total["onwind"] == pytest.approx(fes.at["onshore_wind_gw", "value"] * 1e3, abs=1.0)
+    assert rent[("fes_ceiling_rent_gbp_per_mw_yr", "onwind")] > 1000.0
+    assert total["solar"] < fes.at["solar_gw", "value"] * 1e3 - 1000.0
+    assert rent[("fes_ceiling_rent_gbp_per_mw_yr", "solar")] == 0.0

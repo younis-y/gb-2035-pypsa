@@ -1,0 +1,5 @@
+{
+  "scenario": "cap5_no_h2",
+  "git_sha": "31fe46b",
+  "pypsa_version": "1.3.0"
+}

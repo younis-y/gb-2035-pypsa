@@ -14,6 +14,7 @@ from gb2035.config import (
     load_assumptions,
     load_scenario,
     load_settings,
+    weather_years,
 )
 from gb2035.paths import ProjectPaths
 
@@ -53,6 +54,35 @@ def test_scenario_rejects_cap_and_price_together():
 def test_scenario_allows_neither_cap_nor_price():
     s = Scenario(name="free", demand_pathway="Holistic Transition")
     assert s.co2_cap_mt is None and s.carbon_price_gbp_t is None
+
+
+def test_scenario_weather_year_defaults_to_the_settings_year():
+    assert Scenario(name="free").weather_year is None
+    assert Scenario(name="dry", weather_year=2010).weather_year == 2010
+
+
+def test_capex_scale_rejects_a_free_or_negative_technology():
+    with pytest.raises(ValidationError):
+        Scenario(name="free_offshore", capex_scale={"offwind": 0.0})
+    assert Scenario(name="cheaper", capex_scale={"offwind": 0.5}).capex_scale == {"offwind": 0.5}
+
+
+def test_weather_years_lists_every_year_a_scenario_needs(tmp_path: Path):
+    path = tmp_path / "scenarios.yaml"
+    path.write_text(
+        yaml.safe_dump(
+            {
+                "defaults": {},
+                "scenarios": {
+                    "a": {},
+                    "b": {"weather_year": 2010},
+                    "c": {"weather_year": 2015},
+                    "d": {"weather_year": 2010},
+                },
+            }
+        )
+    )
+    assert weather_years(path, default=2019) == [2010, 2015, 2019]
 
 
 def test_scenario_interconnector_price_overrides_default_none():

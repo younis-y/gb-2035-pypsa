@@ -1,0 +1,25 @@
+metric,zone,value
+shadow_carbon_price_gbp_per_t,GB,127.717
+fes_ceiling_rent_gbp_per_mw_yr,onwind,40677.5
+fes_ceiling_rent_gbp_per_mw_yr,solar,30687.7
+demand_weighted_price_gbp_per_mwh,Z10,84.4781
+demand_weighted_price_gbp_per_mwh,Z11,84.4781
+demand_weighted_price_gbp_per_mwh,Z12,84.4781
+demand_weighted_price_gbp_per_mwh,Z13,84.4781
+demand_weighted_price_gbp_per_mwh,Z14,84.4781
+demand_weighted_price_gbp_per_mwh,Z15,84.4781
+demand_weighted_price_gbp_per_mwh,Z16,84.4781
+demand_weighted_price_gbp_per_mwh,Z17,83.9829
+demand_weighted_price_gbp_per_mwh,Z1_1,84.2196
+demand_weighted_price_gbp_per_mwh,Z1_2,84.2196
+demand_weighted_price_gbp_per_mwh,Z1_3,84.2196
+demand_weighted_price_gbp_per_mwh,Z1_4,84.2196
+demand_weighted_price_gbp_per_mwh,Z2,84.2196
+demand_weighted_price_gbp_per_mwh,Z3,84.2196
+demand_weighted_price_gbp_per_mwh,Z4,84.2196
+demand_weighted_price_gbp_per_mwh,Z5,84.2196
+demand_weighted_price_gbp_per_mwh,Z6,84.2196
+demand_weighted_price_gbp_per_mwh,Z7,84.2196
+demand_weighted_price_gbp_per_mwh,Z8,84.222
+demand_weighted_price_gbp_per_mwh,Z9,84.222
+demand_weighted_price_gbp_per_mwh,Teesside H2,72.5543

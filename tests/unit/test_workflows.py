@@ -53,3 +53,11 @@ def test_readme_quotes_the_published_image(repo_root: Path):
     text = (repo_root / "README.md").read_text()
     assert f"docker run -p 8501:8501 {IMAGE}:latest" in text
     assert "## Run with Docker" in text
+
+
+def test_ci_installs_from_the_lockfile_and_checks_committed_results(repo_root: Path):
+    ci = yaml.safe_load((repo_root / ".github" / "workflows" / "ci.yml").read_text())
+    runs = [step.get("run", "") for step in ci["jobs"]["check"]["steps"]]
+    assert any("uv sync --locked" in r for r in runs), "a stale uv.lock must fail CI"
+    assert any(r.strip() == "uv run pytest tests/results --runslow" for r in runs)
+    assert any("--ignore=tests/results" in r for r in runs), "results run once, in their own step"

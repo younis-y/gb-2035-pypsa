@@ -1,0 +1,21 @@
+component,carrier,gbp_per_yr,kind,is_memo,note
+Generator,gas,669416200.00,capex,False,
+Generator,gas_ccs,685666411.05,capex,False,
+Generator,nuclear,520014880.43,capex,False,
+Generator,offwind,4061167257.48,capex,False,
+Generator,onwind,3652825493.10,capex,False,
+Generator,solar,2097298667.78,capex,False,
+StorageUnit,battery,8993183.46,capex,False,
+StorageUnit,pumped_hydro,113120000.00,capex,False,
+Generator,blue_h2,350000000.00,opex,False,
+Generator,export,-1579809687.83,opex,False,
+Generator,gas,616688855.41,opex,False,
+Generator,gas_ccs,950549661.55,opex,False,
+Generator,import,5533655494.78,opex,False,
+Generator,nuclear,296224595.06,opex,False,
+Generator,offwind,3275507.10,opex,False,
+Generator,onwind,182024490.48,opex,False,
+StorageUnit,battery,630636.57,opex,False,
+memo,all,12905479414.52,memo_lp_objective,True,not additive with component rows
+memo,all,5256262231.90,memo_fixed_asset_fom,True,not additive with component rows
+memo,all,18161741646.42,total,True,not additive with component rows

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import pypsa
 
 from gb2035.config import Scenario, Settings
@@ -23,6 +25,37 @@ def add_co2_cap(n: pypsa.Network, cap_mt: float) -> None:
         sense="<=",
         constant=cap_mt * 1e6,
     )
+
+
+FES_CAPACITY_METRIC = {
+    "onwind": "onshore_wind_gw",
+    "solar": "solar_gw",
+    "offwind": "offshore_wind_gw",
+}
+
+
+def add_fes_capacity_ceiling(n: pypsa.Network, inputs: ModelInputs, scenario: Scenario) -> None:
+    """Hold each listed carrier's national capacity to FES 2035 for the scenario's pathway.
+
+    A stand-in for the planning consent and land use the model has no other way to see. The
+    REPD floor is already built, so the optimiser may add only the remainder, wherever it likes.
+    """
+    fes = inputs.fes[inputs.fes["pathway"] == scenario.demand_pathway].set_index("metric")
+    for carrier in scenario.fes_capacity_ceiling:
+        ceiling_mw = float(cast(Any, fes.at[FES_CAPACITY_METRIC[carrier], "value"])) * 1e3
+        gens = n.generators[n.generators["carrier"] == carrier]
+        existing_mw = float(gens.loc[~gens["p_nom_extendable"], "p_nom"].sum())
+        if existing_mw > ceiling_mw:
+            msg = f"{carrier}: {existing_mw:.0f} MW already built exceeds the FES {ceiling_mw:.0f}"
+            raise ValueError(msg)
+        n.add(
+            "GlobalConstraint",
+            f"fes_ceiling {carrier}",
+            type="tech_capacity_expansion_limit",
+            carrier_attribute=carrier,
+            sense="<=",
+            constant=ceiling_mw - existing_mw,
+        )
 
 
 def add_steel_loads(

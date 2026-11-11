@@ -8,6 +8,9 @@ import pandas as pd
 
 from gb2035.data.zones import LAND_ZONES
 
+# The length of the model's year: snapshot weights always sum to it, whatever the weather year.
+HOURS_PER_YEAR = 8760.0
+
 
 def load_neso_demand(csv: Path, year: int) -> pd.Series:
     """Hourly gross underlying demand in MW for `year`.
@@ -27,7 +30,12 @@ def load_neso_demand(csv: Path, year: int) -> pd.Series:
             "EMBEDDED_SOLAR_GENERATION",
         ],
     )
-    date = pd.to_datetime(df["SETTLEMENT_DATE"].str.title(), format="%d-%b-%Y")
+    # Every year writes `01-JAN-2019` except 2023, which writes `01-Jan-23`.
+    raw = df["SETTLEMENT_DATE"].str.title()
+    four_digit = raw.str.len() == len("01-Jan-2019")
+    date = pd.to_datetime(raw.where(four_digit), format="%d-%b-%Y").fillna(
+        pd.to_datetime(raw.where(~four_digit), format="%d-%b-%y")
+    )
     stamp = date + pd.to_timedelta((df["SETTLEMENT_PERIOD"] - 1) * 30, unit="min")
     gross = df["ND"] + df["EMBEDDED_WIND_GENERATION"] + df["EMBEDDED_SOLAR_GENERATION"]
     half_hourly = pd.Series(gross.to_numpy(dtype=float), index=stamp).sort_index()
@@ -47,7 +55,9 @@ def load_zone_weights(csv: Path) -> pd.Series:
 
 
 def build_zonal_demand(national: pd.Series, weights: pd.Series, target_twh: float) -> pd.DataFrame:
-    scale = target_twh * 1e6 / national.sum()
+    # The model weights every weather year as HOURS_PER_YEAR hours, so scale by the mean hour:
+    # scaling a leap year's 8,784 hours by their sum delivered only 8760/8784 of the target.
+    scale = target_twh * 1e6 / (national.mean() * HOURS_PER_YEAR)
     scaled = national * scale
     return pd.DataFrame({zone: scaled * w for zone, w in weights.items()}, index=national.index)
 

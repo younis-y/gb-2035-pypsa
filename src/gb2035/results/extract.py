@@ -16,8 +16,9 @@ MWH_PER_TWH = 1e6
 def shadow_carbon_price(n: pypsa.Network) -> float:
     if "co2_cap" not in n.global_constraints.index:
         return 0.0
-    mu = float(n.global_constraints.at["co2_cap", "mu"])
-    return max(-mu, 0.0)
+    # max(0.0, ...) and not max(..., 0.0): a slack cap's dual of +0.0 negates to -0.0, and max
+    # keeps its first argument on a tie, which the CSV writer would print as "-0".
+    return max(0.0, -float(n.global_constraints.at["co2_cap", "mu"]))
 
 
 def _weights(n: pypsa.Network) -> pd.Series:
@@ -223,6 +224,16 @@ def duals(n: pypsa.Network) -> pd.DataFrame:
     rows: list[dict[str, Any]] = [
         {"metric": "shadow_carbon_price_gbp_per_t", "zone": "GB", "value": shadow_carbon_price(n)}
     ]
+    # What one more MW of national room under a FES capacity ceiling would be worth.
+    for name, gc in n.global_constraints.iterrows():
+        if str(name).startswith("fes_ceiling "):
+            rows.append(
+                {
+                    "metric": "fes_ceiling_rent_gbp_per_mw_yr",
+                    "zone": gc["carrier_attribute"],
+                    "value": max(0.0, -float(gc["mu"])),
+                }
+            )
     for bus in n.buses.index:
         loads_here = [c for c in load.columns if n.loads.at[c, "bus"] == bus]
         if not loads_here:
@@ -418,6 +429,58 @@ def summary_row(n: pypsa.Network, scenario_name: str, solve: SolveResult) -> pd.
     return pd.DataFrame([row])
 
 
+def breakeven(n: pypsa.Network) -> pd.DataFrame:
+    """What a megawatt of each extendable generator or link earns at the solved prices.
+
+    `market_value` is one MW's annual margin over its own running cost at the LP's nodal prices,
+    with CO2 charged at the cap's shadow price; `capital_cost` is its annuitised capex plus fixed
+    O&M. An unbuilt unit is short of entering by the gap between them; a built one earns its cost
+    exactly unless a cap holds it back, and then the excess is the cap's rent. This reads prices
+    rather than the duals of the capacity bounds because an unbuilt unit's bound dual is
+    degenerate: any value from zero to the true shortfall is optimal, PDLP returns zero, and
+    simplex happens to return the shortfall. Storage is left out, since its value depends on how
+    it would cycle.
+    """
+    w = _weights(n)
+    price = n.buses_t.marginal_price
+    co2_price = shadow_carbon_price(n)
+    rows: list[dict[str, Any]] = []
+    gens = n.generators[n.generators["p_nom_extendable"]]
+    p_max = pd.DataFrame(n.get_switchable_as_dense("Generator", "p_max_pu"))
+    running = pd.DataFrame(n.get_switchable_as_dense("Generator", "marginal_cost"))
+    for name, g in gens.iterrows():
+        co2_cost = co2_price * float(n.carriers.at[g["carrier"], "co2_emissions"]) / g["efficiency"]
+        margin = (price[g["bus"]] - running[name] - co2_cost).clip(lower=0) * p_max[name]
+        rows.append(_breakeven_row("Generator", name, g, g["bus"], float((margin * w).sum())))
+    links = n.links[n.links["p_nom_extendable"]]
+    l_max = pd.DataFrame(n.get_switchable_as_dense("Link", "p_max_pu"))
+    l_min = pd.DataFrame(n.get_switchable_as_dense("Link", "p_min_pu"))
+    l_eff = pd.DataFrame(n.get_switchable_as_dense("Link", "efficiency"))
+    l_cost = pd.DataFrame(n.get_switchable_as_dense("Link", "marginal_cost"))
+    for name, link in links.iterrows():
+        spread = l_eff[name] * price[link["bus1"]] - price[link["bus0"]]
+        forward = (spread - l_cost[name]).clip(lower=0) * l_max[name]
+        reverse = (l_cost[name] - spread).clip(lower=0) * -l_min[name]
+        value = float(((forward + reverse) * w).sum())
+        rows.append(_breakeven_row("Link", name, link, f"{link['bus0']}->{link['bus1']}", value))
+    return pd.DataFrame(rows)
+
+
+def _breakeven_row(
+    component: str, name: Any, s: pd.Series, bus: str, value: float
+) -> dict[str, Any]:
+    return {
+        "component": component,
+        "name": name,
+        "carrier": s["carrier"],
+        "bus": bus,
+        "built_mw": float(s["p_nom_opt"]),
+        "max_mw": float(s["p_nom_max"]),
+        "capital_cost_gbp_per_mw_yr": float(s["capital_cost"]),
+        "market_value_gbp_per_mw_yr": value,
+    }
+
+
 def extract_all(
     n: pypsa.Network, scenario_name: str, solve: SolveResult
 ) -> dict[str, pd.DataFrame]:
@@ -432,6 +495,7 @@ def extract_all(
         "hydrogen": hydrogen(n),
         "dispatch_hourly": dispatch_hourly(n),
         "summary_row": summary_row(n, scenario_name, solve),
+        "breakeven": breakeven(n),
     }
 
 

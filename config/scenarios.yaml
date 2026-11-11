@@ -24,7 +24,13 @@ scenarios:
   cap10: {description: "10 MtCO2 cap", co2_cap_mt: 10.0}
   cap5: {description: "5 MtCO2 cap", co2_cap_mt: 5.0}
   cap2: {description: "2 MtCO2 cap", co2_cap_mt: 2.0}
-  cap0p5: {description: "0.5 MtCO2 cap", co2_cap_mt: 0.5}
+  cap0p5:
+    description: "0.5 MtCO2 cap"
+    co2_cap_mt: 0.5
+    # Neither PDLP converges here: cuPDLP-C ran 1 h 50 min and was killed, and HiGHS's own PDLP
+    # stopped at a four-hour limit. Interior point with crossover, which ends at an exact
+    # vertex, solved it to optimal in 2 h 53 min within an eight-hour limit.
+    solver_options: {solver: ipm, run_crossover: "on", threads: 8, time_limit: 28800}
   cap5_no_h2:
     description: cap5 without the Teesside hydrogen demand
     co2_cap_mt: 5.0
@@ -46,7 +52,62 @@ scenarios:
     description: cap5 with imports priced at 100 GBP/MWh (exports unchanged)
     co2_cap_mt: 5.0
     interconnector_import_price_gbp_mwh: 100.0
+  cap5_fes_ceiling:
+    description: cap5 with onshore wind and solar held to their FES 2035 totals (planning stand-in)
+    co2_cap_mt: 5.0
+    fes_capacity_ceiling: [onwind, solar]
+  cap2_fes_ceiling:
+    description: cap2 with onshore wind and solar held to their FES 2035 totals (planning stand-in)
+    co2_cap_mt: 2.0
+    fes_capacity_ceiling: [onwind, solar]
+    # Neither PDLP converges here: cuPDLP-C ended "unknown" after four hours, and HiGHS's own
+    # PDLP was still iterating after 13 hours. Interior point with crossover, as for cap0p5.
+    solver_options: {solver: ipm, run_crossover: "on", threads: 8, time_limit: 28800}
+  # The FES ceiling alone left offshore unbuilt at 5 Mt: imports at 65 GBP/MWh filled the gap.
+  # This closes both escape valves at once.
+  cap5_fes_ceiling_import_100:
+    description: cap5_fes_ceiling with imports priced at 100 GBP/MWh
+    co2_cap_mt: 5.0
+    fes_capacity_ceiling: [onwind, solar]
+    interconnector_import_price_gbp_mwh: 100.0
+  # Offshore capex either side of the breakeven that cap5's market value implies: Dogger Bank
+  # earns 74.5 percent of its annual cost at the solved prices, 88,177 GBP/MW-yr short, which a
+  # 42.6 percent capex cut closes (results/cap5/breakeven.csv). 15 percent short of that cut,
+  # and 15 percent past it.
+  cap5_offwind_capex64:
+    description: cap5 with offshore capex x 0.64, 15 percent short of breakeven
+    co2_cap_mt: 5.0
+    capex_scale: {offwind: 0.64}
+  cap5_offwind_capex51:
+    description: cap5 with offshore capex x 0.51, 15 percent past breakeven
+    co2_cap_mt: 5.0
+    capex_scale: {offwind: 0.51}
   cap5_steel:
     description: cap5 plus EAF loads at Port Talbot and Scunthorpe (stretch)
     co2_cap_mt: 5.0
     steel: {port_talbot_eaf_twh: 1.5, scunthorpe_eaf_twh: 1.5, h2_dri_enabled: false}
+  # cap5 re-solved on every weather year the Zenodo cutout record holds, 2010 to 2024; wind,
+  # solar and the demand shape all come from the named year. 2020 and 2021 carry lockdown
+  # demand shapes and are kept, flagged, so the set is the whole record and not a selection.
+  # cap5_wy2019 is cap5 itself, re-solved: the same network, so it measures solver noise.
+  # cuPDLP-C ended at status "unknown" on 2010 after 31 minutes; HiGHS's own PDLP gets it, as
+  # it got cap5_ee_demand.
+  cap5_wy2010:
+    description: "cap5 on 2010 weather and demand shape"
+    co2_cap_mt: 5.0
+    weather_year: 2010
+    solver_options: {solver: hipdlp}
+  cap5_wy2011: {description: "cap5 on 2011 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2011}
+  cap5_wy2012: {description: "cap5 on 2012 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2012}
+  cap5_wy2013: {description: "cap5 on 2013 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2013}
+  cap5_wy2014: {description: "cap5 on 2014 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2014}
+  cap5_wy2015: {description: "cap5 on 2015 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2015}
+  cap5_wy2016: {description: "cap5 on 2016 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2016}
+  cap5_wy2017: {description: "cap5 on 2017 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2017}
+  cap5_wy2018: {description: "cap5 on 2018 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2018}
+  cap5_wy2019: {description: "cap5 on 2019 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2019}
+  cap5_wy2020: {description: "cap5 on 2020 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2020}
+  cap5_wy2021: {description: "cap5 on 2021 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2021}
+  cap5_wy2022: {description: "cap5 on 2022 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2022}
+  cap5_wy2023: {description: "cap5 on 2023 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2023}
+  cap5_wy2024: {description: "cap5 on 2024 weather and demand shape", co2_cap_mt: 5.0, weather_year: 2024}

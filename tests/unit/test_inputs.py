@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from gb2035.config import load_assumptions
@@ -9,7 +10,7 @@ from gb2035.paths import ProjectPaths
 
 @pytest.fixture(scope="module")
 def inputs(repo_root: Path):
-    return load_inputs(ProjectPaths(repo_root))
+    return load_inputs(ProjectPaths(repo_root), 2019)
 
 
 def test_topology(inputs):
@@ -34,6 +35,24 @@ def test_tables_present(inputs):
     assert ("onwind", "Z7") in inputs.profiles.columns
     assert "electrolysis" in inputs.costs.index
     assert "consumer_demand_twh" in set(inputs.fes["metric"])
+
+
+def test_load_inputs_reads_the_requested_weather_year(inputs):
+    """Weather and demand come from the same calendar year, the one asked for."""
+    assert inputs.demand.index[0] == inputs.profiles.index[0] == pd.Timestamp("2019-01-01")
+
+
+def test_load_inputs_reads_another_year_not_2019(repo_root: Path):
+    """The original bug: the model read the 2019 files whatever year was configured."""
+    leap = load_inputs(ProjectPaths(repo_root), 2012)
+    for series in (leap.demand, leap.profiles):
+        assert len(series) == 8784
+        assert series.index[0] == pd.Timestamp("2012-01-01")
+
+
+def test_load_inputs_names_the_build_step_for_a_missing_year(repo_root: Path):
+    with pytest.raises(FileNotFoundError, match="build-profiles --weather-year 1999"):
+        load_inputs(ProjectPaths(repo_root), 1999)
 
 
 def test_offshore_units(inputs):

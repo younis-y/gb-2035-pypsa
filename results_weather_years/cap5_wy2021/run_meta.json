@@ -1,0 +1,15 @@
+{
+  "scenario": "cap5_wy2021",
+  "git_sha": "30fda7b",
+  "pypsa_version": "1.3.0",
+  "highs_version": "1.15.1",
+  "input_fingerprint": "aabc68fd3524cc60",
+  "solve_seconds": 432.9,
+  "snapshots": 2920,
+  "resolution_hours": 3,
+  "weather_year": 2021,
+  "solver": "pdlp",
+  "total_cost_gbp_per_yr": 16394139916.433086,
+  "lp_objective_gbp_per_yr": 11137877684.535727,
+  "fixed_asset_cost_gbp_per_yr": 5256262231.89736
+}

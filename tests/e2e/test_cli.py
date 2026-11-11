@@ -36,6 +36,7 @@ def test_run_test_scenario_end_to_end(repo_root: Path, tmp_path: Path, monkeypat
         "curtailment.csv",
         "hydrogen.csv",
         "summary_row.csv",
+        "breakeven.csv",
         "dispatch_hourly.parquet",
         "network.nc",
         "run_meta.json",
@@ -43,6 +44,9 @@ def test_run_test_scenario_end_to_end(repo_root: Path, tmp_path: Path, monkeypat
         assert (out / name).exists(), name
     meta = json.loads((out / "run_meta.json").read_text())
     assert meta["scenario"] == "test" and meta["snapshots"] == 168 and meta["solve_seconds"] > 0
+    assert meta["weather_year"] == 2019
+    assert meta["highs_version"].count(".") == 2
+    assert len(meta["input_fingerprint"]) == 16
     # `solver` is the HiGHS algorithm the run actually used, which the `test` scenario overrides
     # to simplex; `settings.solver_name` is the PyPSA backend ("highs") and is not this field.
     assert meta["solver"] == "simplex"
@@ -77,6 +81,8 @@ def test_run_test_scenario_end_to_end(repo_root: Path, tmp_path: Path, monkeypat
     assert (out / "run_meta.json").read_text() == meta_before, (
         "extract re-writes tables only; the run's metadata is the run's to own"
     )
+    stamp = json.loads((out / "extract_meta.json").read_text())
+    assert stamp["scenario"] == "test" and stamp["git_sha"], "who wrote the tables, if not the run"
     costs_after = pd.read_csv(out / "costs.csv")
     total_after = float(costs_after.loc[costs_after["kind"] == "total", "gbp_per_yr"].iloc[0])
     summary_after = pd.read_csv(out / "summary_row.csv")

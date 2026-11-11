@@ -5,11 +5,16 @@
 Every external input is pinned in `data/manifest.json`: URL, SHA-256 checksum, licence,
 source note. `gb2035 retrieve` downloads each entry to `data/raw/` (git-ignored) and
 verifies its checksum. `gb2035 build-derived` reads `data/raw/` and regenerates the tables
-committed under `data/derived/`, so a fresh clone builds and solves offline. `cf_2019_zonal.parquet` is the
-exception: it needs `gb2035 build-profiles`, the `profiles` extra (atlite) and the 765 MB
-Zenodo cutout.
+committed under `data/derived/`, so a fresh clone builds and solves offline. The wind and
+solar profiles `cf_<year>_zonal.parquet` are the exception: each needs `gb2035
+build-profiles`, the `profiles` extra (atlite) and that year's 765 MB Zenodo cutout.
 
-## External inputs (13 files in `data/manifest.json`)
+Both paths reproduce what is committed. On a clean `data/raw/`, `gb2035 retrieve` matched
+every pinned checksum and `gb2035 build-derived` rebuilt every committed derived table byte
+for byte; `gb2035 build-profiles` on the 2019 cutout reproduced `cf_2019_zonal.parquet` bit
+for bit (both checked when the weather years were added; the raw files are not committed).
+
+## External inputs (41 files in `data/manifest.json`)
 
 | Manifest key | What it is | Licence | Feeds |
 |---|---|---|---|
@@ -26,6 +31,12 @@ Zenodo cutout.
 | `technology_data_costs_2035` | technology costs, v0.15.0 | GPL-3.0 code, CC-BY-4.0 data | `costs_2035_gb.csv` |
 | `desnz_generation_costs_2025_annex_a` | Generation Costs 2025 Annex A | DESNZ, OGL v3 | overrides in `costs_2035_gb.csv` |
 | `zenodo_cutout_uk_2019` | ERA5 cutout | Zenodo 18325225, CC-BY-4.0 | `cf_2019_zonal.parquet` |
+| `neso_demand_<year>`, 2010 to 2024 | half-hourly demand, one file per weather year | NESO Open Data Licence | `demand_<year>_hourly.parquet` |
+| `zenodo_cutout_uk_<year>`, 2010 to 2024 | ERA5 cutout, one per weather year | Zenodo 18325225, CC-BY-4.0 | `cf_<year>_zonal.parquet` |
+
+The 2019 rows are the published sweep's inputs; the 14 other years of each are the
+weather-year family's. NESO's 2023 file writes its dates as `01-Jan-23` where every other
+year writes `01-JAN-2023`, which `load_neso_demand` reads either way.
 
 ## Derived tables
 
@@ -60,7 +71,11 @@ construction, MW): onshore wind 14,293 / 2,012; offshore wind 16,011 / 11,845; s
 10,923 / 3,213; battery 4,946 / 9,707; pumped hydro 2,828 / 0. Regenerate:
 `gb2035 build-derived`.
 
-### demand_2019_hourly.parquet (8,760 rows, one series: `gross_demand_mw`)
+### demand_2019_hourly.parquet (8,760 rows, one series: `gross_demand_mw`), and the other years
+
+The other weather years' `demand_<year>_hourly.parquet` are built the same way from their
+own NESO files (8,784 rows in the leap years 2012, 2016, 2020 and 2024). Every one of the 15
+files has 48 settlement periods on every day but the two clock-change days.
 
 From `demanddata_2019.csv`. NESO's ND excludes embedded generation, so embedded wind and
 solar are added back to recover 2035 gross demand. Each half-hour is timestamped from
@@ -101,14 +116,18 @@ Vestas_V112_3MW) and solar (panel CSi) for the 20 land zones, offshore
 wind (turbine NREL_ReferenceTurbine_2020ATB_15MW_offshore) for the three named offshore
 polygons, plus a generic offshore column per land zone (their mean). Every shape is clipped
 to the cutout's bounds before atlite runs, buffering outward in 0.25-degree steps if needed,
-because the cutout ends at longitude 1.75 while the East Anglia polygon reaches about
-longitude 3.15, both observed during the build (the 765 MB cutout is not committed). East
-Anglia's clipped profile comes from the nearest covered cells west of the site, a documented
-bias. Onshore figures above 0.50, Shetland 0.615, Western Isles 0.518, Argyll 0.537, come
-from ERA5's roughly 25 km cells blending marine boundary-layer wind into small island zones, so the
-plausibility band tested was widened to 0.15-0.65 onshore (0.35-0.65
-offshore, 0.08-0.14 solar). Regenerate: `gb2035 build-profiles --cutout data/raw/uk-2019.nc`
-(`profiles` extra).
+because the cutout ends at longitude 1.75 while all three offshore polygons reach further
+east (East Anglia to about longitude 3.15). `build-profiles` warns with the share of each
+polygon's area the clip removes: 80.5 percent of Dogger Bank, 32.8 percent of Hornsea and
+87.2 percent of East Anglia, the same in every year because the cutouts share one grid. Their
+profiles come from the covered cells west of each site, a documented bias. Onshore figures
+above 0.50, Shetland 0.615, Western Isles 0.518, Argyll 0.537 in 2019, come from ERA5's
+roughly 25 km cells blending marine boundary-layer wind into small island zones; windy years
+run higher (the windiest zone reaches 0.705 in 2022). The plausibility test therefore bounds
+zonal means at 0.15-0.75 onshore, 0.45-0.70 offshore and 0.08-0.15 solar in every year, and
+national means at 0.30-0.45 onshore and 0.10-0.12 solar (2010 to 2024 run 0.325 to 0.428 and
+0.106 to 0.116). Regenerate: `gb2035 build-profiles --cutout data/raw/uk-<year>.nc
+--weather-year <year>` (`profiles` extra), the same command for every year.
 
 ### The six copied PyPSA-GB zonal files
 

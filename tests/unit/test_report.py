@@ -2,7 +2,13 @@ from pathlib import Path
 
 import pandas as pd
 
-from gb2035.report.figures import make_figures, optimised_vs_fes
+from gb2035.report.figures import (
+    _new_build_gw,
+    make_figures,
+    optimised_vs_fes,
+    weather_year_table,
+    weather_years_figure,
+)
 from gb2035.report.readme import assumptions_markdown, summary_markdown, update_readme
 
 
@@ -40,7 +46,7 @@ def test_make_figures_writes_five_pngs(tmp_path: Path):
 
     Covers every `summary_row.csv` column, plus the `*_new_gw` greenfield columns
     `optimised_vs_fes` overlays per controller decision 1, and a minimal FES frame carrying the
-    six metrics `optimised_vs_fes` reads.
+    seven metrics `optimised_vs_fes` reads.
     """
     summary = pd.DataFrame(
         {
@@ -77,11 +83,12 @@ def test_make_figures_writes_five_pngs(tmp_path: Path):
                 "onshore_wind_gw",
                 "solar_gw",
                 "battery_gw",
+                "hydrogen_generation_gw",
                 "gas_ccus_gw",
                 "unabated_gas_gw",
             ],
-            "pathway": ["Holistic Transition"] * 6,
-            "value": [85.0, 30.0, 65.0, 25.0, 6.0, 4.0],
+            "pathway": ["Holistic Transition"] * 7,
+            "value": [85.0, 30.0, 65.0, 25.0, 2.5, 6.0, 4.0],
         }
     )
     out_dir = tmp_path / "figures"
@@ -93,7 +100,7 @@ def test_make_figures_writes_five_pngs(tmp_path: Path):
 
 
 def test_make_figures_falls_back_when_default_fes_scenario_missing(tmp_path: Path):
-    """Mid-sweep, `cap2` (the default `optimised_vs_fes` comparison scenario) may not have been
+    """Mid-sweep, `cap0p5` (the default `optimised_vs_fes` comparison scenario) may not have been
     solved yet. `make_figures` must not raise `IndexError` in that case: it should fall back to
     the tightest cap scenario actually present (`cap5` here) and still return every figure it
     could draw, rather than aborting the whole report after summary.csv is already written.
@@ -132,11 +139,12 @@ def test_make_figures_falls_back_when_default_fes_scenario_missing(tmp_path: Pat
                 "onshore_wind_gw",
                 "solar_gw",
                 "battery_gw",
+                "hydrogen_generation_gw",
                 "gas_ccus_gw",
                 "unabated_gas_gw",
             ],
-            "pathway": ["Holistic Transition"] * 6,
-            "value": [85.0, 30.0, 65.0, 25.0, 6.0, 4.0],
+            "pathway": ["Holistic Transition"] * 7,
+            "value": [85.0, 30.0, 65.0, 25.0, 2.5, 6.0, 4.0],
         }
     )
     out_dir = tmp_path / "figures"
@@ -147,6 +155,14 @@ def test_make_figures_falls_back_when_default_fes_scenario_missing(tmp_path: Pat
     for path in paths:
         assert path.exists()
         assert path.stat().st_size > 0
+
+
+def test_the_fes_figure_draws_greenfield_only_technologies_as_new_build():
+    """The model has no existing gas CCS or hydrogen turbines, so every GW of either is new
+    build; without a `*_new_gw` column the figure drew them as existing capacity."""
+    row = pd.Series({"gas_ccs_gw": 4.4, "h2_turbine_gw_el": 7.9})
+    assert _new_build_gw(row, "gas_ccs_gw") == 4.4
+    assert _new_build_gw(row, "h2_turbine_gw_el") == 7.9
 
 
 def test_optimised_vs_fes_returns_none_when_no_cap_scenario_present(tmp_path: Path):
@@ -184,3 +200,30 @@ def test_assumptions_markdown_lists_header_and_both_rows(tmp_path: Path):
     assert "| alpha | 1.5 | GW | published | Test source A |" in md
     assert "| beta | 42 | GBP/MWh | assumption | Test source B |" in md
     assert md.index("| alpha") < md.index("| beta"), "rows must be sorted by key"
+
+
+def test_weather_years_figure_draws_every_year_in_order(tmp_path: Path):
+    years = [2012, 2010, 2011]
+    summary = pd.DataFrame(
+        {
+            "scenario": [f"cap5_wy{y}" for y in years] + ["cap5"],
+            "total_cost_gbp_bn_per_yr": [15.2, 15.9, 15.4, 15.5],
+            "onwind_new_gw": [20.0, 25.0, 18.0, 20.0],
+            "solar_new_gw": [80.0, 90.0, 85.0, 83.0],
+            "offwind_new_gw": [0.0, 0.0, 0.0, 0.0],
+            "battery_new_gw": [0.0, 1.0, 0.0, 0.0],
+        }
+    )
+    path = weather_years_figure(summary, tmp_path)
+    assert path == tmp_path / "weather_years.png"
+    assert path.stat().st_size > 0
+    assert weather_year_table(summary)["year"].tolist() == [2010, 2011, 2012], "cap5 is left out"
+
+
+def test_weather_year_table_keeps_a_missing_year_as_a_gap():
+    summary = pd.DataFrame(
+        {"scenario": ["cap5_wy2010", "cap5_wy2012"], "total_cost_gbp_bn_per_yr": [15.0, 16.0]}
+    )
+    table = weather_year_table(summary)
+    assert table["year"].tolist() == [2010, 2011, 2012]
+    assert table["total_cost_gbp_bn_per_yr"].isna().tolist() == [False, True, False]
