@@ -60,8 +60,9 @@ scenarios:
     description: cap2 with onshore wind and solar held to their FES 2035 totals (planning stand-in)
     co2_cap_mt: 2.0
     fes_capacity_ceiling: [onwind, solar]
-    # cuPDLP-C was still iterating after three hours; HiGHS's own PDLP finished first.
-    solver_options: {solver: hipdlp}
+    # Neither PDLP converges here: cuPDLP-C ended "unknown" after four hours, and HiGHS's own
+    # PDLP was still iterating after 13 hours. Interior point with crossover, as for cap0p5.
+    solver_options: {solver: ipm, run_crossover: "on", threads: 8, time_limit: 28800}
   # The FES ceiling alone left offshore unbuilt at 5 Mt: imports at 65 GBP/MWh filled the gap.
   # This closes both escape valves at once.
   cap5_fes_ceiling_import_100:
