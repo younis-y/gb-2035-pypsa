@@ -72,11 +72,14 @@ TECH_COLS = [
 ]
 # Task 11 only splits these carriers' capacity into existing/new (`results/extract.py`
 # `summary_row`); controller decision 1 overlays that split where it exists.
+# Gas CCS and hydrogen turbines have no existing plant in the model, so their totals are new build.
 NEW_BUILD_COLS: dict[str, str] = {
     "offwind_gw": "offwind_new_gw",
     "onwind_gw": "onwind_new_gw",
     "solar_gw": "solar_new_gw",
     "battery_gw": "battery_new_gw",
+    "gas_ccs_gw": "gas_ccs_gw",
+    "h2_turbine_gw_el": "h2_turbine_gw_el",
 }
 
 
@@ -96,7 +99,8 @@ def capacity_mix_by_cap(summary: pd.DataFrame, out: Path) -> Path:
             bottom = bottom + df[col].fillna(0.0).fillna(0.0)
     ax.set_ylabel("Installed capacity (GW)")
     ax.set_xlabel("Annual CO2 cap")
-    ax.legend(frameon=False, ncol=2)
+    # Above the axes: inside them the legend sat on the bars and hid the solar swatch.
+    ax.legend(frameon=False, ncol=4, loc="lower center", bbox_to_anchor=(0.5, 1.0))
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
     path = out / "capacity_mix_by_cap.png"
@@ -140,9 +144,9 @@ def _new_build_gw(row: pd.Series, total_col: str) -> float:
 
 
 def optimised_vs_fes(
-    summary: pd.DataFrame, fes: pd.DataFrame, out: Path, scenario: str = "cap2"
+    summary: pd.DataFrame, fes: pd.DataFrame, out: Path, scenario: str = "cap0p5"
 ) -> Path | None:
-    """The model's cap2 (by default) build against FES, or the tightest cap actually solved.
+    """The model's cap0p5 (by default) build against FES, or the tightest cap actually solved.
 
     Mid-sweep, `scenario` may not have a row yet: fall back to the tightest `CAP_ORDER` scenario
     present in `summary` instead of raising, and return `None` (skip the figure) only when no cap
@@ -160,6 +164,11 @@ def optimised_vs_fes(
         ("Onshore wind", "onwind_gw", fes_value(fes, "onshore_wind_gw", "Holistic Transition")),
         ("Solar", "solar_gw", fes_value(fes, "solar_gw", "Holistic Transition")),
         ("Battery", "battery_gw", fes_value(fes, "battery_gw", "Holistic Transition")),
+        (
+            "H2 turbines",
+            "h2_turbine_gw_el",
+            fes_value(fes, "hydrogen_generation_gw", "Holistic Transition"),
+        ),
         ("Gas CCS", "gas_ccs_gw", fes_value(fes, "gas_ccus_gw", "Holistic Transition")),
         ("Unabated gas", "gas_gw", fes_value(fes, "unabated_gas_gw", "Holistic Transition")),
     ]
